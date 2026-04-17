@@ -482,6 +482,11 @@ button.resolve-btn {
         <p>Enter a HuggingFace model path and click <strong>Resolve</strong> to get started.</p>
       </div>
 
+      <div class="empty-state hidden" id="readyState">
+        <div class="icon">&#x2705;</div>
+        <p>Model resolved — click <strong>Calculate Memory</strong> to estimate VRAM/RAM requirements.</p>
+      </div>
+
       <div class="results" id="results">
         <!-- Model Info -->
         <div class="panel model-info visible" id="modelInfoPanel">
@@ -674,6 +679,7 @@ const calcBtn = $('#calcBtn');
 const loadingEl = $('#loading');
 const loadingText = $('#loadingText');
 const emptyState = $('#emptyState');
+const readyState = $('#readyState');
 const resultsEl = $('#results');
 const errorMsg = $('#errorMsg');
 const modelInfoGrid = $('#modelInfoGrid');
@@ -713,10 +719,35 @@ let currentGGUFUrl = null;
 let currentMetadata = null;
 let currentTensorInfos = null;
 
+// ── Parse GGUF from URL ──
+async function parseGGUF(url) {
+  loadingEl.classList.add('visible');
+  loadingText.textContent = 'Parsing GGUF metadata...';
+  readyState.classList.add('hidden');
+
+  try {
+    const result = await gguf(url);
+    currentMetadata = result.metadata;
+    currentTensorInfos = result.tensorInfos;
+
+    // Hide loading, show results
+    loadingEl.classList.remove('visible');
+    resultsEl.classList.add('visible');
+
+    // Auto-calculate on load
+    renderResults();
+  } catch (err) {
+    loadingEl.classList.remove('visible');
+    readyState.classList.remove('hidden');
+    showError(err.message);
+  }
+}
+
 // ── HF API: resolve model path to GGUF URLs ──
 async function resolveHFModel(path) {
-  loadingEl.classList.add('visible');
-  emptyState.classList.remove('visible');
+ loadingEl.classList.add('visible');
+  emptyState.classList.add('hidden');
+  readyState.classList.add('hidden');
   resultsEl.classList.remove('visible');
   errorMsg.classList.remove('visible');
   modelSelectWrap.classList.remove('visible');
@@ -784,22 +815,12 @@ async function resolveHFModel(path) {
         const selectedFile = modelSelect.value;
         url = `https://huggingface.co/${path}/resolve/main/${selectedFile}`;
       }
-      }
     }
 
+    // Store resolved URL for later parsing (don't auto-parse)
     currentGGUFUrl = url;
-    loadingText.textContent = 'Parsing GGUF metadata...';
-
-    const result = await gguf(url);
-    currentMetadata = result.metadata;
-    currentTensorInfos = result.tensorInfos;
-
-    // Hide loading, show results
     loadingEl.classList.remove('visible');
-    resultsEl.classList.add('visible');
-
-    // Auto-calculate on load
-    renderResults();
+    readyState.classList.remove('hidden');
 
   } catch (err) {
     loadingEl.classList.remove('visible');
@@ -1203,12 +1224,16 @@ resolveBtn.addEventListener('click', () => {
   resolveHFModel(path);
 });
 
-calcBtn.addEventListener('click', () => {
-  if (!currentMetadata || !currentTensorInfos) {
+calcBtn.addEventListener('click', async () => {
+  if (!currentGGUFUrl) {
     showError('No model loaded. Resolve a model first.');
     return;
   }
-  renderResults();
+  if (!currentMetadata || !currentTensorInfos) {
+    await parseGGUF(currentGGUFUrl);
+  } else {
+    renderResults();
+  }
 });
 
 // Auto-calculate on input change
@@ -1216,6 +1241,19 @@ calcBtn.addEventListener('click', () => {
   document.getElementById(id).addEventListener('change', () => {
     if (currentMetadata && currentTensorInfos) renderResults();
   });
+});
+
+// Re-parse GGUF when model file is changed from dropdown
+modelSelect.addEventListener('change', () => {
+  let path = hfPathEl.value.trim();
+  // Extract owner/model from full HF URL if needed
+  if (path.match(/^https?:\/\/huggingface\.co\//i)) {
+    const match = path.match(/^https?:\/\/huggingface\.co\/([^/]+\/[^/]+)/i);
+    if (match) path = match[1];
+  }
+  const url = `https://huggingface.co/${path}/resolve/main/${modelSelect.value}`;
+  currentGGUFUrl = url;
+  parseGGUF(url);
 });
 
 // Enter key on path input
