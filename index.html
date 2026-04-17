@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GGUF Memory Estimator</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d1117;
+  --bg2: #161b22;
+  --bg3: #1c2333;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --accent: #58a6ff;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --radius: 8px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--text2);
+  font-size: 0.875rem;
+  margin-bottom: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 800px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+/* Panels */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.panel-title .icon { font-size: 1rem; }
+
+/* Form */
+.form-group { margin-bottom: 12px; }
+
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.form-row .form-group { flex: 1; }
+
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent);
+}
+
+input[type="text"] { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; }
+
+button {
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+button:hover { opacity: 0.85; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+button.resolve-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+}
+
+/* Model info */
+.model-info { display: none; }
+.model-info.visible { display: block; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.info-item {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.info-item .label {
+  font-size: 0.7rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.info-item .value {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Results */
+.results { display: none; }
+.results.visible { display: block; }
+
+.result-section { margin-bottom: 16px; }
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+
+.result-row:last-child { border-bottom: none; }
+.result-row .label { color: var(--text2); }
+.result-row .value {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-weight: 500;
+}
+
+.result-row.total {
+  border-top: 2px solid var(--border);
+  border-bottom: none;
+  padding-top: 10px;
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+/* VRAM bar */
+.vram-section { margin-top: 16px; }
+
+.vram-bar-container {
+  background: var(--bg);
+  border-radius: 6px;
+  height: 28px;
+  overflow: hidden;
+  position: relative;
+  margin: 8px 0;
+}
+
+.vram-bar {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.vram-bar.green { background: var(--green); }
+.vram-bar.yellow { background: var(--yellow); }
+.vram-bar.red { background: var(--red); }
+
+.vram-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  white-space: nowrap;
+}
+
+.vram-status {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.vram-status.green { color: var(--green); }
+.vram-status.yellow { color: var(--yellow); }
+.vram-status.red { color: var(--red); }
+
+/* Quant table */
+.quant-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+.quant-table th {
+  text-align: left;
+  color: var(--text2);
+  font-weight: 500;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quant-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+}
+
+.quant-table tr:last-child td { border-bottom: none; }
+.quant-table .right { text-align: right; }
+
+/* MoE */
+.moe-section {
+  background: var(--bg);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-left: 3px solid var(--yellow);
+}
+
+.moe-section .moe-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  padding: 2px 0;
+}
+
+.moe-section .moe-row .label { color: var(--text2); }
+
+/* Loading */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 32px;
+  color: var(--text2);
+}
+
+.loading.visible { display: block; }
+
+.loading .spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 8px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.error-msg {
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--red);
+  font-size: 0.85rem;
+  margin-top: 12px;
+  display: none;
+}
+
+.error-msg.visible { display: block; }
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.checkbox-group label {
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Select group */
+.select-group {
+  display: flex;
+  gap: 12px;
+}
+
+.select-group .form-group { flex: 1; }
+
+/* Divider */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.status-badge.moe { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
+.status-badge.dense { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+
+/* Model selector */
+.model-select {
+  margin-top: 8px;
+  display: none;
+}
+
+.model-select.visible { display: block; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text2);
+}
+
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-state p { font-size: 0.9rem; }
+
+/* Hidden */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>GGUF Memory Estimator</h1>
+  <p class="subtitle">Estimate VRAM requirements for any GGUF model from HuggingFace</p>
+
+  <div class="grid">
+    <!-- LEFT: Inputs -->
+    <div>
+      <div class="panel">
+        <div class="panel-title"><span class="icon">&#x1F4C2;</span> Model Input</div>
+
+        <div class="form-group">
+          <label for="hfPath">HuggingFace path or URL</label>
+          <div class="form-row">
+            <input type="text" id="hfPath" placeholder="e.g. bartowski/Llama-3.1-8B-Instruct-GGUF" />
+            <button class="resolve-btn" id="resolveBtn" title="Resolve model">Resolve</button>
+          </div>
+        </div>
+
+        <div class="model-select" id="modelSelectWrap">
+          <div class="form-group">
+            <label for="modelSelect">Select GGUF file</label>
+            <select id="modelSelect"></select>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contextLen">Context length <span id="ctxMaxLabel" style="color:var(--text2);font-weight:normal"></span></label>
+            <input type="number" id="contextLen" value="4096" min="1" step="1" />
+          </div>
+          <div class="form-group">
+            <label for="batchSize">Batch size</label>
+            <input type="number" id="batchSize" value="1" min="1" step="1" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="vram">Available VRAM (GB, optional)</label>
+          <input type="number" id="vram" placeholder="e.g. 24" min="0" step="1" />
+        </div>
+
+        <hr class="divider">
+
+        <div class="panel-title" style="margin-bottom:8px"><span class="icon">&#x1F4CA;</span> KV Cache Quantization</div>
+        <div class="select-group">
+          <div class="form-group">
+            <label for="kvTypeK">K cache</label>
+            <select id="kvTypeK"></select>
+          </div>
+          <div class="form-group">
+            <label for="kvTypeV">V cache</label>
+            <select id="kvTypeV"></select>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="includeActivations" checked />
+          <label for="includeActivations">Estimate activation memory</label>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="calcBtn" style="width:100%">Calculate Memory</button>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div id="loadingText">Fetching model metadata...</div>
+      </div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="icon">&#x1F4E6;</div>
+        <p>Enter a HuggingFace model path and click <strong>Resolve</strong> to get started.</p>
+      </div>
+
+      <div class="results" id="results">
+        <!-- Model Info -->
+        <div class="panel model-info visible" id="modelInfoPanel">
+          <div class="panel-title"><span class="icon">&#x1F9E6;</span> Model Info <span id="archBadge"></span></div>
+          <div class="info-grid" id="modelInfoGrid"></div>
+        </div>
+
+        <!-- MoE -->
+        <div id="moeSection" class="moe-section hidden">
+          <div class="moe-row"><span class="label">Total experts</span><span id="moeTotalExperts"></span></div>
+          <div class="moe-row"><span class="label">Active per token</span><span id="moeActiveExperts"></span></div>
+          <div class="moe-row"><span class="label">Total expert params</span><span id="moeTotalParams"></span></div>
+          <div class="moe-row"><span class="label">Active params</span><span id="moeActiveParams"></span></div>
+          <div class="moe-row"><span class="label">Router (gate_inp)</span><span id="moeRouterSize"></span></div>
+        </div>
+
+        <!-- Weights -->
+        <div class="panel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F4B0;</span> Model Weights</div>
+          <div class="result-row">
+            <span class="label">Total weight size</span>
+            <span class="value" id="weightTotal">-</span>
+          </div>
+          <table class="quant-table" id="quantTable">
+            <thead>
+              <tr>
+                <th>Quantization</th>
+                <th class="right">Tensors</th>
+                <th class="right">Elements</th>
+                <th class="right">Size</th>
+              </tr>
+            </thead>
+            <tbody id="quantTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- KV Cache -->
+        <div class="panel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F4CB;</span> KV Cache</div>
+          <div class="result-row">
+            <span class="label">K cache (<span id="kvKLabel">F16</span>)</span>
+            <span class="value" id="kvKSize">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">V cache (<span id="kvVLabel">F16</span>)</span>
+            <span class="value" id="kvVSize">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">KV layers</span>
+            <span class="value" id="kvLayers">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">KV heads (GQA)</span>
+            <span class="value" id="kvHeads">-</span>
+          </div>
+        </div>
+
+        <!-- Activations -->
+        <div class="panel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x26A1;</span> Activations</div>
+          <div class="result-row">
+            <span class="label">Activation memory (FP32)</span>
+            <span class="value" id="actSize">-</span>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="panel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F4CA;</span> Total Memory</div>
+          <div class="result-row total">
+            <span class="label">Total estimated memory</span>
+            <span class="value" id="totalSize">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Weights</span>
+            <span class="value" id="pctWeight">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">KV Cache</span>
+            <span class="value" id="pctKV">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">Activations</span>
+            <span class="value" id="pctAct">-</span>
+          </div>
+        </div>
+
+        <!-- VRAM / RAM Split -->
+        <div class="panel" style="margin-top:12px" id="vramRamPanel">
+          <div class="panel-title"><span class="icon">&#x1F4B0;</span> Memory Split</div>
+          <div class="result-row">
+            <span class="label">In VRAM</span>
+            <span class="value" id="vramSize" style="color:var(--accent)">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label">In RAM</span>
+            <span class="value" id="ramSize" style="color:var(--text2)">-</span>
+          </div>
+          <div class="divider"></div>
+          <div class="result-row">
+            <span class="label" style="font-size:0.75rem">VRAM breakdown</span>
+            <span class="value" style="font-size:0.75rem" id="vramBreakdown">-</span>
+          </div>
+          <div class="result-row">
+            <span class="label" style="font-size:0.75rem">RAM breakdown</span>
+            <span class="value" style="font-size:0.75rem" id="ramBreakdown">-</span>
+          </div>
+        </div>
+
+        <!-- VRAM Fit -->
+        <div class="panel vram-section" id="vramPanel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F50B;</span> VRAM Fit Check</div>
+          <div class="vram-bar-container">
+            <div class="vram-bar green" id="vramBar" style="width:0%"></div>
+            <div class="vram-text" id="vramBarText">-</div>
+          </div>
+          <div class="vram-status green" id="vramStatus">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { gguf, GGMLQuantizationType, GGUF_QUANT_ORDER, GGUF_QUANT_DESCRIPTIONS } from 'https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm';
+
+// ── Bytes-per-element for each quantization type ──
+// Exact values from GGML quantization block structures
+const BPE = {
+  [GGMLQuantizationType.F32]: 4.0,
+  [GGMLQuantizationType.F16]: 2.0,
+  [GGMLQuantizationType.BF16]: 2.0,
+  [GGMLQuantizationType.Q4_0]: 18 / 32,
+  [GGMLQuantizationType.Q4_1]: 20 / 32,
+  [GGMLQuantizationType.Q5_0]: 22 / 32,
+  [GGMLQuantizationType.Q5_1]: 24 / 32,
+  [GGMLQuantizationType.Q8_0]: 34 / 32,
+  [GGMLQuantizationType.Q8_1]: 40 / 32,
+  [GGMLQuantizationType.Q2_K]: 84 / 256,
+  [GGMLQuantizationType.Q3_K]: 110 / 256,
+  [GGMLQuantizationType.Q4_K]: 144 / 256,
+  [GGMLQuantizationType.Q5_K]: 176 / 256,
+  [GGMLQuantizationType.Q6_K]: 210 / 256,
+  [GGMLQuantizationType.Q8_K]: 292 / 256,
+  [GGMLQuantizationType.IQ2_XXS]: 66 / 256,
+  [GGMLQuantizationType.IQ2_XS]: 74 / 256,
+  [GGMLQuantizationType.IQ3_XXS]: 98 / 256,
+  [GGMLQuantizationType.IQ1_S]: 50 / 256,
+  [GGMLQuantizationType.IQ4_NL]: 18 / 32,
+  [GGMLQuantizationType.IQ3_S]: 110 / 256,
+  [GGMLQuantizationType.IQ2_S]: 82 / 256,
+  [GGMLQuantizationType.IQ4_XS]: 136 / 256,
+  [GGMLQuantizationType.I8]: 1.0,
+  [GGMLQuantizationType.I16]: 2.0,
+  [GGMLQuantizationType.I32]: 4.0,
+  [GGMLQuantizationType.I64]: 8.0,
+  [GGMLQuantizationType.F64]: 8.0,
+  [GGMLQuantizationType.IQ1_M]: 56 / 256,
+  [GGMLQuantizationType.TQ1_0]: 54 / 256,
+  [GGMLQuantizationType.TQ2_0]: 66 / 256,
+  [GGMLQuantizationType.MXFP4]: 17 / 32,
+  [GGMLQuantizationType.NVFP4]: 36 / 64,
+  [GGMLQuantizationType.Q1_0]: 18 / 128,
+};
+
+// Quantization type names for display
+const QUANT_NAMES = {};
+for (const [key, val] of Object.entries(GGMLQuantizationType)) {
+  if (typeof val === 'number') QUANT_NAMES[val] = key;
+}
+
+// ── DOM refs ──
+const $ = (s) => document.querySelector(s);
+
+// Warn if running via file:// protocol
+if (location.protocol === 'file:') {
+  showError('⚠ Open via a local server for best results. Run: python3 -m http.server 8000 then visit http://localhost:8000');
+}
+const hfPathEl = $('#hfPath');
+const resolveBtn = $('#resolveBtn');
+const modelSelectWrap = $('#modelSelectWrap');
+const modelSelect = $('#modelSelect');
+const contextLenEl = $('#contextLen');
+const batchSizeEl = $('#batchSize');
+const vramEl = $('#vram');
+const kvTypeKEl = $('#kvTypeK');
+const kvTypeVEl = $('#kvTypeV');
+const includeActivationsEl = $('#includeActivations');
+const calcBtn = $('#calcBtn');
+const loadingEl = $('#loading');
+const loadingText = $('#loadingText');
+const emptyState = $('#emptyState');
+const resultsEl = $('#results');
+const errorMsg = $('#errorMsg');
+const modelInfoGrid = $('#modelInfoGrid');
+const archBadge = $('#archBadge');
+const moeSection = $('#moeSection');
+const quantTableBody = $('#quantTableBody');
+
+// Populate KV quantization dropdowns
+// Only these types are valid for KV cache in llama.cpp
+const KV_VALID_QUANTS = [
+  GGMLQuantizationType.F32,
+  GGMLQuantizationType.F16,
+  GGMLQuantizationType.BF16,
+  GGMLQuantizationType.Q8_0,
+  GGMLQuantizationType.Q4_0,
+  GGMLQuantizationType.Q4_1,
+  GGMLQuantizationType.IQ4_NL,
+  GGMLQuantizationType.Q5_0,
+  GGMLQuantizationType.Q5_1,
+];
+
+function populateQuantSelect(sel, defaultType) {
+  for (const q of KV_VALID_QUANTS) {
+    const opt = document.createElement('option');
+    opt.value = q;
+    opt.textContent = QUANT_NAMES[q] || q;
+    if (q === defaultType) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+populateQuantSelect(kvTypeKEl, GGMLQuantizationType.F16);
+populateQuantSelect(kvTypeVEl, GGMLQuantizationType.F16);
+
+// ── State ──
+let currentGGUFUrl = null;
+let currentMetadata = null;
+let currentTensorInfos = null;
+
+// ── HF API: resolve model path to GGUF URLs ──
+async function resolveHFModel(path) {
+  loadingEl.classList.add('visible');
+  emptyState.classList.remove('visible');
+  resultsEl.classList.remove('visible');
+  errorMsg.classList.remove('visible');
+  modelSelectWrap.classList.remove('visible');
+  resolveBtn.disabled = true;
+
+  try {
+    let url;
+
+    // Check if it's a direct URL
+    if (path.match(/^https?:\/\/.*\.gguf/i)) {
+      // Normalize: /blob/ → /resolve/ (blob endpoint lacks CORS headers)
+      url = path.replace(/\/blob\//, '/resolve/').replace(/#.*$/, '');
+    } else if (path.match(/^https?:\/\/huggingface\.co\//i)) {
+      // Extract model path from full HF URL (e.g. https://huggingface.co/owner/model → owner/model)
+      const match = path.match(/^https?:\/\/huggingface\.co\/([^/]+\/[^/]+)/i);
+      if (match) {
+        path = match[1];
+      }
+    }
+
+    // Query HF API (if not already resolved to a direct URL)
+    if (!url) {
+      loadingText.textContent = 'Querying HuggingFace API...';
+      const apiRes = await fetch(`https://huggingface.co/api/models/${path}`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!apiRes.ok) {
+        throw new Error(`HF API returned ${apiRes.status}: ${apiRes.statusText}`);
+      }
+      const model = await apiRes.json();
+
+      // Find GGUF files in siblings
+      const ggufFiles = (model.siblings || [])
+        .map(s => s.rfilename)
+        .filter(f => f && f.toLowerCase().endsWith('.gguf'));
+
+      if (ggufFiles.length === 0) {
+        throw new Error('No .gguf files found in this model repository.');
+      }
+
+      if (ggufFiles.length === 1) {
+        url = `https://huggingface.co/${path}/resolve/main/${ggufFiles[0]}`;
+      } else {
+        // Show dropdown for user to pick
+        modelSelect.innerHTML = '';
+        for (const f of ggufFiles) {
+          const opt = document.createElement('option');
+          opt.value = f;
+          opt.textContent = f;
+          modelSelect.appendChild(opt);
+        }
+        modelSelectWrap.classList.add('visible');
+
+        // Wait for user selection
+        await new Promise((resolve) => {
+          const onSelect = () => {
+            modelSelect.removeEventListener('change', onSelect);
+            resolve();
+          };
+          modelSelect.addEventListener('change', onSelect);
+          // Auto-resolve after 8 seconds if no selection
+          setTimeout(resolve, 8000);
+        });
+
+        const selectedFile = modelSelect.value;
+        url = `https://huggingface.co/${path}/resolve/main/${selectedFile}`;
+      }
+      }
+    }
+
+    currentGGUFUrl = url;
+    loadingText.textContent = 'Parsing GGUF metadata...';
+
+    const result = await gguf(url);
+    currentMetadata = result.metadata;
+    currentTensorInfos = result.tensorInfos;
+
+    // Hide loading, show results
+    loadingEl.classList.remove('visible');
+    resultsEl.classList.add('visible');
+
+    // Auto-calculate on load
+    renderResults();
+
+  } catch (err) {
+    loadingEl.classList.remove('visible');
+    showError(err.message);
+  } finally {
+    resolveBtn.disabled = false;
+  }
+}
+
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('visible');
+}
+
+// ── Memory calculations ──
+function getModelArch(metadata) {
+  return metadata['general.architecture'] || 'unknown';
+}
+
+function getMeta(metadata, key, fallback = 0) {
+  const val = metadata[key];
+  if (val === undefined || val === null) return fallback;
+  return Number(val) || fallback;
+}
+
+function calcWeightSize(tensorInfos) {
+  let total = 0;
+  const byQuant = {};
+
+  for (const t of tensorInfos) {
+    const nElem = t.shape.map(Number).reduce((a, b) => a * b, 1);
+    const bpe = BPE[t.dtype] || 0;
+    const size = nElem * bpe;
+    total += size;
+
+    const name = QUANT_NAMES[t.dtype] || `type_${t.dtype}`;
+    if (!byQuant[name]) {
+      byQuant[name] = { count: 0, elements: 0, bytes: 0 };
+    }
+    byQuant[name].count++;
+    byQuant[name].elements += nElem;
+    byQuant[name].bytes += size;
+  }
+
+  return { total, byQuant };
+}
+
+function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV) {
+  const arch = getModelArch(metadata);
+  const n_embd = getMeta(metadata, `${arch}.embedding_length`);
+  const n_head = getMeta(metadata, `${arch}.attention.head_count`);
+  const n_embd_head_k = getMeta(metadata, `${arch}.attention.key_length`) || (n_embd / n_head);
+  const n_embd_head_v = getMeta(metadata, `${arch}.attention.value_length`) || (n_embd / n_head);
+  const n_head_kv = getMeta(metadata, `${arch}.attention.head_count_kv`);
+  const n_layer = getMeta(metadata, `${arch}.block_count`);
+
+  if (arch.startsWith('mamba') || arch.startsWith('rwkv')) {
+    throw new Error(`Memory estimation for architecture "${arch}" is not supported`);
+  }
+
+  // Handle per-layer KV head counts (array) or single value
+  let n_head_kv_arr = Array(n_layer).fill(n_head);
+  if (Array.isArray(n_head_kv)) {
+    for (let i = 0; i < n_layer; i++) {
+      if (n_head_kv[i]) n_head_kv_arr[i] = Number(n_head_kv[i]);
+    }
+  } else {
+    for (let i = 0; i < n_layer; i++) {
+      n_head_kv_arr[i] = Number(n_head_kv);
+    }
+  }
+
+  let totalElemsK = 0;
+  let totalElemsV = 0;
+  for (let i = 0; i < n_layer; i++) {
+    totalElemsK += n_embd_head_k * n_head_kv_arr[i] * ctxSize;
+    totalElemsV += n_embd_head_v * n_head_kv_arr[i] * ctxSize;
+  }
+
+  const bytesK = totalElemsK * (BPE[kvTypeK] || 0);
+  const bytesV = totalElemsV * (BPE[kvTypeV] || 0);
+
+  return {
+    bytesK,
+    bytesV,
+    totalBytes: bytesK + bytesV,
+    layers: n_layer,
+    headsK: n_embd_head_k,
+    headsV: n_embd_head_v,
+    totalHeadsKV: n_head_kv_arr.reduce((a, b) => a + b, 0),
+    avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
+  };
+}
+
+function calcActivations(metadata, ctxSize, batchSize, tensorInfos) {
+  const arch = getModelArch(metadata);
+  const n_embd = getMeta(metadata, `${arch}.embedding_length`);
+  const n_ff = getMeta(metadata, `${arch}.feed_forward_length`);
+  const n_layer = getMeta(metadata, `${arch}.block_count`);
+  const expertCount = getMeta(metadata, `${arch}.expert_count`);
+  const expertUsedCount = getMeta(metadata, `${arch}.expert_used_count`);
+  const expertFF = getMeta(metadata, `${arch}.expert_feed_forward_length`);
+
+  const isMoe = expertCount > 0;
+
+  // Per-layer activation estimate (FP32 = 4 bytes per element)
+  // Includes: layer norm outputs, attention outputs, FFN outputs
+  // Simplified: hidden_size + ff_size per layer
+  let perLayerBytes;
+  if (isMoe && expertUsedCount > 0 && expertFF > 0) {
+    // MoE: only used experts contribute to activation memory
+    perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+  } else {
+    perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+  }
+
+  return {
+    totalBytes: perLayerBytes * n_layer * 4, // 4 bytes for FP32
+    perLayerBytes: perLayerBytes * 4,
+    isMoe,
+    expertCount,
+    expertUsedCount,
+    expertFF,
+  };
+}
+
+function calcMoEInfo(metadata, tensorInfos) {
+  const arch = getModelArch(metadata);
+  const expertCount = getMeta(metadata, `${arch}.expert_count`);
+  const expertUsedCount = getMeta(metadata, `${arch}.expert_used_count`);
+
+  if (expertCount === 0) return null;
+
+  // Group expert tensors
+  const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
+  const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+  const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.') || t.name.includes('_chexp.'));
+
+  // Calculate expert weight sizes
+  let expertWeightBytes = 0;
+  let routerBytes = 0;
+  let sharedBytes = 0;
+
+  for (const t of expertTensors) {
+    const nElem = t.shape.map(Number).reduce((a, b) => a * b, 1);
+    expertWeightBytes += nElem * (BPE[t.dtype] || 0);
+  }
+
+  if (routerTensor) {
+    const nElem = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1);
+    routerBytes = nElem * (BPE[routerTensor.dtype] || 0);
+  }
+
+  for (const t of sharedTensors) {
+    const nElem = t.shape.map(Number).reduce((a, b) => a * b, 1);
+    sharedBytes += nElem * (BPE[t.dtype] || 0);
+  }
+
+  // Total parameter count (all tensors)
+  const totalParams = tensorInfos.reduce((sum, t) => sum + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
+
+  // Expert-specific parameter count
+  const expertParams = expertTensors.reduce((sum, t) => sum + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
+
+  // Active expert weight: only expert_used_count experts are active per token
+  const perExpertWeightBytes = expertCount > 0 ? expertWeightBytes / expertCount : 0;
+  const activeExpertWeightBytes = perExpertWeightBytes * expertUsedCount;
+
+  // Total weight bytes (all experts loaded in VRAM)
+  const totalWeightBytes = expertWeightBytes + routerBytes + sharedBytes;
+
+  return {
+    expertCount,
+    expertUsedCount,
+    expertWeightBytes,
+    routerBytes,
+    sharedBytes,
+    totalWeightBytes,
+    totalParams,
+    expertParams,
+    activeExpertWeightBytes,
+  };
+}
+
+// ── Format helpers ──
+function formatBytes(bytes) {
+  if (bytes < 1e6) return `${(bytes / 1e3).toFixed(1)} KB`;
+  if (bytes < 1e9) return `${(bytes / 1e6).toFixed(1)} MB`;
+  if (bytes < 1e12) return `${(bytes / 1e9).toFixed(2)} GB`;
+  return `${(bytes / 1e12).toFixed(2)} TB`;
+}
+
+function formatElements(n) {
+  if (n >= 1e12) return `${(Number(n) / 1e12).toFixed(2)}T`;
+  if (n >= 1e9) return `${(Number(n) / 1e9).toFixed(2)}B`;
+  if (n >= 1e6) return `${(Number(n) / 1e6).toFixed(2)}M`;
+  if (n >= 1e3) return `${(Number(n) / 1e3).toFixed(1)}K`;
+  return n.toString();
+}
+
+// ── Render results ──
+function renderResults() {
+  if (!currentMetadata || !currentTensorInfos) return;
+
+  const arch = getModelArch(currentMetadata);
+  const ctxSize = parseInt(contextLenEl.value) || 4096;
+  const batchSize = parseInt(batchSizeEl.value) || 1;
+  const kvTypeK = parseInt(kvTypeKEl.value);
+  const kvTypeV = parseInt(kvTypeVEl.value);
+  const includeActs = includeActivationsEl.checked;
+  const vramGB = parseFloat(vramEl.value) || 0;
+
+  // Weight calculation
+  const weights = calcWeightSize(currentTensorInfos);
+
+  // KV cache
+  const kv = calcKVCache(currentMetadata, ctxSize, kvTypeK, kvTypeV);
+
+  // Activations
+  const acts = calcActivations(currentMetadata, ctxSize, batchSize, currentTensorInfos);
+
+  // MoE
+  const moe = calcMoEInfo(currentMetadata, currentTensorInfos);
+
+  // VRAM vs RAM split
+  // Dense: all weights + KV + activations in VRAM
+  // MoE: only active experts + router + shared + KV + activations in VRAM, rest in RAM
+  let vramBytes = 0;
+  let ramBytes = 0;
+
+  if (moe) {
+    // MoE: active expert weights in VRAM, inactive in RAM
+    vramBytes += moe.activeExpertWeightBytes + moe.routerBytes + moe.sharedBytes;
+    ramBytes += moe.expertWeightBytes - moe.activeExpertWeightBytes;
+  } else {
+    // Dense: all weights in VRAM
+    vramBytes += weights.total;
+  }
+
+  // KV cache always in VRAM
+  vramBytes += kv.totalBytes;
+
+  // Activations always in VRAM
+  if (includeActs) vramBytes += acts.totalBytes;
+
+  // Total
+  let totalBytes = vramBytes + ramBytes;
+
+  // ── Model info ──
+  const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
+  const n_head = getMeta(currentMetadata, `${arch}.attention.head_count`);
+  const n_head_kv = getMeta(currentMetadata, `${arch}.attention.head_count_kv`);
+  const n_layer = getMeta(currentMetadata, `${arch}.block_count`);
+  const n_ff = getMeta(currentMetadata, `${arch}.feed_forward_length`);
+  const ctx_len = getMeta(currentMetadata, `${arch}.context_length`);
+  const vocab = getMeta(currentMetadata, `${arch}.vocab_size`);
+  const modelName = currentMetadata['general.name'] || currentMetadata['general.basename'] || arch;
+
+  // Clamp context length to model's maximum
+  if (ctx_len && ctx_len > 0) {
+    contextLenEl.max = ctx_len;
+    $('#ctxMaxLabel').textContent = `(max ${formatElements(BigInt(ctx_len))})`;
+    if (parseInt(contextLenEl.value) > ctx_len) {
+      contextLenEl.value = ctx_len;
+    }
+  } else {
+    $('#ctxMaxLabel').textContent = '';
+  }
+
+  // Architecture badge
+  const isMoe = (moe !== null);
+  archBadge.innerHTML = isMoe
+    ? `<span class="status-badge moe">MoE</span>`
+    : `<span class="status-badge dense">Dense</span>`;
+
+  modelInfoGrid.innerHTML = `
+    <div class="info-item"><div class="label">Model</div><div class="value" style="font-size:0.85rem">${modelName}</div></div>
+    <div class="info-item"><div class="label">Architecture</div><div class="value">${arch}</div></div>
+    <div class="info-item"><div class="label">Layers</div><div class="value">${n_layer}</div></div>
+    <div class="info-item"><div class="label">Heads</div><div class="value">${n_head}</div></div>
+    <div class="info-item"><div class="label">KV Heads</div><div class="value">${n_head_kv}</div></div>
+    <div class="info-item"><div class="label">Hidden</div><div class="value">${n_embd}</div></div>
+    <div class="info-item"><div class="label">FFN</div><div class="value">${n_ff}</div></div>
+    <div class="info-item"><div class="label">Context</div><div class="value">${ctx_len ? formatElements(ctx_len) : '-'}</div></div>
+    <div class="info-item"><div class="label">Vocab</div><div class="value">${vocab ? formatElements(BigInt(vocab)) : '-'}</div></div>
+  `;
+
+  // ── MoE section ──
+  if (isMoe) {
+    moeSection.classList.remove('hidden');
+    $('#moeTotalExperts').textContent = moe.expertCount;
+    $('#moeActiveExperts').textContent = `${moe.expertUsedCount} per token`;
+    $('#moeTotalParams').textContent = `${formatElements(moe.totalParams)} params (${formatBytes(moe.totalWeightBytes)} weights)`;
+    $('#moeActiveParams').textContent = `${formatElements(moe.expertParams)} params (${formatBytes(moe.activeExpertWeightBytes)} weights)`;
+    $('#moeRouterSize').textContent = formatBytes(moe.routerBytes);
+  } else {
+    moeSection.classList.add('hidden');
+  }
+
+  // ── Weights ──
+  $('#weightTotal').textContent = formatBytes(weights.total);
+
+  // Quant table
+  const sortedQuants = Object.entries(weights.byQuant)
+    .sort((a, b) => b[1].bytes - a[1].bytes);
+
+  quantTableBody.innerHTML = sortedQuants.map(([name, info]) => `
+    <tr>
+      <td>${name}</td>
+      <td class="right">${info.count}</td>
+      <td class="right">${formatElements(info.elements)}</td>
+      <td class="right">${formatBytes(info.bytes)}</td>
+    </tr>
+  `).join('');
+
+  // ── KV Cache ──
+  $('#kvKLabel').textContent = QUANT_NAMES[kvTypeK] || kvTypeK;
+  $('#kvVLabel').textContent = QUANT_NAMES[kvTypeV] || kvTypeV;
+  $('#kvKSize').textContent = formatBytes(kv.bytesK);
+  $('#kvVSize').textContent = formatBytes(kv.bytesV);
+  $('#kvLayers').textContent = kv.layers;
+  $('#kvHeads').textContent = kv.avgHeadsKV.toFixed(1);
+
+  // ── Activations ──
+  $('#actSize').textContent = includeActs ? formatBytes(acts.totalBytes) : 'Disabled';
+
+  // ── Total ──
+  $('#totalSize').textContent = formatBytes(totalBytes);
+  const totalGB = totalBytes / 1e9;
+
+  // Percentages
+  const pctW = (weights.total / totalBytes * 100).toFixed(1);
+  const pctKV = (kv.totalBytes / totalBytes * 100).toFixed(1);
+  const pctA = includeActs ? (acts.totalBytes / totalBytes * 100).toFixed(1) : '0.0';
+  $('#pctWeight').textContent = `${formatBytes(weights.total)} (${pctW}%)`;
+  $('#pctKV').textContent = `${formatBytes(kv.totalBytes)} (${pctKV}%)`;
+  $('#pctAct').textContent = includeActs ? `${formatBytes(acts.totalBytes)} (${pctA}%)` : '0.0%';
+
+  // ── VRAM / RAM split ──
+  $('#vramSize').textContent = formatBytes(vramBytes);
+  $('#ramSize').textContent = formatBytes(ramBytes);
+
+  // VRAM breakdown
+  let vramParts = [];
+  if (moe) {
+    vramParts.push(`active experts: ${formatBytes(moe.activeExpertWeightBytes)}`);
+    if (moe.routerBytes > 0) vramParts.push(`router: ${formatBytes(moe.routerBytes)}`);
+    if (moe.sharedBytes > 0) vramParts.push(`shared: ${formatBytes(moe.sharedBytes)}`);
+  } else {
+    vramParts.push(`weights: ${formatBytes(weights.total)}`);
+  }
+  vramParts.push(`KV: ${formatBytes(kv.totalBytes)}`);
+  if (includeActs) vramParts.push(`activations: ${formatBytes(acts.totalBytes)}`);
+  $('#vramBreakdown').textContent = vramParts.join(', ');
+
+  // RAM breakdown
+  let ramParts = [];
+  if (moe) {
+    const inactiveWeight = moe.expertWeightBytes - moe.activeExpertWeightBytes;
+    ramParts.push(`inactive experts: ${formatBytes(inactiveWeight)} (${moe.expertCount - moe.expertUsedCount} experts)`);
+  }
+  $('#ramBreakdown').textContent = ramParts.length > 0 ? ramParts.join(', ') : 'None';
+
+  // ── VRAM fit ──
+  if (vramGB > 0) {
+    $('#vramPanel').style.display = '';
+    const vramGBNum = vramBytes / 1e9;
+    const usagePct = (vramGBNum / vramGB * 100);
+    const clampedPct = Math.min(usagePct, 100);
+
+    const bar = $('#vramBar');
+    const barText = $('#vramBarText');
+    const status = $('#vramStatus');
+
+    bar.style.width = `${clampedPct}%`;
+
+    if (usagePct <= 80) {
+      bar.className = 'vram-bar green';
+      status.className = 'vram-status green';
+      status.textContent = `\u2713 Fits comfortably — ${formatBytes(vramBytes)} of ${vramGB} GB VRAM (${usagePct.toFixed(0)}% used)`;
+    } else if (usagePct <= 100) {
+      bar.className = 'vram-bar yellow';
+      status.className = 'vram-status yellow';
+      status.textContent = `\u26A0 Marginal — ${formatBytes(vramBytes)} of ${vramGB} GB VRAM (${usagePct.toFixed(0)}% used)`;
+    } else {
+      bar.className = 'vram-bar red';
+      status.className = 'vram-status red';
+      status.textContent = `\u2717 Does not fit — ${formatBytes(vramBytes)} needed, ${vramGB} GB available (${((usagePct - 100)).toFixed(0)}% over)`;
+    }
+
+    barText.textContent = `${usagePct.toFixed(1)}%`;
+  } else {
+    $('#vramPanel').style.display = 'none';
+  }
+}
+
+// ── Event listeners ──
+resolveBtn.addEventListener('click', () => {
+  const path = hfPathEl.value.trim();
+  if (!path) { showError('Please enter a HuggingFace model path or URL.'); return; }
+  resolveHFModel(path);
+});
+
+calcBtn.addEventListener('click', () => {
+  if (!currentMetadata || !currentTensorInfos) {
+    showError('No model loaded. Resolve a model first.');
+    return;
+  }
+  renderResults();
+});
+
+// Auto-calculate on input change
+['contextLen', 'batchSize', 'vram', 'kvTypeK', 'kvTypeV', 'includeActivations'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (currentMetadata && currentTensorInfos) renderResults();
+  });
+});
+
+// Enter key on path input
+hfPathEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') resolveBtn.click();
+});
+</script>
+</body>
+</html>
