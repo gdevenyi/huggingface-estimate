@@ -611,7 +611,7 @@ button.resolve-btn {
 </div>
 
 <script type="module">
-import { gguf, GGMLQuantizationType, GGUF_QUANT_ORDER, GGUF_QUANT_DESCRIPTIONS } from 'https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm';
+import { gguf, ggufAllShards, GGMLQuantizationType, GGUF_QUANT_ORDER, GGUF_QUANT_DESCRIPTIONS } from 'https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm';
 
 // ── Bytes-per-element for each quantization type ──
 // Exact values from GGML quantization block structures
@@ -726,7 +726,15 @@ async function parseGGUF(url) {
   readyState.classList.add('hidden');
 
   try {
-    const result = await gguf(url);
+    let result;
+    // Detect sharded GGUF (e.g. -00001-of-00002.gguf)
+    if (url.includes('-of-') && url.endsWith('.gguf')) {
+      loadingText.textContent = 'Parsing sharded GGUF (all shards)...';
+      const shards = await ggufAllShards(url);
+      result = { metadata: shards.shards[0].metadata, tensorInfos: shards.shards.flatMap(s => s.tensorInfos) };
+    } else {
+      result = await gguf(url);
+    }
     currentMetadata = result.metadata;
     currentTensorInfos = result.tensorInfos;
 
