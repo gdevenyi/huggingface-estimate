@@ -38,11 +38,6 @@ url = path.replace(/\/blob\//, '/resolve/').replace(/#.*$/, '');
 
 `@huggingface/gguf` imported from `https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm`. Check for updates via `https://data.jsdelivr.com/v1/package/npm/@huggingface/gguf`.
 
-## Key exports from @huggingface/gguf
+## Bytes-per-element hardcoded
 
-- `gguf(url)` — parses header + metadata + tensor info (~2MB fetch)
-- `GGMLQuantizationType` — enum of all 34 quant types
-- `GGUF_QUANT_ORDER` — quant ranking (largest to smallest)
-- `GGUF_QUANT_DESCRIPTIONS` — human-readable descriptions
-
-Note: `GGML_QUANT_SIZES` is NOT exported from the browser build. Bytes-per-element values are hardcoded in `index.html` (lines ~591-626).
+`GGML_QUANT_SIZES` is NOT exported from the browser build. BPE values are hardcoded as the `BPE` object in `index.html` (lines 618–653). Use `GGMLQuantizationType` enum keys as indices.
