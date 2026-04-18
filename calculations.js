@@ -476,11 +476,17 @@ const ARCHITECTURES = {
       const n_embd_head_v = getMeta(meta, `${arch}.attention.value_length`) || (n_embd / n_head);
       const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
-      const n_head_kv_arr = Array(n_layer).fill(n_head_kv);
+      const n_swa = getMeta(meta, `${arch}.attention.sliding_window`) || 8192;
+      const swa_period = getMeta(meta, `${arch}.attention.sliding_window_pattern`) || 4;
+      const n_head_kv_arr = Array.isArray(n_head_kv)
+        ? n_head_kv.map(v => Number(v))
+        : Array(n_layer).fill(n_head_kv);
       let totalElemsK = 0, totalElemsV = 0;
       for (let i = 0; i < n_layer; i++) {
-        totalElemsK += n_embd_head_k * n_head_kv_arr[i] * ctxSize;
-        totalElemsV += n_embd_head_v * n_head_kv_arr[i] * ctxSize;
+        const isSwa = swa_period > 0 && (i % swa_period < (swa_period - 1));
+        const layerCtx = isSwa ? Math.min(n_swa, ctxSize) : ctxSize;
+        totalElemsK += n_embd_head_k * n_head_kv_arr[i] * layerCtx;
+        totalElemsV += n_embd_head_v * n_head_kv_arr[i] * layerCtx;
       }
       return {
         bytesK: totalElemsK * (BPE[kvTypeK] || 0),
