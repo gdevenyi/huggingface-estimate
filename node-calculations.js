@@ -230,11 +230,11 @@ function llamaMoe(meta, tensorInfos) {
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   if (expertCount === 0) return null;
   const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.') || t.name.includes('exp_probs_b'));
-  const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+  const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
   const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.') || t.name.includes('_chexp.'));
   let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
   for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-  if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+  for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
   for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
   const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
   const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -310,11 +310,11 @@ const ARCHITECTURES = {
       if (expertCount === 0) return null;
       // DeepSeek2 MoE: _exps. for expert weights, _shexp. for shared, exp_probs_b bias
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.') || t.name.includes('exp_probs_b'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -543,11 +543,11 @@ const ARCHITECTURES = {
       if (expertCount === 0) return null;
       // Llama4 Scout: ffn_gate_exps, ffn_up_exps, ffn_down_exps, ffn_gate_shexp, ffn_up_shexp, ffn_down_shexp
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -608,11 +608,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -682,11 +682,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -784,11 +784,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -846,11 +846,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -907,11 +907,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -971,11 +971,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -1039,11 +1039,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -1111,11 +1111,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -1172,11 +1172,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -1237,11 +1237,11 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.') || t.name.includes('gate_up_exps'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensors = tensorInfos.filter(t => t.name.includes('ffn_gate_inp'));
       const sharedTensors = [];
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
-      if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
+      for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
       for (const t of sharedTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
