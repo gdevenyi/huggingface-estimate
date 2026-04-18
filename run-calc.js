@@ -95,8 +95,11 @@ async function calcModel(repo) {
 
   // VRAM / RAM breakdown
   const isMoe = moeInfo !== null;
+  const nonMoEWeightBytes = isMoe
+    ? weightInfo.total - moeInfo.expertWeightBytes - moeInfo.routerBytes - moeInfo.sharedBytes
+    : 0;
   const vramWeightBytes = isMoe
-    ? moeInfo.activeExpertWeightBytes + moeInfo.routerBytes + moeInfo.sharedBytes
+    ? nonMoEWeightBytes + moeInfo.activeExpertWeightBytes + moeInfo.routerBytes + moeInfo.sharedBytes
     : weightInfo.total;
   const vramBytes = vramWeightBytes + kvCache.totalBytes + activations.totalBytes;
   const ramBytes = isMoe ? (moeInfo.expertWeightBytes - moeInfo.activeExpertWeightBytes) : 0;

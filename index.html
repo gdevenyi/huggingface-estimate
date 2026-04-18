@@ -764,13 +764,13 @@ function renderResults() {
 
   // VRAM vs RAM split
   // Dense: all weights + KV + activations in VRAM
-  // MoE: only active experts + router + shared + KV + activations in VRAM, rest in RAM
+  // MoE: non-MoE weights + active experts + router + shared + KV + activations in VRAM, inactive experts in RAM
   let vramBytes = 0;
   let ramBytes = 0;
 
   if (moe) {
-    // MoE: active expert weights in VRAM, inactive in RAM
-    vramBytes += moe.activeExpertWeightBytes + moe.routerBytes + moe.sharedBytes;
+    const nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
+    vramBytes += nonMoEWeightBytes + moe.activeExpertWeightBytes + moe.routerBytes + moe.sharedBytes;
     ramBytes += moe.expertWeightBytes - moe.activeExpertWeightBytes;
   } else {
     // Dense: all weights in VRAM
