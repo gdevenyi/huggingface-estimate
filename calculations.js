@@ -671,7 +671,7 @@ const ARCHITECTURES = {
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
-      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
+      const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'));
       const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
