@@ -44,8 +44,8 @@ const BPE = {
   // Q8 variants (different block sizes)
   136: 68 / 64,   // Q8_K64
   147: 64 / 64,   // Q8_K16
-  148: 292 / 256, // Q8_K32
-  149: 292 / 256, // Q8_KR8
+  148: 296 / 256, // Q8_K32
+  149: 296 / 256, // Q8_KR8
   150: 140 / 128, // Q8_K128
   399: 258 / 256, // Q8_K_R8
   // X4 row-interleaved variants
