@@ -470,11 +470,6 @@ button.resolve-btn {
 
         <hr class="divider">
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="includeActivations" checked />
-          <label for="includeActivations">Estimate activation memory</label>
-        </div>
-
         <div style="margin-top:12px">
           <button id="calcBtn" style="width:100%">Calculate Memory</button>
         </div>
@@ -667,7 +662,7 @@ const batchSizeEl = $('#batchSize');
 const vramEl = $('#vram');
 const kvTypeKEl = $('#kvTypeK');
 const kvTypeVEl = $('#kvTypeV');
-const includeActivationsEl = $('#includeActivations');
+
 const calcBtn = $('#calcBtn');
 const loadingEl = $('#loading');
 const loadingText = $('#loadingText');
@@ -784,7 +779,6 @@ function renderResults() {
   const batchSize = parseInt(batchSizeEl.value) || 1;
   const kvTypeK = parseInt(kvTypeKEl.value);
   const kvTypeV = parseInt(kvTypeVEl.value);
-  const includeActs = includeActivationsEl.checked;
   const vramGB = parseFloat(vramEl.value) || 0;
   const ramGB = parseFloat($('#ram').value) || 0;
 
@@ -819,7 +813,7 @@ function renderResults() {
   vramBytes += kv.totalBytes;
 
   // Activations always in VRAM
-  if (includeActs) vramBytes += acts.totalBytes;
+  vramBytes += acts.totalBytes;
 
   // ── Model info ──
   const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
@@ -918,7 +912,7 @@ function renderResults() {
   }
 
   // ── Activations ──
-  $('#actSize').textContent = includeActs ? formatBytes(acts.totalBytes) : 'Disabled';
+  $('#actSize').textContent = formatBytes(acts.totalBytes);
 
   // ── Memory Requirements panel ──
   const totalBytes = vramBytes + ramBytes;
@@ -933,7 +927,7 @@ function renderResults() {
     vramWeightBytes = weights.total;
   }
   const vramKVBytes = kv.totalBytes;
-  const vramActBytes = includeActs ? acts.totalBytes : 0;
+  const vramActBytes = acts.totalBytes;
 
   const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
 
@@ -958,9 +952,7 @@ function renderResults() {
   }
   $('#vramWeightsSize').textContent = `${formatBytes(vramWeightBytes)} (${vramPct(vramWeightBytes)})`;
   $('#vramKVSize').textContent = `${formatBytes(vramKVBytes)} (${vramPct(vramKVBytes)})`;
-  $('#vramActSize').textContent = includeActs
-    ? `${formatBytes(vramActBytes)} (${vramPct(vramActBytes)})`
-    : 'Disabled';
+  $('#vramActSize').textContent = `${formatBytes(vramActBytes)} (${vramPct(vramActBytes)})`;
 
   // RAM section
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
@@ -1075,7 +1067,7 @@ calcBtn.addEventListener('click', async () => {
 });
 
 // Auto-calculate on input change
-['contextLen', 'batchSize', 'vram', 'ram', 'kvTypeK', 'kvTypeV', 'includeActivations'].forEach(id => {
+['contextLen', 'batchSize', 'vram', 'ram', 'kvTypeK', 'kvTypeV'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     if (currentMetadata && currentTensorInfos) renderResults();
   });
