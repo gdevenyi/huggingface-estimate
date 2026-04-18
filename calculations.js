@@ -1041,8 +1041,6 @@ const ARCHITECTURES = {
       const n_embd_head_v = getMeta(meta, `${arch}.attention.value_length`) || (n_embd / n_head);
       const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
-      // Nemotron-H-MoE: hybrid SSM/attention. Recurrent layers have n_head_kv == 0 && n_ff == 0.
-      // FFN-only layers have n_head_kv == 0 && n_ff != 0. Only attention layers (n_head_kv != 0) have KV cache.
       const n_head_kv_arr = Array.isArray(n_head_kv)
         ? n_head_kv.map(v => Number(v))
         : Array(n_layer).fill(n_head_kv);
@@ -1088,7 +1086,7 @@ const ARCHITECTURES = {
       if (expertCount === 0) return null;
       const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
       const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
-      const sharedTensors = [];
+      const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.'));
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
       if (routerTensor) { const n = routerTensor.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes = n * (BPE[routerTensor.dtype] || 0); }
@@ -1099,7 +1097,7 @@ const ARCHITECTURES = {
       const activeExpertWeightBytes = perExpertWeightBytes * expertUsedCount;
       return { expertCount, expertUsedCount, expertWeightBytes, routerBytes, sharedBytes, totalWeightBytes: expertWeightBytes + routerBytes + sharedBytes, totalParams, expertParams, activeExpertWeightBytes };
     },
-    tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] },
+    tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_up_shexp*', '*ffn_down_shexp*'] },
   },
 
   afmoe: {
