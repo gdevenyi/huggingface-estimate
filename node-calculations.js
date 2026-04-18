@@ -221,7 +221,7 @@ function llamaMoe(meta, tensorInfos) {
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   if (expertCount === 0) return null;
-  const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.'));
+  const expertTensors = tensorInfos.filter(t => t.name.includes('_exps.') || t.name.includes('exp_probs_b'));
   const routerTensor = tensorInfos.find(t => t.name.includes('ffn_gate_inp'));
   const sharedTensors = tensorInfos.filter(t => t.name.includes('_shexp.') || t.name.includes('_chexp.'));
   let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
@@ -235,7 +235,7 @@ function llamaMoe(meta, tensorInfos) {
   return { expertCount, expertUsedCount, expertWeightBytes, routerBytes, sharedBytes, totalWeightBytes: expertWeightBytes + routerBytes + sharedBytes, totalParams, expertParams, activeExpertWeightBytes };
 }
 
-const LLAMA_TENSOR_GROUPS = { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] };
+const LLAMA_TENSOR_GROUPS = { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*', '*exp_probs_b*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] };
 
 // ── Standalone MLA KV cache handler (shared by deepseek2 and glm-dsa) ──
 function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
