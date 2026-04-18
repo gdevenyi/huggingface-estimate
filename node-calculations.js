@@ -1238,20 +1238,26 @@ const ARCHITECTURES = {
       const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
       const n_swa = getMeta(meta, `${arch}.attention.sliding_window`);
-      // ISWA: alternate between full and sliding window layers
-      const fullLayers = Math.ceil(n_layer / 2);
-      const swaLayers = n_layer - fullLayers;
-      const fullK = fullLayers * n_embd_head_k * n_head_kv * ctxSize;
-      const swaK = swaLayers * n_embd_head_k * n_head_kv * Math.min(n_swa, ctxSize);
-      const fullV = fullLayers * n_embd_head_v * n_head_kv * ctxSize;
-      const swaV = swaLayers * n_embd_head_v * n_head_kv * Math.min(n_swa, ctxSize);
+      const n_layer_kv = getMeta(meta, `${arch}.attention.layer_kv_from_start`);
+      const swa_period = getMeta(meta, `${arch}.attention.sliding_window_pattern`) || 5;
+      const effectiveLayers = n_layer_kv > 0 ? Math.min(n_layer_kv, n_layer) : n_layer;
+      const n_head_kv_arr = Array.isArray(n_head_kv)
+        ? (() => { const a = Array(effectiveLayers).fill(n_head[0] || 1); for (let i = 0; i < effectiveLayers; i++) if (n_head_kv[i]) a[i] = Number(n_head_kv[i]); return a; })()
+        : Array(effectiveLayers).fill(n_head_kv);
+      let totalElemsK = 0, totalElemsV = 0;
+      for (let i = 0; i < effectiveLayers; i++) {
+        const isSwa = swa_period > 0 && (i % swa_period < (swa_period - 1));
+        const layerCtx = isSwa ? Math.min(n_swa || ctxSize, ctxSize) : ctxSize;
+        totalElemsK += n_embd_head_k * n_head_kv_arr[i] * layerCtx;
+        totalElemsV += n_embd_head_v * n_head_kv_arr[i] * layerCtx;
+      }
       return {
-        bytesK: (fullK + swaK) * (BPE[kvTypeK] || 0),
-        bytesV: (fullV + swaV) * (BPE[kvTypeV] || 0),
+        bytesK: totalElemsK * (BPE[kvTypeK] || 0),
+        bytesV: totalElemsV * (BPE[kvTypeV] || 0),
         totalBytes: 0, layers: n_layer, headsK: n_embd_head_k,
         headsV: n_embd_head_v,
-        totalHeadsKV: n_head_kv,
-        avgHeadsKV: n_head_kv,
+        totalHeadsKV: n_head_kv_arr.reduce((a, b) => a + b, 0),
+        avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
     activations(meta, batchSize) {
