@@ -196,8 +196,15 @@ button.resolve-btn {
   font-size: 1rem;
 }
 
+.result-row.indent {
+  padding: 4px 0 4px 16px;
+  font-size: 0.8rem;
+}
+
+.result-row.indent .label { color: var(--text2); }
+.result-row.indent .value { font-size: 0.8rem; }
+
 /* VRAM bar */
-.vram-section { margin-top: 16px; }
 
 .vram-bar-container {
   background: var(--bg);
@@ -436,9 +443,15 @@ button.resolve-btn {
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="vram">Available VRAM (GB, optional)</label>
-          <input type="number" id="vram" placeholder="e.g. 24" min="0" step="1" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="vram">Available VRAM (GB, optional)</label>
+            <input type="number" id="vram" placeholder="e.g. 24" min="0" step="1" />
+          </div>
+          <div class="form-group">
+            <label for="ram">Available RAM (GB, optional)</label>
+            <input type="number" id="ram" placeholder="e.g. 32" min="0" step="1" />
+          </div>
         </div>
 
         <hr class="divider">
@@ -553,57 +566,81 @@ button.resolve-btn {
           </div>
         </div>
 
-        <!-- Total -->
-        <div class="panel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x1F4CA;</span> Total Memory</div>
-          <div class="result-row total">
-            <span class="label">Total estimated memory</span>
-            <span class="value" id="totalSize">-</span>
-          </div>
-          <div class="result-row">
-            <span class="label">Weights</span>
-            <span class="value" id="pctWeight">-</span>
-          </div>
-          <div class="result-row">
-            <span class="label">KV Cache</span>
-            <span class="value" id="pctKV">-</span>
-          </div>
-          <div class="result-row">
-            <span class="label">Activations</span>
-            <span class="value" id="pctAct">-</span>
-          </div>
-        </div>
+        <!-- Memory Requirements -->
+        <div class="panel" style="margin-top:12px" id="memReqPanel">
+          <div class="panel-title"><span class="icon">&#x1F4CA;</span> Memory Requirements</div>
 
-        <!-- VRAM / RAM Split -->
-        <div class="panel" style="margin-top:12px" id="vramRamPanel">
-          <div class="panel-title"><span class="icon">&#x1F4B0;</span> Memory Split</div>
-          <div class="result-row">
-            <span class="label">In VRAM</span>
+          <div class="result-row total">
+            <span class="label">VRAM required</span>
             <span class="value" id="vramSize" style="color:var(--accent)">-</span>
           </div>
-          <div class="result-row">
-            <span class="label">In RAM</span>
+          <div class="result-row indent" id="vramWeightsRow">
+            <span class="label">Weights</span>
+            <span class="value" id="vramWeightsSize">-</span>
+          </div>
+          <div class="result-row indent" id="vramActiveExpertRow" style="display:none">
+            <span class="label" id="vramActiveExpertLabel">Active experts</span>
+            <span class="value" id="vramActiveExpertSize">-</span>
+          </div>
+          <div class="result-row indent" id="vramRouterRow" style="display:none">
+            <span class="label">Router + shared</span>
+            <span class="value" id="vramRouterSize">-</span>
+          </div>
+          <div class="result-row indent">
+            <span class="label">KV cache</span>
+            <span class="value" id="vramKVSize">-</span>
+          </div>
+          <div class="result-row indent">
+            <span class="label">Activations</span>
+            <span class="value" id="vramActSize">-</span>
+          </div>
+
+          <hr class="divider">
+
+          <div class="result-row total">
+            <span class="label">RAM required</span>
             <span class="value" id="ramSize" style="color:var(--text2)">-</span>
           </div>
-          <div class="divider"></div>
-          <div class="result-row">
-            <span class="label" style="font-size:0.75rem">VRAM breakdown</span>
-            <span class="value" style="font-size:0.75rem" id="vramBreakdown">-</span>
+          <div class="result-row indent" id="ramInactiveRow" style="display:none">
+            <span class="label" id="ramInactiveLabel">Inactive experts</span>
+            <span class="value" id="ramInactiveSize">-</span>
           </div>
+
+          <hr class="divider">
+
           <div class="result-row">
-            <span class="label" style="font-size:0.75rem">RAM breakdown</span>
-            <span class="value" style="font-size:0.75rem" id="ramBreakdown">-</span>
+            <span class="label" style="font-size:0.8rem">Total system memory</span>
+            <span class="value" style="font-size:0.85rem;color:var(--text2)" id="totalSize">-</span>
           </div>
         </div>
 
-        <!-- VRAM Fit -->
-        <div class="panel vram-section" id="vramPanel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x1F50B;</span> VRAM Fit Check</div>
-          <div class="vram-bar-container">
-            <div class="vram-bar green" id="vramBar" style="width:0%"></div>
-            <div class="vram-text" id="vramBarText">-</div>
+        <!-- System Fit Check -->
+        <div class="panel" id="fitCheckPanel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F50B;</span> System Fit Check</div>
+
+          <div id="vramFitSection">
+            <div class="result-row">
+              <span class="label" style="font-size:0.8rem">VRAM</span>
+              <span class="value" id="vramFitLabel" style="font-size:0.8rem">-</span>
+            </div>
+            <div class="vram-bar-container">
+              <div class="vram-bar green" id="vramBar" style="width:0%"></div>
+              <div class="vram-text" id="vramBarText">-</div>
+            </div>
+            <div class="vram-status green" id="vramStatus">-</div>
           </div>
-          <div class="vram-status green" id="vramStatus">-</div>
+
+          <div id="ramFitSection" style="display:none; margin-top:12px">
+            <div class="result-row">
+              <span class="label" style="font-size:0.8rem">RAM</span>
+              <span class="value" id="ramFitLabel" style="font-size:0.8rem">-</span>
+            </div>
+            <div class="vram-bar-container">
+              <div class="vram-bar green" id="ramBar" style="width:0%"></div>
+              <div class="vram-text" id="ramBarText">-</div>
+            </div>
+            <div class="vram-status green" id="ramStatus">-</div>
+          </div>
         </div>
       </div>
     </div>
@@ -749,6 +786,7 @@ function renderResults() {
   const kvTypeV = parseInt(kvTypeVEl.value);
   const includeActs = includeActivationsEl.checked;
   const vramGB = parseFloat(vramEl.value) || 0;
+  const ramGB = parseFloat($('#ram').value) || 0;
 
   // Weight calculation
   const weights = calcWeightSize(currentTensorInfos);
@@ -782,9 +820,6 @@ function renderResults() {
 
   // Activations always in VRAM
   if (includeActs) vramBytes += acts.totalBytes;
-
-  // Total
-  let totalBytes = vramBytes + ramBytes;
 
   // ── Model info ──
   const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
@@ -885,73 +920,138 @@ function renderResults() {
   // ── Activations ──
   $('#actSize').textContent = includeActs ? formatBytes(acts.totalBytes) : 'Disabled';
 
-  // ── Total ──
-  $('#totalSize').textContent = formatBytes(totalBytes);
-  const totalGB = totalBytes / 1e9;
+  // ── Memory Requirements panel ──
+  const totalBytes = vramBytes + ramBytes;
 
-  // Percentages
-  const pctW = (weights.total / totalBytes * 100).toFixed(1);
-  const pctKV = (kv.totalBytes / totalBytes * 100).toFixed(1);
-  const pctA = includeActs ? (acts.totalBytes / totalBytes * 100).toFixed(1) : '0.0';
-  $('#pctWeight').textContent = `${formatBytes(weights.total)} (${pctW}%)`;
-  $('#pctKV').textContent = `${formatBytes(kv.totalBytes)} (${pctKV}%)`;
-  $('#pctAct').textContent = includeActs ? `${formatBytes(acts.totalBytes)} (${pctA}%)` : '0.0%';
-
-  // ── VRAM / RAM split ──
-  $('#vramSize').textContent = formatBytes(vramBytes);
-  $('#ramSize').textContent = formatBytes(ramBytes);
-
-  // VRAM breakdown
-  let vramParts = [];
+  // VRAM breakdown components
+  let vramWeightBytes, vramActiveExpertBytes = 0, vramRouterSharedBytes = 0;
   if (moe) {
-    vramParts.push(`active experts: ${formatBytes(moe.activeExpertWeightBytes)}`);
-    if (moe.routerBytes > 0) vramParts.push(`router: ${formatBytes(moe.routerBytes)}`);
-    if (moe.sharedBytes > 0) vramParts.push(`shared: ${formatBytes(moe.sharedBytes)}`);
+    vramWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
+    vramActiveExpertBytes = moe.activeExpertWeightBytes;
+    vramRouterSharedBytes = moe.routerBytes + moe.sharedBytes;
   } else {
-    vramParts.push(`weights: ${formatBytes(weights.total)}`);
+    vramWeightBytes = weights.total;
   }
-  vramParts.push(`KV: ${formatBytes(kv.totalBytes)}`);
-  if (includeActs) vramParts.push(`activations: ${formatBytes(acts.totalBytes)}`);
-  $('#vramBreakdown').textContent = vramParts.join(', ');
+  const vramKVBytes = kv.totalBytes;
+  const vramActBytes = includeActs ? acts.totalBytes : 0;
 
-  // RAM breakdown
-  let ramParts = [];
+  const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
+
+  // VRAM section
+  $('#vramSize').textContent = formatBytes(vramBytes);
+
   if (moe) {
-    const inactiveWeight = moe.expertWeightBytes - moe.activeExpertWeightBytes;
-    ramParts.push(`inactive experts: ${formatBytes(inactiveWeight)} (${moe.expertCount - moe.expertUsedCount} experts)`);
-  }
-  $('#ramBreakdown').textContent = ramParts.length > 0 ? ramParts.join(', ') : 'None';
-
-  // ── VRAM fit ──
-  if (vramGB > 0) {
-    $('#vramPanel').style.display = '';
-    const vramGBNum = vramBytes / 1e9;
-    const usagePct = (vramGBNum / vramGB * 100);
-    const clampedPct = Math.min(usagePct, 100);
-
-    const bar = $('#vramBar');
-    const barText = $('#vramBarText');
-    const status = $('#vramStatus');
-
-    bar.style.width = `${clampedPct}%`;
-
-    if (usagePct <= 80) {
-      bar.className = 'vram-bar green';
-      status.className = 'vram-status green';
-      status.textContent = `\u2713 Fits comfortably — ${formatBytes(vramBytes)} of ${vramGB} GB VRAM (${usagePct.toFixed(0)}% used)`;
-    } else if (usagePct <= 100) {
-      bar.className = 'vram-bar yellow';
-      status.className = 'vram-status yellow';
-      status.textContent = `\u26A0 Marginal — ${formatBytes(vramBytes)} of ${vramGB} GB VRAM (${usagePct.toFixed(0)}% used)`;
+    $('#vramWeightsRow .label').textContent = 'Attention + embedding weights';
+    $('#vramActiveExpertRow').style.display = '';
+    $('#vramActiveExpertLabel').textContent = `Active experts (${moe.expertUsedCount} of ${moe.expertCount})`;
+    $('#vramActiveExpertSize').textContent = `${formatBytes(vramActiveExpertBytes)} (${vramPct(vramActiveExpertBytes)})`;
+    if (vramRouterSharedBytes > 0) {
+      $('#vramRouterRow').style.display = '';
+      $('#vramRouterSize').textContent = `${formatBytes(vramRouterSharedBytes)} (${vramPct(vramRouterSharedBytes)})`;
     } else {
-      bar.className = 'vram-bar red';
-      status.className = 'vram-status red';
-      status.textContent = `\u2717 Does not fit — ${formatBytes(vramBytes)} needed, ${vramGB} GB available (${((usagePct - 100)).toFixed(0)}% over)`;
+      $('#vramRouterRow').style.display = 'none';
+    }
+  } else {
+    $('#vramWeightsRow .label').textContent = 'Weights';
+    $('#vramActiveExpertRow').style.display = 'none';
+    $('#vramRouterRow').style.display = 'none';
+  }
+  $('#vramWeightsSize').textContent = `${formatBytes(vramWeightBytes)} (${vramPct(vramWeightBytes)})`;
+  $('#vramKVSize').textContent = `${formatBytes(vramKVBytes)} (${vramPct(vramKVBytes)})`;
+  $('#vramActSize').textContent = includeActs
+    ? `${formatBytes(vramActBytes)} (${vramPct(vramActBytes)})`
+    : 'Disabled';
+
+  // RAM section
+  $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
+  if (moe && ramBytes > 0) {
+    const inactiveCount = moe.expertCount - moe.expertUsedCount;
+    const inactiveWeight = moe.expertWeightBytes - moe.activeExpertWeightBytes;
+    $('#ramInactiveRow').style.display = '';
+    $('#ramInactiveLabel').textContent = `Inactive experts (${inactiveCount})`;
+    $('#ramInactiveSize').textContent = `${formatBytes(inactiveWeight)} (100%)`;
+  } else {
+    $('#ramInactiveRow').style.display = 'none';
+  }
+
+  // Total system memory
+  $('#totalSize').textContent = formatBytes(totalBytes);
+
+  // ── System Fit Check ──
+  const fitPanel = $('#fitCheckPanel');
+  const showVramBar = vramGB > 0;
+  const showRamBar = ramGB > 0 && ramBytes > 0;
+
+  if (!showVramBar && !showRamBar) {
+    fitPanel.style.display = 'none';
+  } else {
+    fitPanel.style.display = '';
+
+    // VRAM bar
+    if (showVramBar) {
+      $('#vramFitSection').style.display = '';
+      const vramGBNum = vramBytes / 1e9;
+      const usagePct = (vramGBNum / vramGB * 100);
+      const clampedPct = Math.min(usagePct, 100);
+
+      const bar = $('#vramBar');
+      const barText = $('#vramBarText');
+      const status = $('#vramStatus');
+
+      bar.style.width = `${clampedPct}%`;
+
+      if (usagePct <= 80) {
+        bar.className = 'vram-bar green';
+        status.className = 'vram-status green';
+        status.textContent = `\u2713 Fits comfortably \u2014 ${formatBytes(vramBytes)} of ${vramGB} GB (${usagePct.toFixed(0)}% used)`;
+      } else if (usagePct <= 100) {
+        bar.className = 'vram-bar yellow';
+        status.className = 'vram-status yellow';
+        status.textContent = `\u26A0 Marginal \u2014 ${formatBytes(vramBytes)} of ${vramGB} GB (${usagePct.toFixed(0)}% used)`;
+      } else {
+        bar.className = 'vram-bar red';
+        status.className = 'vram-status red';
+        status.textContent = `\u2717 Does not fit \u2014 ${formatBytes(vramBytes)} needed, ${vramGB} GB available (${(usagePct - 100).toFixed(0)}% over)`;
+      }
+
+      barText.textContent = `${usagePct.toFixed(1)}%`;
+      $('#vramFitLabel').textContent = `${formatBytes(vramBytes)} / ${vramGB} GB`;
+    } else {
+      $('#vramFitSection').style.display = 'none';
     }
 
-    barText.textContent = `${usagePct.toFixed(1)}%`;
-  } else {
-    $('#vramPanel').style.display = 'none';
+    // RAM bar
+    if (showRamBar) {
+      $('#ramFitSection').style.display = '';
+      const ramGBNum = ramBytes / 1e9;
+      const usagePct = (ramGBNum / ramGB * 100);
+      const clampedPct = Math.min(usagePct, 100);
+
+      const bar = $('#ramBar');
+      const barText = $('#ramBarText');
+      const status = $('#ramStatus');
+
+      bar.style.width = `${clampedPct}%`;
+
+      if (usagePct <= 80) {
+        bar.className = 'vram-bar green';
+        status.className = 'vram-status green';
+        status.textContent = `\u2713 Fits comfortably \u2014 ${formatBytes(ramBytes)} of ${ramGB} GB (${usagePct.toFixed(0)}% used)`;
+      } else if (usagePct <= 100) {
+        bar.className = 'vram-bar yellow';
+        status.className = 'vram-status yellow';
+        status.textContent = `\u26A0 Marginal \u2014 ${formatBytes(ramBytes)} of ${ramGB} GB (${usagePct.toFixed(0)}% used)`;
+      } else {
+        bar.className = 'vram-bar red';
+        status.className = 'vram-status red';
+        status.textContent = `\u2717 Does not fit \u2014 ${formatBytes(ramBytes)} needed, ${ramGB} GB available (${(usagePct - 100).toFixed(0)}% over)`;
+      }
+
+      barText.textContent = `${usagePct.toFixed(1)}%`;
+      $('#ramFitLabel').textContent = `${formatBytes(ramBytes)} / ${ramGB} GB`;
+    } else {
+      $('#ramFitSection').style.display = 'none';
+    }
   }
 }
 
@@ -975,7 +1075,7 @@ calcBtn.addEventListener('click', async () => {
 });
 
 // Auto-calculate on input change
-['contextLen', 'batchSize', 'vram', 'kvTypeK', 'kvTypeV', 'includeActivations'].forEach(id => {
+['contextLen', 'batchSize', 'vram', 'ram', 'kvTypeK', 'kvTypeV', 'includeActivations'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     if (currentMetadata && currentTensorInfos) renderResults();
   });

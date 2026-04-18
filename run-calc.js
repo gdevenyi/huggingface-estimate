@@ -21,6 +21,8 @@ function parseArgs(argv) {
     batchSize: 1,
     kvTypeK: GGMLQuantizationType.F16,
     kvTypeV: GGMLQuantizationType.F16,
+    vram: 0,
+    ram: 0,
   };
 
   let i = 2;
@@ -42,6 +44,10 @@ function parseArgs(argv) {
       args.kvTypeV = GGMLQuantizationType[val] !== undefined
         ? GGMLQuantizationType[val]
         : parseInt(val, 10);
+    } else if (arg === '--vram') {
+      args.vram = parseFloat(argv[++i]) || 0;
+    } else if (arg === '--ram') {
+      args.ram = parseFloat(argv[++i]) || 0;
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
     }
@@ -174,6 +180,26 @@ async function calcModel(repo) {
     vramBytesFormatted: formatBytes(vramBytes),
     ramBytes,
     ramBytesFormatted: formatBytes(ramBytes),
+    vramFit: args.vram > 0 ? (() => {
+      const vramAvailBytes = args.vram * 1e9;
+      const usagePct = vramBytes / vramAvailBytes * 100;
+      return {
+        availableGB: args.vram,
+        requiredGB: +(vramBytes / 1e9).toFixed(2),
+        fits: vramBytes <= vramAvailBytes,
+        usagePct: +usagePct.toFixed(1),
+      };
+    })() : null,
+    ramFit: args.ram > 0 && ramBytes > 0 ? (() => {
+      const ramAvailBytes = args.ram * 1e9;
+      const usagePct = ramBytes / ramAvailBytes * 100;
+      return {
+        availableGB: args.ram,
+        requiredGB: +(ramBytes / 1e9).toFixed(2),
+        fits: ramBytes <= ramAvailBytes,
+        usagePct: +usagePct.toFixed(1),
+      };
+    })() : null,
   };
 }
 
@@ -215,8 +241,8 @@ if (args.batch) {
     process.exit(1);
   });
 } else {
-  console.error(`Usage: node run-calc.js <repo> [--ctx N] [--batchSize N] [--kvTypeK TYPE] [--kvTypeV TYPE]
-       node run-calc.js --batch testmodels.list
+  console.error(`Usage: node run-calc.js <repo> [--ctx N] [--batchSize N] [--kvTypeK TYPE] [--kvTypeV TYPE] [--vram N] [--ram N]
+       node run-calc.js --batch testModels.list
 
 Arguments:
   <repo>          HuggingFace repo (e.g. unsloth/Qwen3-8B-GGUF)
@@ -225,6 +251,8 @@ Arguments:
   --batchSize <N> Batch size (default: 1)
   --kvTypeK <T>   KV cache K quantization type (name or number, default: F16)
   --kvTypeV <T>   KV cache V quantization type (name or number, default: F16)
+  --vram <N>      Available VRAM in GB (enables VRAM fit check)
+  --ram <N>       Available system RAM in GB (enables RAM fit check)
 
 Quantization type names: F32, F16, BF16, Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, Q4_K, Q5_K, Q6_K, Q8_K, ...
 `);
