@@ -95,9 +95,11 @@ async function calcModel(repo) {
 
   // VRAM / RAM breakdown
   const isMoe = moeInfo !== null;
-  const vramWeightBytes = isMoe ? moeInfo.activeExpertWeightBytes : weightInfo.total;
+  const vramWeightBytes = isMoe
+    ? moeInfo.activeExpertWeightBytes + moeInfo.routerBytes + moeInfo.sharedBytes
+    : weightInfo.total;
   const vramBytes = vramWeightBytes + kvCache.totalBytes + activations.totalBytes;
-  const ramBytes = isMoe ? (moeInfo.totalWeightBytes - moeInfo.activeExpertWeightBytes) : 0;
+  const ramBytes = isMoe ? (moeInfo.expertWeightBytes - moeInfo.activeExpertWeightBytes) : 0;
 
   // Total parameters
   const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
