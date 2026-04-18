@@ -28,7 +28,7 @@ export const KV_VALID_QUANTS = [
  */
 export async function parseGGUF(url) {
   let result;
-  if (url.includes('-of-') && url.endsWith('.gguf')) {
+  if (/-\d+-of-\d+\.gguf(?:[?#]|$)/i.test(url)) {
     const shards = await ggufAllShards(url);
     result = {
       metadata: shards.shards[0].metadata,
@@ -71,7 +71,12 @@ export async function resolveHFModel(path) {
 
     const ggufFiles = (model.siblings || [])
       .map((s) => s.rfilename)
-      .filter((f) => f && f.toLowerCase().endsWith('.gguf'));
+      .filter((f) => f && f.toLowerCase().endsWith('.gguf'))
+      .sort((a, b) => {
+        const aFirst = /-0*1-of-\d+\.gguf$/i.test(a) ? 0 : 1;
+        const bFirst = /-0*1-of-\d+\.gguf$/i.test(b) ? 0 : 1;
+        return aFirst - bFirst || a.localeCompare(b);
+      });
 
     if (ggufFiles.length === 0) {
       throw new Error('No .gguf files found in this model repository.');

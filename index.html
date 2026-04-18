@@ -728,8 +728,11 @@ async function doResolveHFModel(path) {
   try {
     const result = await resolveHFModel(path);
 
+    loadingEl.classList.remove('visible');
+
     if (!result.url) {
-      // Multiple GGUF files — show dropdown
+      // Multiple GGUF files — show dropdown; the permanent change handler
+      // will fire doParseGGUF once the user picks a file.
       modelSelect.innerHTML = '';
       for (const f of result.ggufFiles) {
         const opt = document.createElement('option');
@@ -738,24 +741,10 @@ async function doResolveHFModel(path) {
         modelSelect.appendChild(opt);
       }
       modelSelectWrap.classList.add('visible');
-
-      await new Promise((resolve) => {
-        const onSelect = () => {
-          modelSelect.removeEventListener('change', onSelect);
-          resolve();
-        };
-        modelSelect.addEventListener('change', onSelect);
-        setTimeout(resolve, 8000);
-      });
-
-      const selectedFile = modelSelect.value;
-      currentGGUFUrl = buildResolveUrl(path, selectedFile);
     } else {
       currentGGUFUrl = result.url;
+      readyState.classList.remove('hidden');
     }
-
-    loadingEl.classList.remove('visible');
-    readyState.classList.remove('hidden');
 
   } catch (err) {
     loadingEl.classList.remove('visible');
@@ -775,10 +764,10 @@ function renderResults() {
   if (!currentMetadata || !currentTensorInfos) return;
 
   const arch = getModelArch(currentMetadata);
-  const ctxSize = parseInt(contextLenEl.value) || 4096;
-  const batchSize = parseInt(batchSizeEl.value) || 1;
-  const kvTypeK = isNaN(kvTypeKEl.value) ? kvTypeKEl.value : parseInt(kvTypeKEl.value);
-  const kvTypeV = isNaN(kvTypeVEl.value) ? kvTypeVEl.value : parseInt(kvTypeVEl.value);
+  const ctxSize = parseInt(contextLenEl.value, 10) || 4096;
+  const batchSize = parseInt(batchSizeEl.value, 10) || 1;
+  const kvTypeK = isNaN(kvTypeKEl.value) ? kvTypeKEl.value : parseInt(kvTypeKEl.value, 10);
+  const kvTypeV = isNaN(kvTypeVEl.value) ? kvTypeVEl.value : parseInt(kvTypeVEl.value, 10);
   const vramGB = parseFloat(vramEl.value) || 0;
   const ramGB = parseFloat($('#ram').value) || 0;
 
@@ -829,7 +818,7 @@ function renderResults() {
   if (ctx_len && ctx_len > 0) {
     contextLenEl.max = ctx_len;
     $('#ctxMaxLabel').textContent = `(max ${formatElements(BigInt(ctx_len))})`;
-    if (parseInt(contextLenEl.value) > ctx_len) {
+    if (parseInt(contextLenEl.value, 10) > ctx_len) {
       contextLenEl.value = ctx_len;
     }
   } else {
@@ -845,27 +834,43 @@ function renderResults() {
     ? `<span class="status-badge moe">MoE</span>`
     : `<span class="status-badge dense">Dense</span>`;
 
-  modelInfoGrid.innerHTML = `
-    <div class="info-item"><div class="label">Model</div><div class="value" style="font-size:0.85rem">${modelName}</div></div>
-    <div class="info-item"><div class="label">Architecture</div><div class="value">${arch}</div></div>
-    <div class="info-item"><div class="label">Categories</div><div class="value" style="font-size:0.75rem">${archCategories}</div></div>
-    <div class="info-item"><div class="label">Layers</div><div class="value">${n_layer}</div></div>
-    <div class="info-item"><div class="label">Heads</div><div class="value">${n_head}</div></div>
-    <div class="info-item"><div class="label">KV Heads</div><div class="value">${n_head_kv}</div></div>
-    <div class="info-item"><div class="label">Hidden</div><div class="value">${n_embd}</div></div>
-    <div class="info-item"><div class="label">FFN</div><div class="value">${n_ff}</div></div>
-    <div class="info-item"><div class="label">Context</div><div class="value">${ctx_len ? formatElements(ctx_len) : '-'}</div></div>
-    <div class="info-item"><div class="label">Vocab</div><div class="value">${vocab ? formatElements(BigInt(vocab)) : '-'}</div></div>
-  ` + (isMla ? `
-    <div class="info-item"><div class="label">KV LoRA Rank</div><div class="value">${getMeta(currentMetadata, `${arch}.attention.kv_lora_rank`)}</div></div>
-    <div class="info-item"><div class="label">Q LoRA Rank</div><div class="value">${getMeta(currentMetadata, `${arch}.attention.q_lora_rank`)}</div></div>
-    <div class="info-item"><div class="label">Key MLA</div><div class="value">${getMeta(currentMetadata, `${arch}.attention.key_length_mla`)}</div></div>
-    <div class="info-item"><div class="label">Value MLA</div><div class="value">${getMeta(currentMetadata, `${arch}.attention.value_length_mla`)}</div></div>
-  ` : '') + (handler.categories.includes('iswa') ? `
-    <div class="info-item"><div class="label">Sliding Window</div><div class="value">${getMeta(currentMetadata, `${arch}.attention.sliding_window`) || 'off'}</div></div>
-  ` : '') + (isMoe ? `
-    <div class="info-item"><div class="label">Experts</div><div class="value">${moe.expertCount} (×${moe.expertUsedCount})</div></div>
-  ` : '');
+  modelInfoGrid.textContent = '';
+  const addInfo = (label, value, smallValue = false) => {
+    const item = document.createElement('div');
+    item.className = 'info-item';
+    const labelEl = document.createElement('div');
+    labelEl.className = 'label';
+    labelEl.textContent = label;
+    const valueEl = document.createElement('div');
+    valueEl.className = 'value';
+    if (smallValue) valueEl.style.fontSize = smallValue === true ? '0.85rem' : smallValue;
+    valueEl.textContent = value;
+    item.appendChild(labelEl);
+    item.appendChild(valueEl);
+    modelInfoGrid.appendChild(item);
+  };
+  addInfo('Model', modelName, true);
+  addInfo('Architecture', arch);
+  addInfo('Categories', archCategories, '0.75rem');
+  addInfo('Layers', n_layer);
+  addInfo('Heads', n_head);
+  addInfo('KV Heads', n_head_kv);
+  addInfo('Hidden', n_embd);
+  addInfo('FFN', n_ff);
+  addInfo('Context', ctx_len ? formatElements(ctx_len) : '-');
+  addInfo('Vocab', vocab ? formatElements(BigInt(vocab)) : '-');
+  if (isMla) {
+    addInfo('KV LoRA Rank', getMeta(currentMetadata, `${arch}.attention.kv_lora_rank`));
+    addInfo('Q LoRA Rank', getMeta(currentMetadata, `${arch}.attention.q_lora_rank`));
+    addInfo('Key MLA', getMeta(currentMetadata, `${arch}.attention.key_length_mla`));
+    addInfo('Value MLA', getMeta(currentMetadata, `${arch}.attention.value_length_mla`));
+  }
+  if (handler.categories.includes('iswa')) {
+    addInfo('Sliding Window', getMeta(currentMetadata, `${arch}.attention.sliding_window`) || 'off');
+  }
+  if (isMoe) {
+    addInfo('Experts', `${moe.expertCount} (×${moe.expertUsedCount})`);
+  }
 
   // ── MoE section ──
   if (isMoe) {
@@ -886,14 +891,23 @@ function renderResults() {
   const sortedQuants = Object.entries(weights.byQuant)
     .sort((a, b) => b[1].bytes - a[1].bytes);
 
-  quantTableBody.innerHTML = sortedQuants.map(([name, info]) => `
-    <tr>
-      <td>${name}</td>
-      <td class="right">${info.count}</td>
-      <td class="right">${formatElements(info.elements)}</td>
-      <td class="right">${formatBytes(info.bytes)}</td>
-    </tr>
-  `).join('');
+  quantTableBody.textContent = '';
+  for (const [name, info] of sortedQuants) {
+    const tr = document.createElement('tr');
+    const cells = [
+      { text: name },
+      { text: String(info.count), cls: 'right' },
+      { text: formatElements(info.elements), cls: 'right' },
+      { text: formatBytes(info.bytes), cls: 'right' },
+    ];
+    for (const c of cells) {
+      const td = document.createElement('td');
+      if (c.cls) td.className = c.cls;
+      td.textContent = c.text;
+      tr.appendChild(td);
+    }
+    quantTableBody.appendChild(tr);
+  }
 
   // ── KV Cache ──
   $('#kvKLabel').textContent = QUANT_NAMES[kvTypeK] || kvTypeK;

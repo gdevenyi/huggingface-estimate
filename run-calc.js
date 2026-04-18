@@ -1,4 +1,4 @@
-import { resolveHFModel, parseGGUF, KV_VALID_QUANTS, GGMLQuantizationType } from './node-parsing.js';
+import { resolveHFModel, parseGGUF, GGMLQuantizationType } from './node-parsing.js';
 import {
   getArchHandler,
   getModelArch,
@@ -14,6 +14,16 @@ import {
 } from './node-calculations.js';
 
 // ── CLI argument parsing ──
+function parseKvType(val, flag) {
+  if (GGMLQuantizationType[val] !== undefined) return GGMLQuantizationType[val];
+  if (BPE[val] !== undefined) return val;
+  const num = parseInt(val, 10);
+  if (!Number.isNaN(num) && BPE[num] !== undefined) return num;
+  const validNames = Object.keys(GGMLQuantizationType).filter(k => isNaN(Number(k))).sort().join(', ');
+  console.error(`Error: invalid ${flag} value "${val}". Valid: ${validNames}`);
+  process.exit(1);
+}
+
 function parseArgs(argv) {
   const args = {
     repo: null,
@@ -36,21 +46,13 @@ function parseArgs(argv) {
     } else if (arg === '--batchSize') {
       args.batchSize = parseInt(argv[++i], 10);
     } else if (arg === '--kvTypeK') {
-      const val = argv[++i];
-      args.kvTypeK = GGMLQuantizationType[val] !== undefined
-        ? GGMLQuantizationType[val]
-        : BPE[val] !== undefined ? val
-        : parseInt(val, 10);
+      args.kvTypeK = parseKvType(argv[++i], '--kvTypeK');
     } else if (arg === '--kvTypeV') {
-      const val = argv[++i];
-      args.kvTypeV = GGMLQuantizationType[val] !== undefined
-        ? GGMLQuantizationType[val]
-        : BPE[val] !== undefined ? val
-        : parseInt(val, 10);
+      args.kvTypeV = parseKvType(argv[++i], '--kvTypeV');
     } else if (arg === '--vram') {
-      args.vram = parseFloat(argv[++i]) || 0;
+      args.vram = Math.max(0, parseFloat(argv[++i]) || 0);
     } else if (arg === '--ram') {
-      args.ram = parseFloat(argv[++i]) || 0;
+      args.ram = Math.max(0, parseFloat(argv[++i]) || 0);
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
     }
@@ -208,34 +210,36 @@ async function calcModel(repo) {
 
 // ── Batch mode ──
 async function runBatch(batchFile) {
-  import('node:fs').then(async (fs) => {
-    const lines = fs.default.readFileSync(batchFile, 'utf-8')
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l && !l.startsWith('#'));
+  const fs = await import('node:fs');
+  const lines = fs.default.readFileSync(batchFile, 'utf-8')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !l.startsWith('#'));
 
-    const results = [];
-    for (let i = 0; i < lines.length; i++) {
-      const repo = lines[i];
-      process.stderr.write(`[${i + 1}/${lines.length}] ${repo}... `);
-      try {
-        const result = await calcModel(repo);
-        console.error(`done (${result.arch}, ${result.weightBytesFormatted})`);
-        results.push({ success: true, data: result });
-      } catch (err) {
-        console.error(`failed: ${err.message}`);
-        results.push({ success: false, repo, error: err.message });
-      }
+  const results = [];
+  for (let i = 0; i < lines.length; i++) {
+    const repo = lines[i];
+    process.stderr.write(`[${i + 1}/${lines.length}] ${repo}... `);
+    try {
+      const result = await calcModel(repo);
+      console.error(`done (${result.arch}, ${result.weightBytesFormatted})`);
+      results.push({ success: true, data: result });
+    } catch (err) {
+      console.error(`failed: ${err.message}`);
+      results.push({ success: false, repo, error: err.message });
     }
-    console.log(JSON.stringify(results, null, 2));
-  });
+  }
+  console.log(JSON.stringify(results, null, 2));
 }
 
 // ── Entry point ──
 const args = parseArgs(process.argv);
 
 if (args.batch) {
-  runBatch(args.batch);
+  runBatch(args.batch).catch(err => {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  });
 } else if (args.repo) {
   calcModel(args.repo).then(result => {
     console.log(JSON.stringify(result, null, 2));

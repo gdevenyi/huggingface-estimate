@@ -1360,8 +1360,10 @@ const ARCHITECTURES = {
       let expertWeightBytes = 0, routerBytes = 0, sharedBytes = 0;
       for (const t of expertTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); expertWeightBytes += n * (BPE[t.dtype] || 0); }
       for (const t of routerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); routerBytes += n * (BPE[t.dtype] || 0); }
-      // Gemma3n has per-layer tensors
-      const perLayerTensors = tensorInfos.filter(t => t.name.includes('per_layer_') || t.name.includes('altup_'));
+      // Gemma3n has per-layer tensors (altup_router is already counted in routerTensors)
+      const perLayerTensors = tensorInfos.filter(t =>
+        t.name.includes('per_layer_') || (t.name.includes('altup_') && !t.name.includes('altup_router'))
+      );
       for (const t of perLayerTensors) { const n = t.shape.map(Number).reduce((a, b) => a * b, 1); sharedBytes += n * (BPE[t.dtype] || 0); }
       const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
       const expertParams = expertTensors.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
