@@ -187,7 +187,9 @@ function llamaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   const n_embd_head_v = getMeta(meta, `${arch}.attention.value_length`) || (n_embd / n_head);
   const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
-  const n_head_kv_arr = Array(n_layer).fill(n_head_kv);
+  const n_head_kv_arr = Array.isArray(n_head_kv)
+    ? n_head_kv.map(v => Number(v))
+    : Array(n_layer).fill(n_head_kv);
   let totalElemsK = 0, totalElemsV = 0;
   for (let i = 0; i < n_layer; i++) {
     totalElemsK += n_embd_head_k * n_head_kv_arr[i] * ctxSize;
