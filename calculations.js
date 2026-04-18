@@ -617,21 +617,29 @@ const ARCHITECTURES = {
       const n_head = getMeta(meta, `${arch}.attention.head_count`);
       const n_embd_head_k = getMeta(meta, `${arch}.attention.key_length`) || (n_embd / n_head);
       const n_embd_head_v = getMeta(meta, `${arch}.attention.value_length`) || (n_embd / n_head);
-      const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
+      const n_head_kv_raw = getMeta(meta, `${arch}.attention.head_count_kv`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
-      const n_head_kv_arr = Array(n_layer).fill(n_head_kv);
-      let totalElemsK = 0, totalElemsV = 0;
+      const full_attn_interval = getMeta(meta, `${arch}.attention.full_attention_interval`) || 4;
+      const n_head_kv_arr = Array.isArray(n_head_kv_raw)
+        ? n_head_kv_raw.map(v => Number(v))
+        : Array(n_layer).fill(n_head_kv_raw);
+      let totalElemsK = 0, totalElemsV = 0, activeLayers = 0, activeHeadsKV = 0;
       for (let i = 0; i < n_layer; i++) {
-        totalElemsK += n_embd_head_k * n_head_kv_arr[i] * ctxSize;
-        totalElemsV += n_embd_head_v * n_head_kv_arr[i] * ctxSize;
+        const isFullAttn = (i + 1) % full_attn_interval === 0;
+        if (isFullAttn && n_head_kv_arr[i] > 0) {
+          totalElemsK += n_embd_head_k * n_head_kv_arr[i] * ctxSize;
+          totalElemsV += n_embd_head_v * n_head_kv_arr[i] * ctxSize;
+          activeLayers++;
+          activeHeadsKV += n_head_kv_arr[i];
+        }
       }
       return {
         bytesK: totalElemsK * (BPE[kvTypeK] || 0),
         bytesV: totalElemsV * (BPE[kvTypeV] || 0),
         totalBytes: 0, layers: n_layer, headsK: n_embd_head_k,
         headsV: n_embd_head_v,
-        totalHeadsKV: n_head_kv_arr.reduce((a, b) => a + b, 0),
-        avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
+        totalHeadsKV: activeHeadsKV,
+        avgHeadsKV: activeLayers > 0 ? activeHeadsKV / activeLayers : 0,
       };
     },
     activations(meta, batchSize) {
