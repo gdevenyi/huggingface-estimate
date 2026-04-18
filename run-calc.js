@@ -88,7 +88,7 @@ async function calcModel(repo) {
   const kvCache = calcKVCache(metadata, args.ctx, args.kvTypeK, args.kvTypeV);
 
   // Activations
-  const activations = calcActivations(metadata, args.ctx, args.batchSize);
+  const activations = calcActivations(metadata, args.batchSize);
 
   // MoE info
   const moeInfo = calcMoEInfo(metadata, tensorInfos);

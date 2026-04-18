@@ -198,7 +198,7 @@ function llamaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   };
 }
 
-function llamaActivations(meta, ctxSize, batchSize) {
+function llamaActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
   const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -209,9 +209,9 @@ function llamaActivations(meta, ctxSize, batchSize) {
   const isMoe = expertCount > 0;
   let perLayerBytes;
   if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-    perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+    perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
   } else {
-    perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+    perLayerBytes = batchSize * (n_embd + n_ff);
   }
   return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
 }
@@ -277,7 +277,7 @@ const ARCHITECTURES = {
     name: 'deepseek2',
     categories: ['transformer', 'moe', 'mla'],
     kvCache: mlaKvCache,
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -291,9 +291,9 @@ const ARCHITECTURES = {
       // MLA: attention output = kv_lora_rank (compressed), not n_embd
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + q_lora_rank + kv_lora_rank + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + q_lora_rank + kv_lora_rank + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + q_lora_rank + kv_lora_rank + n_ff);
+        perLayerBytes = batchSize * (n_embd + q_lora_rank + kv_lora_rank + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -349,7 +349,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -360,9 +360,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -415,7 +415,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -426,9 +426,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -481,7 +481,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -492,9 +492,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -547,7 +547,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -558,9 +558,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -612,7 +612,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -624,9 +624,9 @@ const ARCHITECTURES = {
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
         // Shared expert (1) + routed experts (expertUsedCount), plus residual connection
-        perLayerBytes = ctxSize * batchSize * (2 * n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (2 * n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -715,7 +715,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -726,9 +726,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -779,7 +779,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -790,8 +790,8 @@ const ARCHITECTURES = {
       const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
       const isMoe = expertCount > 0;
       // Dense lead layers use full FFN, MoE layers use only active experts
-      const denseBytes = leadingDense * ctxSize * batchSize * (n_embd + n_ff) * 4;
-      const moeBytes = (n_layer - leadingDense) * ctxSize * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
+      const denseBytes = leadingDense * batchSize * (n_embd + n_ff) * 4;
+      const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
       return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
     },
     moe(meta, tensorInfos) {
@@ -841,7 +841,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -851,8 +851,8 @@ const ARCHITECTURES = {
       const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
       const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
       const isMoe = expertCount > 0;
-      const denseBytes = leadingDense * ctxSize * batchSize * (n_embd + n_ff) * 4;
-      const moeBytes = (n_layer - leadingDense) * ctxSize * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
+      const denseBytes = leadingDense * batchSize * (n_embd + n_ff) * 4;
+      const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
       return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
     },
     moe(meta, tensorInfos) {
@@ -902,7 +902,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -913,9 +913,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -973,7 +973,7 @@ const ARCHITECTURES = {
         avgHeadsKV: activeLayers > 0 ? activeHeadsKV / activeLayers : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -983,8 +983,8 @@ const ARCHITECTURES = {
       const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
       const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
       const isMoe = expertCount > 0;
-      const denseBytes = leadingDense * ctxSize * batchSize * (n_embd + n_ff) * 4;
-      const moeBytes = (n_layer - leadingDense) * ctxSize * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
+      const denseBytes = leadingDense * batchSize * (n_embd + n_ff) * 4;
+      const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
       return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
     },
     moe(meta, tensorInfos) {
@@ -1042,7 +1042,7 @@ const ARCHITECTURES = {
         avgHeadsKV: activeLayers > 0 ? activeHeadsKV / activeLayers : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -1053,9 +1053,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -1106,7 +1106,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -1116,8 +1116,8 @@ const ARCHITECTURES = {
       const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
       const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
       const isMoe = expertCount > 0;
-      const denseBytes = leadingDense * ctxSize * batchSize * (n_embd + n_ff) * 4;
-      const moeBytes = (n_layer - leadingDense) * ctxSize * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
+      const denseBytes = leadingDense * batchSize * (n_embd + n_ff) * 4;
+      const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + expertUsedCount * (expertFF || 1)) * 4;
       return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
     },
     moe(meta, tensorInfos) {
@@ -1168,7 +1168,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv_arr.length > 0 ? n_head_kv_arr.reduce((a, b) => a + b, 0) / n_head_kv_arr.length : 0,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -1179,9 +1179,9 @@ const ARCHITECTURES = {
       const isMoe = expertCount > 0;
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd + n_ff);
+        perLayerBytes = batchSize * (n_embd + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
     },
@@ -1211,14 +1211,14 @@ const ARCHITECTURES = {
     name: 'glm-dsa',
     categories: ['transformer', 'mla'],
     kvCache: mlaKvCache,
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
       const indexerTopK = getMeta(meta, `${arch}.attention.indexer.top_k`);
       // DSA has additional indexer state (kv_cache_indexer_k, kv_cache_indexer_v)
-      const perLayerBytes = ctxSize * batchSize * (n_embd + n_ff + indexerTopK * 256);
+      const perLayerBytes = batchSize * (n_embd + n_ff + indexerTopK * 256);
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe: false, expertCount: 0, expertUsedCount: 0, expertFF: 0 };
     },
     moe(meta, tensorInfos) {
@@ -1256,7 +1256,7 @@ const ARCHITECTURES = {
         avgHeadsKV: n_head_kv,
       };
     },
-    activations(meta, ctxSize, batchSize) {
+    activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
@@ -1269,9 +1269,9 @@ const ARCHITECTURES = {
       // Gemma3n has altup mechanism that multiplies activation memory
       let perLayerBytes;
       if (isMoe && expertUsedCount > 0 && expertFF > 0) {
-        perLayerBytes = ctxSize * batchSize * (n_embd * n_altup + expertUsedCount * expertFF);
+        perLayerBytes = batchSize * (n_embd * n_altup + expertUsedCount * expertFF);
       } else {
-        perLayerBytes = ctxSize * batchSize * (n_embd * n_altup + n_ff);
+        perLayerBytes = batchSize * (n_embd * n_altup + n_ff);
       }
       return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF, n_altup };
     },
@@ -1385,10 +1385,10 @@ export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV) {
   return result;
 }
 
-export function calcActivations(metadata, ctxSize, batchSize) {
+export function calcActivations(metadata, batchSize) {
   const arch = getModelArch(metadata);
   const handler = getArchHandler(arch);
-  return handler.activations(metadata, ctxSize, batchSize);
+  return handler.activations(metadata, batchSize);
 }
 
 export function calcMoEInfo(metadata, tensorInfos) {

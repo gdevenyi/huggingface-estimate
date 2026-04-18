@@ -432,7 +432,7 @@ button.resolve-btn {
           </div>
           <div class="form-group">
             <label for="batchSize">Batch size</label>
-            <input type="number" id="batchSize" value="1" min="1" step="1" />
+            <input type="number" id="batchSize" value="2048" min="1" step="1" />
           </div>
         </div>
 
@@ -757,7 +757,7 @@ function renderResults() {
   const kv = calcKVCache(currentMetadata, ctxSize, kvTypeK, kvTypeV);
 
   // Activations
-  const acts = calcActivations(currentMetadata, ctxSize, batchSize);
+  const acts = calcActivations(currentMetadata, batchSize);
 
   // MoE
   const moe = calcMoEInfo(currentMetadata, currentTensorInfos);
