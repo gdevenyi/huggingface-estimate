@@ -40,12 +40,17 @@ export async function parseGGUF(url) {
   return result;
 }
 
+const MMPROJ_RE = /mmproj/i;
+const isMmProjName = (f) => MMPROJ_RE.test(f.replace(/^.*\//, ''));
+
 /**
  * Resolve a HuggingFace path or URL to a GGUF file URL.
- * If the model has multiple GGUF files, returns { url: null, ggufFiles: [...] }
- * so the caller can prompt the user to pick one.
+ * Splits repo GGUFs into main models and mmproj files (filename contains "mmproj").
+ * If the repo has multiple main GGUFs, returns { url: null, ggufFiles: [...] }
+ * so the caller can prompt the user to pick one. mmProjFiles is always returned
+ * when present so the caller can offer a companion-projector selector.
  * @param {string} path - HuggingFace path (e.g. "owner/model") or URL
- * @returns {Promise<{ url: string | null, ggufFiles?: string[] }>}
+ * @returns {Promise<{ url: string | null, ggufFiles?: string[], mmProjFiles?: string[] }>}
  */
 export async function resolveHFModel(path) {
   // Direct URL to a .gguf file → normalize /blob/ → /resolve/, strip query/fragment
@@ -68,22 +73,35 @@ export async function resolveHFModel(path) {
   }
   const model = await apiRes.json();
 
-  const ggufFiles = (model.siblings || [])
+  const sortByShardsThenAlpha = (a, b) => {
+    const aFirst = /-0*1-of-\d+\.gguf$/i.test(a) ? 0 : 1;
+    const bFirst = /-0*1-of-\d+\.gguf$/i.test(b) ? 0 : 1;
+    return aFirst - bFirst || a.localeCompare(b);
+  };
+
+  const allGguf = (model.siblings || [])
     .map((s) => s.rfilename)
     .filter((f) => f && f.toLowerCase().endsWith('.gguf'))
-    .sort((a, b) => {
-      const aFirst = /-0*1-of-\d+\.gguf$/i.test(a) ? 0 : 1;
-      const bFirst = /-0*1-of-\d+\.gguf$/i.test(b) ? 0 : 1;
-      return aFirst - bFirst || a.localeCompare(b);
-    });
+    .sort(sortByShardsThenAlpha);
+
+  const ggufFiles = allGguf.filter((f) => !isMmProjName(f));
+  const mmProjFiles = allGguf.filter(isMmProjName);
 
   if (ggufFiles.length === 0) {
+    if (mmProjFiles.length > 0) {
+      throw new Error('This repository only contains mmproj files; no main GGUF model to estimate.');
+    }
     throw new Error('No .gguf files found in this model repository.');
   }
+
+  const result = { url: null };
   if (ggufFiles.length === 1) {
-    return { url: `https://huggingface.co/${path}/resolve/main/${ggufFiles[0]}` };
+    result.url = `https://huggingface.co/${path}/resolve/main/${ggufFiles[0]}`;
+  } else {
+    result.ggufFiles = ggufFiles;
   }
-  return { url: null, ggufFiles };
+  if (mmProjFiles.length > 0) result.mmProjFiles = mmProjFiles;
+  return result;
 }
 
 /**

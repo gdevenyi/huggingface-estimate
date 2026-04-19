@@ -23,7 +23,7 @@ node run-calc.js unsloth/Qwen3-30B-A3B-GGUF --ctx 8192 --vram 24 --ram 64
 node run-calc.js --batch testModels.list
 ```
 
-Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1, Q8_KV, Q8_KV_R8, plus rotorquant (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0).
+Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`, `--mmproj FILE`, `--mmprojDevice vram|ram`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1, Q8_KV, Q8_KV_R8, plus rotorquant (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0).
 
 ## What it calculates
 
@@ -32,6 +32,11 @@ Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram
 | **Model weights** | Dense: VRAM / MoE: VRAM (active) + RAM (inactive) | Sum of all tensor sizes from GGUF metadata, exact bytes-per-element per quantization type |
 | **KV cache** | VRAM | Separate K and V quantization. `layers × kv_heads × head_size × context × bytes_per_elem` per cache |
 | **Activations** | VRAM | `layers × batch × (hidden + ff_size) × 4` bytes (FP32). For MoE, uses `expert_used_count × expert_ff_size` |
+| **Multimodal projector (mmproj)** | VRAM default, RAM with `--no-mmproj-offload` | Weights + per-image output activation (`n_output_tokens × projection_dim × 4` bytes). `n_output_tokens` is arch-specific, mirroring `clip_n_output_tokens()` from llama.cpp |
+
+## Multimodal projector (mmproj) support
+
+When a HuggingFace repo contains both a language-model GGUF and an `mmproj-*.gguf` companion (vision/audio encoder), the tool detects and lists mmproj files separately from the main-model dropdown. Pick "None" to ignore, or select one to fold its memory contribution into the VRAM or RAM total (toggle via the placement select). The CLI exposes the same via `--mmproj <filename>` and `--mmprojDevice vram|ram`. Detection is filename-based (`/mmproj/i` on basename). Activation output tokens are estimated per projector type (gemma3, qwen2vl_merger, resampler, etc.); audio projectors report weights only because their patch count depends on runtime audio length.
 
 ## Dense vs MoE
 

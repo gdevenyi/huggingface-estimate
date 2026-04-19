@@ -29,7 +29,7 @@ node run-calc.js bartowski/Llama-3.1-8B-Instruct-GGUF --ctx 8192 --kvTypeK Q8_0
 node run-calc.js --batch testModels.list
 ```
 
-Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
+Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16), `--mmproj FILE`, `--mmprojDevice vram|ram` (default vram). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
 
 ## BigInt gotcha
 
@@ -64,6 +64,18 @@ The importmap in `index.html` pins `@huggingface/gguf` to `https://cdn.jsdelivr.
 ## Sharded GGUF
 
 Files matching `*-of-*.gguf` are auto-detected as shards in `parseGGUF()`. Calls `ggufAllShards()`, merges tensor infos from all shards, takes metadata from the first shard.
+
+## Multimodal projector (mmproj)
+
+`resolveHFModel()` partitions the repo's `.gguf` siblings by filename: anything matching `/mmproj/i` on the basename goes to `mmProjFiles`, the rest to `ggufFiles`. Detection is filename-only (no metadata prefetch). A repo containing only mmproj files throws — nothing to estimate. `buildResolveUrl()` is exported for constructing the mmproj download URL.
+
+`calcMmProj(metadata, tensorInfos)` in `calculations.js` returns `null` if the parsed GGUF is not a CLIP/mtmd projector (checks `clip.has_vision_encoder`, `clip.has_audio_encoder`, `general.architecture === 'clip'`). Otherwise it computes:
+
+- **Weights** — delegated to `calcWeightSize()`, identical to the main-model weight math.
+- **Per-image output activation** — `n_output_tokens × projection_dim × 4` bytes (fp32). `n_output_tokens` mirrors `clip_n_output_tokens()` at `llama.cpp/tools/mtmd/clip.cpp:2829` via `estimateOutputTokens(projType, ...)`. Projector types map to a handful of formulas keyed on `clip.vision.image_size`, `clip.vision.patch_size`, `clip.vision.spatial_merge_size`, and (for resampler) `clip.minicpmv_query_num` / `clip.minicpmv_version`. Audio projectors (ultravox, voxtral, qwen2a, etc.) return 0 — their patch count depends on runtime audio length.
+- **Metadata keys read**: `clip.has_vision_encoder`, `clip.has_audio_encoder`, `clip.projector_type` (plus `clip.vision.projector_type` / `clip.audio.projector_type` fallbacks), `clip.vision.image_size`, `clip.vision.patch_size`, `clip.vision.embedding_length`, `clip.vision.block_count`, `clip.vision.projection_dim`, `clip.vision.spatial_merge_size`, `clip.minicpmv_query_num`, `clip.minicpmv_version`. Source of truth: `llama.cpp/tools/mtmd/clip-impl.h`.
+
+**Placement** — `--mmprojDevice vram` (default) mirrors llama.cpp's `mmproj_use_gpu=true`; `ram` mirrors `--no-mmproj-offload` (see `llama.cpp/common/common.h:544`). When selected, the combined `weightBytes + perImageActBytes` is folded into either `vramBytes` or `ramBytes`.
 
 ## Adding a new architecture
 

@@ -1,4 +1,4 @@
-import { resolveHFModel, parseGGUF, GGMLQuantizationType } from './parsing.js';
+import { resolveHFModel, parseGGUF, buildResolveUrl, GGMLQuantizationType } from './parsing.js';
 import {
   getArchHandler,
   getModelArch,
@@ -6,6 +6,7 @@ import {
   calcKVCache,
   calcActivations,
   calcMoEInfo,
+  calcMmProj,
   formatBytes,
   formatElements,
   QUANT_NAMES,
@@ -34,6 +35,8 @@ function parseArgs(argv) {
     kvTypeV: GGMLQuantizationType.F16,
     vram: 0,
     ram: 0,
+    mmproj: null,
+    mmprojDevice: 'vram',
   };
 
   let i = 2;
@@ -53,6 +56,15 @@ function parseArgs(argv) {
       args.vram = Math.max(0, parseFloat(argv[++i]) || 0);
     } else if (arg === '--ram') {
       args.ram = Math.max(0, parseFloat(argv[++i]) || 0);
+    } else if (arg === '--mmproj') {
+      args.mmproj = argv[++i];
+    } else if (arg === '--mmprojDevice') {
+      const v = argv[++i];
+      if (v !== 'vram' && v !== 'ram') {
+        console.error(`Error: --mmprojDevice must be "vram" or "ram" (got "${v}")`);
+        process.exit(1);
+      }
+      args.mmprojDevice = v;
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
     }
@@ -112,8 +124,23 @@ async function calcModel(repo) {
   const vramWeightBytes = isMoe
     ? nonMoEWeightBytes + moeInfo.activeExpertWeightBytes + moeInfo.routerBytes + moeInfo.sharedBytes
     : weightInfo.total;
-  const vramBytes = vramWeightBytes + kvCache.totalBytes + activations.totalBytes;
-  const ramBytes = isMoe ? (moeInfo.expertWeightBytes - moeInfo.activeExpertWeightBytes) : 0;
+  let vramBytes = vramWeightBytes + kvCache.totalBytes + activations.totalBytes;
+  let ramBytes = isMoe ? (moeInfo.expertWeightBytes - moeInfo.activeExpertWeightBytes) : 0;
+
+  // mmproj (optional multimodal projector)
+  let mmProjInfo = null;
+  let mmProjUrl = null;
+  let mmProjBytes = 0;
+  if (args.mmproj) {
+    mmProjUrl = buildResolveUrl(repo, args.mmproj);
+    const mmParsed = await parseGGUF(mmProjUrl);
+    mmProjInfo = calcMmProj(mmParsed.metadata, mmParsed.tensorInfos);
+    if (mmProjInfo) {
+      mmProjBytes = mmProjInfo.weightBytes + (mmProjInfo.perImageActBytes || 0);
+      if (args.mmprojDevice === 'ram') ramBytes += mmProjBytes;
+      else vramBytes += mmProjBytes;
+    }
+  }
 
   // Total parameters
   const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
@@ -180,6 +207,29 @@ async function calcModel(repo) {
       expertParamsFormatted: formatElements(moeInfo.expertParams),
       activeExpertWeightBytes: moeInfo.activeExpertWeightBytes,
       activeExpertWeightBytesFormatted: formatBytes(moeInfo.activeExpertWeightBytes),
+    } : null,
+    mmproj: mmProjInfo ? {
+      filename: args.mmproj,
+      url: mmProjUrl,
+      placement: args.mmprojDevice,
+      hasVision: mmProjInfo.hasVision,
+      hasAudio: mmProjInfo.hasAudio,
+      isAudioProj: mmProjInfo.isAudioProj,
+      projType: mmProjInfo.projType,
+      projTypeKnown: mmProjInfo.projTypeKnown,
+      imageSize: mmProjInfo.imageSize,
+      patchSize: mmProjInfo.patchSize,
+      nLayerV: mmProjInfo.nLayerV,
+      nEmbdV: mmProjInfo.nEmbdV,
+      projDim: mmProjInfo.projDim,
+      nMerge: mmProjInfo.nMerge,
+      nOutputTokens: mmProjInfo.nOutputTokens,
+      weightBytes: mmProjInfo.weightBytes,
+      weightBytesFormatted: formatBytes(mmProjInfo.weightBytes),
+      perImageActBytes: mmProjInfo.perImageActBytes,
+      perImageActBytesFormatted: formatBytes(mmProjInfo.perImageActBytes),
+      totalBytes: mmProjBytes,
+      totalBytesFormatted: formatBytes(mmProjBytes),
     } : null,
     vramBytes,
     vramBytesFormatted: formatBytes(vramBytes),
@@ -248,18 +298,20 @@ if (args.batch) {
     process.exit(1);
   });
 } else {
-  console.error(`Usage: node run-calc.js <repo> [--ctx N] [--batchSize N] [--kvTypeK TYPE] [--kvTypeV TYPE] [--vram N] [--ram N]
+  console.error(`Usage: node run-calc.js <repo> [--ctx N] [--batchSize N] [--kvTypeK TYPE] [--kvTypeV TYPE] [--vram N] [--ram N] [--mmproj FILE] [--mmprojDevice vram|ram]
        node run-calc.js --batch testModels.list
 
 Arguments:
-  <repo>          HuggingFace repo (e.g. unsloth/Qwen3-8B-GGUF)
-  --batch <file>  Process all repos from a file (one per line)
-  --ctx <N>       Context size (default: 4096)
-  --batchSize <N> Batch size (default: 1)
-  --kvTypeK <T>   KV cache K quantization type (name or number, default: F16)
-  --kvTypeV <T>   KV cache V quantization type (name or number, default: F16)
-  --vram <N>      Available VRAM in GB (enables VRAM fit check)
-  --ram <N>       Available system RAM in GB (enables RAM fit check)
+  <repo>             HuggingFace repo (e.g. unsloth/Qwen3-8B-GGUF)
+  --batch <file>     Process all repos from a file (one per line)
+  --ctx <N>          Context size (default: 4096)
+  --batchSize <N>    Batch size (default: 1)
+  --kvTypeK <T>      KV cache K quantization type (name or number, default: F16)
+  --kvTypeV <T>      KV cache V quantization type (name or number, default: F16)
+  --vram <N>         Available VRAM in GB (enables VRAM fit check)
+  --ram <N>          Available system RAM in GB (enables RAM fit check)
+  --mmproj <file>    mmproj GGUF filename within the repo (e.g. mmproj-F16.gguf)
+  --mmprojDevice <d> Where to place mmproj: vram (default) or ram (--no-mmproj-offload)
 
 Quantization type names: F32, F16, BF16, Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, Q4_K, Q5_K, Q6_K, Q8_K, ...
 `);

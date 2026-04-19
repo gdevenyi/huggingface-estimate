@@ -709,6 +709,144 @@ export function calcMoEInfo(metadata, tensorInfos) {
   return handler.moe(metadata, tensorInfos);
 }
 
+// ── Multimodal projector (mmproj) ──
+// Mirrors llama.cpp/tools/mtmd/clip.cpp:2829 clip_n_output_tokens() — a static
+// estimate of how many tokens the projector emits per image. Assumes a square
+// input at the model's declared image_size; real inputs may differ for
+// dynamic-resolution projectors. Audio projectors return 0 because their
+// patch count depends on the runtime audio length.
+const AUDIO_PROJ_TYPES = new Set([
+  'ultravox', 'voxtral', 'qwen2a', 'qwen3a', 'glma', 'lfm2a',
+  'gemma4a', 'gemma3na', 'meralion', 'musicflamingo',
+]);
+
+function estimateOutputTokens(projType, p) {
+  const { imageSize, patchSize, nMerge, minicpmvQ, minicpmvV } = p;
+  const type = (projType || '').toLowerCase();
+  if (AUDIO_PROJ_TYPES.has(type)) return 0; // runtime-dependent
+  if (type === 'resampler') {
+    if (minicpmvQ > 0) return minicpmvQ;
+    if (minicpmvV === 2) return 96;
+    if (minicpmvV >= 3) return 64;
+    return 64;
+  }
+  if (!imageSize || !patchSize) return 0;
+  const perSide = Math.floor(imageSize / patchSize);
+  const nPatches = perSide * perSide;
+  const merge = nMerge > 0 ? nMerge : 1;
+
+  switch (type) {
+    case 'mlp':
+    case 'mlp_norm':
+    case 'phi4':
+    case 'pixtral':
+    case 'lightonocr':
+    case 'janus_pro':
+      return nPatches;
+    case 'dots_ocr':
+    case 'paddleocr': {
+      const stride = merge * merge;
+      return Math.ceil(nPatches / stride);
+    }
+    case 'ldp':
+    case 'ldpv2':
+    case 'adapter':
+      return Math.floor(nPatches / 4);
+    case 'qwen2vl_merger':
+    case 'qwen2.5vl_merger':
+    case 'qwen3vl_merger':
+    case 'glm4v':
+    case 'youtuvl': {
+      const x = Math.floor(imageSize / (patchSize * 2));
+      return x * x;
+    }
+    case 'step3vl': {
+      const x = Math.floor(imageSize / (patchSize * merge));
+      return x * x;
+    }
+    case 'gemma3':
+    case 'gemma4v':
+    case 'idefics3':
+    case 'internvl':
+    case 'nemotron_v2_vl':
+    case 'llama4':
+      return Math.floor(nPatches / (merge * merge));
+    case 'gemma3nv':
+      return perSide;
+    case 'lfm2':
+    case 'kimivl':
+    case 'kimik25': {
+      const out = patchSize * merge;
+      const x = Math.ceil(imageSize / out);
+      return x * x;
+    }
+    case 'cogvlm':
+      return nPatches + 2;
+    case 'deepseekocr': {
+      const reduced = Math.floor(nPatches / 16);
+      const h = Math.floor(Math.sqrt(reduced));
+      return h * (h + 1) + 1;
+    }
+    case 'hunyuanocr': {
+      const ow = Math.floor(perSide / merge);
+      const oh = ow;
+      return (ow + 1) * oh + 2;
+    }
+    default:
+      return nPatches; // generic fallback
+  }
+}
+
+const KNOWN_PROJ_TYPES = new Set([
+  'mlp', 'mlp_norm', 'phi4', 'pixtral', 'lightonocr', 'janus_pro',
+  'dots_ocr', 'paddleocr', 'ldp', 'ldpv2', 'adapter', 'resampler',
+  'qwen2vl_merger', 'qwen2.5vl_merger', 'qwen3vl_merger', 'glm4v', 'youtuvl',
+  'step3vl', 'gemma3', 'gemma4v', 'idefics3', 'internvl', 'nemotron_v2_vl',
+  'llama4', 'gemma3nv', 'lfm2', 'kimivl', 'kimik25', 'cogvlm', 'deepseekocr',
+  'hunyuanocr', ...AUDIO_PROJ_TYPES,
+]);
+
+export function calcMmProj(metadata, tensorInfos) {
+  const arch = metadata['general.architecture'];
+  const hasVision = !!metadata['clip.has_vision_encoder'];
+  const hasAudio = !!metadata['clip.has_audio_encoder'];
+  const projType = metadata['clip.projector_type']
+    || metadata['clip.vision.projector_type']
+    || metadata['clip.audio.projector_type']
+    || null;
+  if (!hasVision && !hasAudio && arch !== 'clip') return null;
+
+  const weights = calcWeightSize(tensorInfos);
+  const imageSize = getMeta(metadata, 'clip.vision.image_size');
+  const patchSize = getMeta(metadata, 'clip.vision.patch_size');
+  const nEmbdV = getMeta(metadata, 'clip.vision.embedding_length');
+  const nLayerV = getMeta(metadata, 'clip.vision.block_count');
+  const projDim = getMeta(metadata, 'clip.vision.projection_dim') || nEmbdV;
+  const nMerge = getMeta(metadata, 'clip.vision.spatial_merge_size') || 1;
+  const minicpmvQ = getMeta(metadata, 'clip.minicpmv_query_num');
+  const minicpmvV = getMeta(metadata, 'clip.minicpmv_version');
+
+  const projTypeKnown = projType != null && KNOWN_PROJ_TYPES.has(projType.toLowerCase());
+  const isAudioProj = projType != null && AUDIO_PROJ_TYPES.has(projType.toLowerCase());
+  const nOutputTokens = estimateOutputTokens(projType, {
+    imageSize, patchSize, nMerge, minicpmvQ, minicpmvV,
+  });
+  const perImageActBytes = nOutputTokens > 0 && projDim > 0
+    ? nOutputTokens * projDim * 4
+    : 0;
+
+  return {
+    isMmProj: true,
+    hasVision, hasAudio, isAudioProj,
+    projType, projTypeKnown,
+    name: metadata['general.name'] || null,
+    weightBytes: weights.total,
+    byQuant: weights.byQuant,
+    imageSize, patchSize, nEmbdV, nLayerV, projDim, nMerge,
+    nOutputTokens, perImageActBytes,
+  };
+}
+
 // ── Format helpers ──
 // Uses base-10 units (1 GB = 1e9 bytes) to match vram/ram inputs; don't "fix" to base-2.
 export function formatBytes(bytes) {

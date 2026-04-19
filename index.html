@@ -435,6 +435,20 @@ button.resolve-btn {
           </div>
         </div>
 
+        <div class="model-select" id="mmProjSelectWrap">
+          <div class="form-group">
+            <label for="mmProjSelect">Multimodal projector (mmproj)</label>
+            <select id="mmProjSelect"><option value="">None</option></select>
+          </div>
+          <div class="form-group" id="mmProjDeviceWrap" style="display:none">
+            <label for="mmProjDevice">mmproj location</label>
+            <select id="mmProjDevice">
+              <option value="vram" selected>VRAM (default)</option>
+              <option value="ram">RAM (--no-mmproj-offload)</option>
+            </select>
+          </div>
+        </div>
+
         <hr class="divider">
 
         <div class="form-row">
@@ -566,6 +580,20 @@ button.resolve-btn {
           </div>
         </div>
 
+        <!-- Multimodal Projector -->
+        <div class="panel hidden" id="mmProjPanel" style="margin-top:12px">
+          <div class="panel-title"><span class="icon">&#x1F5BC;&#xFE0F;</span> Multimodal Projector</div>
+          <div class="result-row"><span class="label">File</span><span class="value" id="mmProjFile" style="font-size:0.8rem">-</span></div>
+          <div class="result-row"><span class="label">Projector type</span><span class="value" id="mmProjType">-</span></div>
+          <div class="result-row"><span class="label">Modality</span><span class="value" id="mmProjModality">-</span></div>
+          <div class="result-row"><span class="label">Image / patch</span><span class="value" id="mmProjImage">-</span></div>
+          <div class="result-row"><span class="label">Vision layers / hidden</span><span class="value" id="mmProjDims">-</span></div>
+          <div class="result-row"><span class="label">Output tokens per image</span><span class="value" id="mmProjTokens">-</span></div>
+          <div class="result-row"><span class="label">Weights</span><span class="value" id="mmProjWeights">-</span></div>
+          <div class="result-row"><span class="label">Output activation (per image)</span><span class="value" id="mmProjAct">-</span></div>
+          <div class="result-row"><span class="label">Placement</span><span class="value" id="mmProjPlacement">-</span></div>
+        </div>
+
         <!-- Memory Requirements -->
         <div class="panel" style="margin-top:12px" id="memReqPanel">
           <div class="panel-title"><span class="icon">&#x1F4CA;</span> Memory Requirements</div>
@@ -594,6 +622,10 @@ button.resolve-btn {
             <span class="label">Activations</span>
             <span class="value" id="vramActSize">-</span>
           </div>
+          <div class="result-row indent" id="vramMmProjRow" style="display:none">
+            <span class="label">mmproj</span>
+            <span class="value" id="vramMmProjSize">-</span>
+          </div>
 
           <hr class="divider">
 
@@ -604,6 +636,10 @@ button.resolve-btn {
           <div class="result-row indent" id="ramInactiveRow" style="display:none">
             <span class="label" id="ramInactiveLabel">Inactive experts</span>
             <span class="value" id="ramInactiveSize">-</span>
+          </div>
+          <div class="result-row indent" id="ramMmProjRow" style="display:none">
+            <span class="label">mmproj</span>
+            <span class="value" id="ramMmProjSize">-</span>
           </div>
 
           <hr class="divider">
@@ -649,7 +685,7 @@ button.resolve-btn {
 
 <script type="module">
 import { GGMLQuantizationType, KV_VALID_QUANTS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
-import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, formatBytes, formatElements } from './calculations.js';
+import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, formatBytes, formatElements } from './calculations.js';
 
 // ── DOM refs ──
 const $ = (s) => document.querySelector(s);
@@ -662,6 +698,10 @@ const hfPathEl = $('#hfPath');
 const resolveBtn = $('#resolveBtn');
 const modelSelectWrap = $('#modelSelectWrap');
 const modelSelect = $('#modelSelect');
+const mmProjSelectWrap = $('#mmProjSelectWrap');
+const mmProjSelect = $('#mmProjSelect');
+const mmProjDeviceWrap = $('#mmProjDeviceWrap');
+const mmProjDeviceEl = $('#mmProjDevice');
 const contextLenEl = $('#contextLen');
 const batchSizeEl = $('#batchSize');
 const vramEl = $('#vram');
@@ -699,6 +739,18 @@ populateQuantSelect(kvTypeVEl, GGMLQuantizationType.F16);
 let currentGGUFUrl = null;
 let currentMetadata = null;
 let currentTensorInfos = null;
+let currentMmProjUrl = null;
+let currentMmProjMetadata = null;
+let currentMmProjTensorInfos = null;
+let currentMmProjInfo = null;
+
+function resetMmProjState() {
+  currentMmProjUrl = null;
+  currentMmProjMetadata = null;
+  currentMmProjTensorInfos = null;
+  currentMmProjInfo = null;
+  mmProjDeviceWrap.style.display = 'none';
+}
 
 // ── Parse GGUF from URL (UI wrapper) ──
 async function doParseGGUF(url) {
@@ -731,6 +783,9 @@ async function doResolveHFModel(path) {
   errorMsg.classList.remove('visible');
   errorMsg.textContent = '';
   modelSelectWrap.classList.remove('visible');
+  mmProjSelectWrap.classList.remove('visible');
+  mmProjSelect.value = '';
+  resetMmProjState();
   resolveBtn.disabled = true;
 
   try {
@@ -754,6 +809,18 @@ async function doResolveHFModel(path) {
     } else {
       currentGGUFUrl = result.url;
     }
+
+    mmProjSelect.innerHTML = '<option value="">None</option>';
+    if (result.mmProjFiles && result.mmProjFiles.length) {
+      for (const f of result.mmProjFiles) {
+        const opt = document.createElement('option');
+        opt.value = f;
+        opt.textContent = f;
+        mmProjSelect.appendChild(opt);
+      }
+      mmProjSelectWrap.classList.add('visible');
+    }
+
     readyState.classList.remove('hidden');
 
   } catch (err) {
@@ -813,6 +880,15 @@ function renderResults() {
 
   // Activations always in VRAM
   vramBytes += acts.totalBytes;
+
+  // mmproj weights + per-image output activation, placed per user toggle
+  const mmProjDevice = mmProjDeviceEl.value;
+  let mmProjBytes = 0;
+  if (currentMmProjInfo) {
+    mmProjBytes = currentMmProjInfo.weightBytes + (currentMmProjInfo.perImageActBytes || 0);
+    if (mmProjDevice === 'ram') ramBytes += mmProjBytes;
+    else vramBytes += mmProjBytes;
+  }
 
   // ── Model info ──
   const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
@@ -977,17 +1053,62 @@ function renderResults() {
   $('#vramWeightsSize').textContent = `${formatBytes(vramWeightBytes)} (${vramPct(vramWeightBytes)})`;
   $('#vramKVSize').textContent = `${formatBytes(vramKVBytes)} (${vramPct(vramKVBytes)})`;
   $('#vramActSize').textContent = `${formatBytes(vramActBytes)} (${vramPct(vramActBytes)})`;
+  if (currentMmProjInfo && mmProjDevice === 'vram') {
+    $('#vramMmProjRow').style.display = '';
+    $('#vramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${vramPct(mmProjBytes)})`;
+  } else {
+    $('#vramMmProjRow').style.display = 'none';
+  }
 
   // RAM section
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
-  if (moe && ramBytes > 0) {
+  if (moe && (moe.expertWeightBytes - moe.activeExpertWeightBytes) > 0) {
     const inactiveCount = moe.expertCount - moe.expertUsedCount;
     const inactiveWeight = moe.expertWeightBytes - moe.activeExpertWeightBytes;
     $('#ramInactiveRow').style.display = '';
     $('#ramInactiveLabel').textContent = `Inactive experts (${inactiveCount})`;
-    $('#ramInactiveSize').textContent = `${formatBytes(inactiveWeight)} (100%)`;
+    $('#ramInactiveSize').textContent = `${formatBytes(inactiveWeight)} (${ramBytes > 0 ? (inactiveWeight / ramBytes * 100).toFixed(1) : '0'}%)`;
   } else {
     $('#ramInactiveRow').style.display = 'none';
+  }
+  if (currentMmProjInfo && mmProjDevice === 'ram') {
+    $('#ramMmProjRow').style.display = '';
+    const ramPct = ramBytes > 0 ? (mmProjBytes / ramBytes * 100).toFixed(1) : '0';
+    $('#ramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${ramPct}%)`;
+  } else {
+    $('#ramMmProjRow').style.display = 'none';
+  }
+
+  // ── mmproj panel ──
+  const mmProjPanel = $('#mmProjPanel');
+  if (currentMmProjInfo) {
+    mmProjPanel.classList.remove('hidden');
+    const mp = currentMmProjInfo;
+    const modalityParts = [];
+    if (mp.hasVision) modalityParts.push('vision');
+    if (mp.hasAudio) modalityParts.push('audio');
+    $('#mmProjFile').textContent = mmProjSelect.value || '-';
+    $('#mmProjType').textContent = mp.projType
+      ? (mp.projTypeKnown ? mp.projType : `${mp.projType} (unknown formula — generic fallback)`)
+      : '(unspecified)';
+    $('#mmProjModality').textContent = modalityParts.length ? modalityParts.join(' + ') : 'unknown';
+    $('#mmProjImage').textContent = (mp.imageSize && mp.patchSize)
+      ? `${mp.imageSize}×${mp.imageSize} / patch ${mp.patchSize}${mp.nMerge > 1 ? ` (merge ${mp.nMerge})` : ''}`
+      : '-';
+    $('#mmProjDims').textContent = (mp.nLayerV || mp.nEmbdV)
+      ? `${mp.nLayerV || '-'} layers / ${mp.nEmbdV || '-'} hidden → ${mp.projDim || '-'} out`
+      : '-';
+    if (mp.isAudioProj) {
+      $('#mmProjTokens').textContent = 'n/a (audio, runtime-dependent)';
+      $('#mmProjAct').textContent = 'n/a (audio, runtime-dependent)';
+    } else {
+      $('#mmProjTokens').textContent = mp.nOutputTokens ? mp.nOutputTokens.toString() : '-';
+      $('#mmProjAct').textContent = mp.perImageActBytes ? formatBytes(mp.perImageActBytes) : '-';
+    }
+    $('#mmProjWeights').textContent = formatBytes(mp.weightBytes);
+    $('#mmProjPlacement').textContent = mmProjDevice === 'ram' ? 'RAM (--no-mmproj-offload)' : 'VRAM';
+  } else {
+    mmProjPanel.classList.add('hidden');
   }
 
   // Total system memory
@@ -1103,6 +1224,39 @@ modelSelect.addEventListener('change', () => {
   const url = buildResolveUrl(path, modelSelect.value);
   currentGGUFUrl = url;
   doParseGGUF(url);
+});
+
+async function doParseMmProj(url) {
+  try {
+    const { metadata, tensorInfos } = await parseGGUF(url);
+    currentMmProjMetadata = metadata;
+    currentMmProjTensorInfos = tensorInfos;
+    currentMmProjInfo = calcMmProj(metadata, tensorInfos);
+    mmProjDeviceWrap.style.display = '';
+  } catch (err) {
+    resetMmProjState();
+    showError(`mmproj parse failed: ${err.message}`);
+  }
+}
+
+mmProjSelect.addEventListener('change', async () => {
+  const filename = mmProjSelect.value;
+  if (!filename) {
+    resetMmProjState();
+    if (currentMetadata) renderResults();
+    return;
+  }
+  const path = hfPathEl.value.trim();
+  currentMmProjUrl = buildResolveUrl(path, filename);
+  loadingEl.classList.add('visible');
+  loadingText.textContent = 'Parsing mmproj metadata...';
+  await doParseMmProj(currentMmProjUrl);
+  loadingEl.classList.remove('visible');
+  if (currentMetadata) renderResults();
+});
+
+mmProjDeviceEl.addEventListener('change', () => {
+  if (currentMetadata && currentMmProjInfo) renderResults();
 });
 
 // Enter key on path input
