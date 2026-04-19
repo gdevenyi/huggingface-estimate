@@ -737,8 +737,9 @@ async function doResolveHFModel(path) {
     loadingEl.classList.remove('visible');
 
     if (!result.url) {
-      // Multiple GGUF files — show dropdown; the permanent change handler
-      // will fire doParseGGUF once the user picks a file.
+      // Multiple GGUF files — show dropdown. The first option is selected by
+      // default, so seed currentGGUFUrl from it; the change handler takes over
+      // when the user picks a different file.
       modelSelect.innerHTML = '';
       for (const f of result.ggufFiles) {
         const opt = document.createElement('option');
@@ -747,10 +748,11 @@ async function doResolveHFModel(path) {
         modelSelect.appendChild(opt);
       }
       modelSelectWrap.classList.add('visible');
+      currentGGUFUrl = buildResolveUrl(path, modelSelect.value);
     } else {
       currentGGUFUrl = result.url;
-      readyState.classList.remove('hidden');
     }
+    readyState.classList.remove('hidden');
 
   } catch (err) {
     loadingEl.classList.remove('visible');
