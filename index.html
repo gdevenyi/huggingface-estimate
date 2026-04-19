@@ -921,6 +921,19 @@ function renderResults() {
     : `<span class="status-badge dense">Dense</span>`;
 
   modelInfoGrid.textContent = '';
+  const formatInfoValue = (value) => {
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '-';
+      const nums = value.map(Number);
+      if (nums.every(Number.isFinite)) {
+        const min = Math.min(...nums);
+        const max = Math.max(...nums);
+        return min === max ? String(min) : `${min}\u2013${max}`;
+      }
+      return String(value[0]);
+    }
+    return value;
+  };
   const addInfo = (label, value, smallValue = false) => {
     const item = document.createElement('div');
     item.className = 'info-item';
@@ -930,7 +943,7 @@ function renderResults() {
     const valueEl = document.createElement('div');
     valueEl.className = 'value';
     if (smallValue) valueEl.style.fontSize = smallValue === true ? '0.85rem' : smallValue;
-    valueEl.textContent = value;
+    valueEl.textContent = formatInfoValue(value);
     item.appendChild(labelEl);
     item.appendChild(valueEl);
     modelInfoGrid.appendChild(item);
