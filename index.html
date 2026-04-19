@@ -53,8 +53,21 @@ h1 {
   gap: 20px;
 }
 
+.grid > div:first-child {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
 @media (max-width: 800px) {
   .grid { grid-template-columns: 1fr; }
+  .grid > div:first-child {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 /* Panels */
