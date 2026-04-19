@@ -663,6 +663,7 @@ const modelSelect = $('#modelSelect');
 const contextLenEl = $('#contextLen');
 const batchSizeEl = $('#batchSize');
 const vramEl = $('#vram');
+const ramEl = $('#ram');
 const kvTypeKEl = $('#kvTypeK');
 const kvTypeVEl = $('#kvTypeV');
 
@@ -714,6 +715,7 @@ async function doParseGGUF(url) {
   } catch (err) {
     loadingEl.classList.remove('visible');
     readyState.classList.remove('hidden');
+    resultsEl.classList.remove('visible');
     showError(err.message);
   }
 }
@@ -725,6 +727,7 @@ async function doResolveHFModel(path) {
   readyState.classList.add('hidden');
   resultsEl.classList.remove('visible');
   errorMsg.classList.remove('visible');
+  errorMsg.textContent = '';
   modelSelectWrap.classList.remove('visible');
   resolveBtn.disabled = true;
 
@@ -772,7 +775,7 @@ function renderResults() {
   const kvTypeK = isNaN(kvTypeKEl.value) ? kvTypeKEl.value : parseInt(kvTypeKEl.value, 10);
   const kvTypeV = isNaN(kvTypeVEl.value) ? kvTypeVEl.value : parseInt(kvTypeVEl.value, 10);
   const vramGB = parseFloat(vramEl.value) || 0;
-  const ramGB = parseFloat($('#ram').value) || 0;
+  const ramGB = parseFloat(ramEl.value) || 0;
 
   // Weight calculation
   const weights = calcWeightSize(currentTensorInfos);

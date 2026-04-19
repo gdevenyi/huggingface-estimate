@@ -48,48 +48,42 @@ export async function parseGGUF(url) {
  * @returns {Promise<{ url: string | null, ggufFiles?: string[] }>}
  */
 export async function resolveHFModel(path) {
-  let url;
-
-  // Direct URL
+  // Direct URL to a .gguf file → normalize /blob/ → /resolve/, strip query/fragment
   if (path.match(/^https?:\/\/.*\.gguf/i)) {
-    url = path.replace(/\/blob\//, '/resolve/').replace(/#.*$/, '');
-  } else if (path.match(/^https?:\/\/huggingface\.co\//i)) {
+    const url = path.replace(/\/blob\//, '/resolve/').replace(/[?#].*$/, '');
+    return { url };
+  }
+
+  // HF page URL → extract owner/model slug and fall through to the API lookup
+  if (path.match(/^https?:\/\/huggingface\.co\//i)) {
     const match = path.match(/^https?:\/\/huggingface\.co\/([^/]+\/[^/]+)/i);
-    if (match) {
-      path = match[1];
-    }
+    if (match) path = match[1];
   }
 
-  if (!url) {
-    const apiRes = await fetch(`https://huggingface.co/api/models/${path}`, {
-      headers: { Accept: 'application/json' },
+  const apiRes = await fetch(`https://huggingface.co/api/models/${path}`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!apiRes.ok) {
+    throw new Error(`HF API returned ${apiRes.status}: ${apiRes.statusText}`);
+  }
+  const model = await apiRes.json();
+
+  const ggufFiles = (model.siblings || [])
+    .map((s) => s.rfilename)
+    .filter((f) => f && f.toLowerCase().endsWith('.gguf'))
+    .sort((a, b) => {
+      const aFirst = /-0*1-of-\d+\.gguf$/i.test(a) ? 0 : 1;
+      const bFirst = /-0*1-of-\d+\.gguf$/i.test(b) ? 0 : 1;
+      return aFirst - bFirst || a.localeCompare(b);
     });
-    if (!apiRes.ok) {
-      throw new Error(`HF API returned ${apiRes.status}: ${apiRes.statusText}`);
-    }
-    const model = await apiRes.json();
 
-    const ggufFiles = (model.siblings || [])
-      .map((s) => s.rfilename)
-      .filter((f) => f && f.toLowerCase().endsWith('.gguf'))
-      .sort((a, b) => {
-        const aFirst = /-0*1-of-\d+\.gguf$/i.test(a) ? 0 : 1;
-        const bFirst = /-0*1-of-\d+\.gguf$/i.test(b) ? 0 : 1;
-        return aFirst - bFirst || a.localeCompare(b);
-      });
-
-    if (ggufFiles.length === 0) {
-      throw new Error('No .gguf files found in this model repository.');
-    }
-
-    if (ggufFiles.length === 1) {
-      url = `https://huggingface.co/${path}/resolve/main/${ggufFiles[0]}`;
-    } else {
-      return { url: null, ggufFiles };
-    }
+  if (ggufFiles.length === 0) {
+    throw new Error('No .gguf files found in this model repository.');
   }
-
-  return { url };
+  if (ggufFiles.length === 1) {
+    return { url: `https://huggingface.co/${path}/resolve/main/${ggufFiles[0]}` };
+  }
+  return { url: null, ggufFiles };
 }
 
 /**
