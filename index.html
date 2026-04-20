@@ -786,14 +786,27 @@ button.resolve-btn {
 <script type="module">
 import { GGMLQuantizationType, KV_VALID_QUANTS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
 import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
-import { CPU_PRESETS } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset } from './hardware-presets.js';
 
-// GPU preset data (loaded once from gpu-data.json)
-let GPU_PRESETS = [];
-fetch('./gpu-data.json')
-  .then(r => r.ok ? r.json() : [])
-  .then(d => { GPU_PRESETS = d; populateGpuSelect(); })
-  .catch(() => { GPU_PRESETS = []; });
+// Preset data loaded from per-vendor JSON files
+const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
+const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json'];
+
+let _cpuLoaded = 0, _gpuLoaded = 0;
+
+for (const f of CPU_JSON_FILES) {
+  fetch('./' + f)
+    .then(r => r.ok ? r.json() : [])
+    .then(d => { mergeCpuPresets(d); _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) populateCpuSelect(); })
+    .catch(() => { _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) populateCpuSelect(); });
+}
+
+for (const f of GPU_JSON_FILES) {
+  fetch('./' + f)
+    .then(r => r.ok ? r.json() : [])
+    .then(d => { mergeGpuPresets(d); _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) populateGpuSelect(); })
+    .catch(() => { _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) populateGpuSelect(); });
+}
 
 // ── DOM refs ──
 const $ = (s) => document.querySelector(s);
@@ -855,9 +868,9 @@ populateQuantSelect(kvTypeKEl, GGMLQuantizationType.F16);
 populateQuantSelect(kvTypeVEl, GGMLQuantizationType.F16);
 
 function populateGpuSelect() {
-  // Grouped by vendor; newest first within each group (already sorted in JSON).
+  gpuPresetEl.innerHTML = '';
   const vendors = {};
-  for (const g of GPU_PRESETS) {
+  for (const g of getGpuPresets()) {
     (vendors[g.vendor] = vendors[g.vendor] || []).push(g);
   }
   for (const vendor of Object.keys(vendors)) {
@@ -874,8 +887,9 @@ function populateGpuSelect() {
 }
 
 function populateCpuSelect() {
+  cpuPresetEl.innerHTML = '';
   const vendors = {};
-  for (const c of CPU_PRESETS) {
+  for (const c of getCpuPresets()) {
     (vendors[c.vendor] = vendors[c.vendor] || []).push(c);
   }
   for (const vendor of Object.keys(vendors)) {
@@ -890,10 +904,9 @@ function populateCpuSelect() {
     cpuPresetEl.appendChild(og);
   }
 }
-populateCpuSelect();
 
 gpuPresetEl.addEventListener('change', () => {
-  const g = GPU_PRESETS.find(x => x.id === gpuPresetEl.value);
+  const g = getGpuPresets().find(x => x.id === gpuPresetEl.value);
   if (g) {
     gpuFlopsEl.value = g.fp16Tflops;
     gpuBwEl.value = g.memBwGBps;
@@ -905,7 +918,7 @@ gpuPresetEl.addEventListener('change', () => {
   if (currentMetadata) renderResults();
 });
 cpuPresetEl.addEventListener('change', () => {
-  const c = CPU_PRESETS.find(x => x.id === cpuPresetEl.value);
+  const c = findCpuPreset(cpuPresetEl.value);
   if (c) {
     cpuFlopsEl.value = c.fp16Tflops;
     ramBwEl.value = c.defaultRamBwGBps;

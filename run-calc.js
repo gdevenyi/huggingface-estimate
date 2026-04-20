@@ -17,29 +17,34 @@ import {
   getMeta,
   BPE,
 } from './calculations.js';
-import { CPU_PRESETS, findCpuPreset } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-let GPU_PRESETS = null;
-function loadGpuPresets() {
-  if (GPU_PRESETS) return GPU_PRESETS;
+
+const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
+const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json'];
+
+for (const f of [...CPU_JSON_FILES, ...GPU_JSON_FILES]) {
   try {
-    GPU_PRESETS = JSON.parse(readFileSync(join(__dirname, 'gpu-data.json'), 'utf8'));
-  } catch { GPU_PRESETS = []; }
-  return GPU_PRESETS;
+    const data = JSON.parse(readFileSync(join(__dirname, f), 'utf8'));
+    if (f.includes('-cpu-')) mergeCpuPresets(data);
+    else mergeGpuPresets(data);
+  } catch (e) {
+    if (e.code !== 'ENOENT') console.error(`Warning: failed to load ${f}: ${e.message}`);
+  }
 }
+
 function findGpuPreset(query) {
   if (!query) return null;
-  const list = loadGpuPresets();
+  const list = getGpuPresets();
   const q = query.toLowerCase();
   const exactId = list.find(g => g.id === q);
   if (exactId) return exactId;
   const exactName = list.find(g => g.name.toLowerCase() === q);
   if (exactName) return exactName;
-  // Among substring matches, prefer the shortest name (most specific).
   const subs = list.filter(g => g.name.toLowerCase().includes(q));
   if (subs.length === 0) return null;
   subs.sort((a, b) => a.name.length - b.name.length);
@@ -161,7 +166,7 @@ function parseArgs(argv) {
 function resolveDevice(args) {
   const gpuPreset = args.gpu ? findGpuPreset(args.gpu) : null;
   if (args.gpu && !gpuPreset && (args.gpuFlops == null || args.gpuBw == null)) {
-    console.error(`Warning: GPU preset "${args.gpu}" not found in gpu-data.json.`);
+    console.error(`Warning: GPU preset "${args.gpu}" not found in GPU preset files.`);
   }
   const gpuFlops = args.gpuFlops != null ? args.gpuFlops : (gpuPreset ? gpuPreset.fp16Tflops : null);
   const gpuBw = args.gpuBw != null ? args.gpuBw : (gpuPreset ? gpuPreset.memBwGBps : null);
@@ -169,7 +174,7 @@ function resolveDevice(args) {
 
   const cpuPreset = args.cpu ? findCpuPreset(args.cpu) : null;
   if (args.cpu && !cpuPreset && (args.cpuFlops == null || args.ramBw == null)) {
-    console.error(`Warning: CPU preset "${args.cpu}" not found in hardware-presets.js.`);
+    console.error(`Warning: CPU preset "${args.cpu}" not found in CPU preset files.`);
   }
   const cpuFlops = args.cpuFlops != null ? args.cpuFlops : (cpuPreset ? cpuPreset.fp16Tflops : null);
   const ramBw = args.ramBw != null ? args.ramBw : (cpuPreset ? cpuPreset.defaultRamBwGBps : null);
@@ -499,7 +504,7 @@ Arguments:
   --mmprojDevice <d> Where to place mmproj: vram (default) or ram (--no-mmproj-offload)
 
 Performance estimation (supply --gpu or --gpu-flops + --gpu-bw to enable):
-  --gpu <name|id>    GPU preset from gpu-data.json (e.g. "RTX 4090", "nvidia-geforce-rtx-4090")
+  --gpu <name|id>    GPU preset (e.g. "RTX 4090", "nvidia-geforce-rtx-4090")
   --gpu-flops <TF>   Override GPU FP16 TFLOPS
   --gpu-bw <GB/s>    Override GPU memory bandwidth
   --cpu <name|id>    CPU preset from hardware-presets.js (e.g. "Ryzen 9 7950X")

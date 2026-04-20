@@ -1,7 +1,9 @@
-// Reads gpu_1986-2026.csv and emits a compact gpu-data.json used by the
-// performance estimator. Filters to NVIDIA 1000-series+, AMD RX 5000+ / MI,
-// Intel Arc A/B-series. Apple M-series GPUs live in a hand-curated list in
-// hardware-presets.js (they're not uniformly represented in this CSV).
+// Reads gpu_1986-2026.csv and emits per-vendor GPU preset JSON files used by
+// the performance estimator. Also produces a merged gpu-data.json for
+// backward compat. Filters to NVIDIA 1000-series+, AMD RX 5000+/MI,
+// Intel Arc. AMD entries are built separately from first-party AMD CSVs
+// via build-amd-gpu-list.js. Apple M-series GPUs aren't in the CSV
+// uniformly — the per-CPU defaultRamBwGBps value covers unified memory.
 //
 // Run once after updating the CSV: `node scripts/build-gpu-list.js`
 
@@ -103,14 +105,9 @@ function acceptNvidia(name, year) {
   return false;
 }
 
-// AMD: Radeon RX 5000+ (RDNA1, 2019+), Instinct MI series, Radeon Pro W series.
+// AMD entries are now built from first-party AMD CSVs via build-amd-gpu-list.js.
+// Skip all AMD rows from the generic CSV.
 function acceptAmd(name, year) {
-  if (!name) return false;
-  if (/\b(Mobile|Max-Q)\b/i.test(name)) return false;
-  if (/Radeon RX [5-9]\d{3}/i.test(name)) return true;
-  if (/Radeon RX 9\d{3}/i.test(name)) return true;
-  if (/Instinct MI\d{3}/i.test(name)) return true;
-  if (/Radeon Pro W[67]\d{3}/i.test(name)) return true;
   return false;
 }
 
@@ -296,9 +293,31 @@ function cmp(a, b) {
   }
   return 0;
 }
+// ── Merge AMD entries from first-party CSV build ──
+const AMD_DATA_PATH = join(ROOT, 'amd-gpu-presets.json');
+try {
+  const amdData = JSON.parse(readFileSync(AMD_DATA_PATH, 'utf8'));
+  for (const g of amdData) out.push(g);
+  console.error(`Merged ${amdData.length} AMD GPUs from ${AMD_DATA_PATH}`);
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
+  console.error(`Warning: ${AMD_DATA_PATH} not found, skipping AMD merge. Run scripts/build-amd-gpu-list.js first.`);
+}
+
 out.sort(cmp);
 
-writeFileSync(OUT_PATH, JSON.stringify(out, null, 0) + '\n');
-console.error(`Wrote ${out.length} GPUs to ${OUT_PATH}`);
 const byVendor = out.reduce((a, g) => (a[g.vendor] = (a[g.vendor] || 0) + 1, a), {});
+
+const vendorFiles = {
+  NVIDIA: join(ROOT, 'nvidia-gpu-presets.json'),
+  Intel: join(ROOT, 'intel-gpu-presets.json'),
+};
+for (const [vendor, path] of Object.entries(vendorFiles)) {
+  const entries = out.filter(g => g.vendor === vendor);
+  writeFileSync(path, JSON.stringify(entries, null, 2) + '\n');
+  console.error(`Wrote ${entries.length} ${vendor} GPUs to ${path}`);
+}
+
+writeFileSync(OUT_PATH, JSON.stringify(out, null, 0) + '\n');
+console.error(`Wrote ${out.length} total GPUs to ${OUT_PATH}`);
 console.error('By vendor:', byVendor);

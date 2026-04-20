@@ -1,0 +1,107 @@
+[
+  {
+    "id": "apple-m4-max",
+    "name": "Apple M4 Max (10P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.32,
+    "defaultRamBwGBps": 546
+  },
+  {
+    "id": "apple-m4-pro",
+    "name": "Apple M4 Pro (8P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 273
+  },
+  {
+    "id": "apple-m4",
+    "name": "Apple M4 (4P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "apple-m3-ultra",
+    "name": "Apple M3 Ultra (24P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.7,
+    "defaultRamBwGBps": 819
+  },
+  {
+    "id": "apple-m3-max",
+    "name": "Apple M3 Max (12P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.35,
+    "defaultRamBwGBps": 400
+  },
+  {
+    "id": "apple-m3-pro",
+    "name": "Apple M3 Pro (6P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.18,
+    "defaultRamBwGBps": 150
+  },
+  {
+    "id": "apple-m3",
+    "name": "Apple M3 (4P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 100
+  },
+  {
+    "id": "apple-m2-ultra",
+    "name": "Apple M2 Ultra (16P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.45,
+    "defaultRamBwGBps": 819
+  },
+  {
+    "id": "apple-m2-max",
+    "name": "Apple M2 Max (8P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.22,
+    "defaultRamBwGBps": 400
+  },
+  {
+    "id": "apple-m2-pro",
+    "name": "Apple M2 Pro (8P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.22,
+    "defaultRamBwGBps": 200
+  },
+  {
+    "id": "apple-m2",
+    "name": "Apple M2 (4P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 100
+  },
+  {
+    "id": "apple-m1-ultra",
+    "name": "Apple M1 Ultra (16P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 819
+  },
+  {
+    "id": "apple-m1-max",
+    "name": "Apple M1 Max (8P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.21,
+    "defaultRamBwGBps": 400
+  },
+  {
+    "id": "apple-m1-pro",
+    "name": "Apple M1 Pro (8P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.21,
+    "defaultRamBwGBps": 200
+  },
+  {
+    "id": "apple-m1",
+    "name": "Apple M1 (4P)",
+    "vendor": "Apple",
+    "fp16Tflops": 0.1,
+    "defaultRamBwGBps": 68
+  }
+]

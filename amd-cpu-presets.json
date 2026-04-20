@@ -1,0 +1,4363 @@
+[
+  {
+    "id": "ryzen-5-7520c",
+    "name": "Ryzen 5 7520C (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-3-7320c",
+    "name": "Ryzen 3 7320C (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-gold-7220c",
+    "name": "Athlon Gold 7220C (Zen 4, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-silver-7120c",
+    "name": "Athlon Silver 7120C (Zen 4, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.22,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-7-5825c",
+    "name": "Ryzen 7 5825C (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5625c",
+    "name": "Ryzen 5 5625C (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5425c",
+    "name": "Ryzen 3 5425C (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5125c",
+    "name": "Ryzen 3 5125C (Zen 3, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.1,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-3700c",
+    "name": "Ryzen 7 3700C (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 30
+  },
+  {
+    "id": "ryzen-5-3500c",
+    "name": "Ryzen 5 3500C (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 30
+  },
+  {
+    "id": "ryzen-3-3250c",
+    "name": "Ryzen 3 3250C (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.06,
+    "defaultRamBwGBps": 30
+  },
+  {
+    "id": "athlon-gold-3150c",
+    "name": "Athlon Gold 3150C (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 30
+  },
+  {
+    "id": "athlon-silver-3050c",
+    "name": "Athlon Silver 3050C (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 30
+  },
+  {
+    "id": "ryzen-9-3950x",
+    "name": "Ryzen 9 3950X (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-5900xt",
+    "name": "Ryzen 9 5900XT (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.23,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-5950x",
+    "name": "Ryzen 9 5950X (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.25,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-7940hx",
+    "name": "Ryzen 9 7940HX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.66,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7945hx",
+    "name": "Ryzen 9 7945HX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7945hx3d",
+    "name": "Ryzen 9 7945HX3D (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7950x",
+    "name": "Ryzen 9 7950X (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7950x3d",
+    "name": "Ryzen 9 7950X3D (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-8940hx",
+    "name": "Ryzen 9 8940HX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.71,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-8945hx",
+    "name": "Ryzen 9 8945HX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9950x",
+    "name": "Ryzen 9 9950X (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9950x3d",
+    "name": "Ryzen 9 9950X3D (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9950x3d2-dual-edition",
+    "name": "Ryzen 9 9950X3D2 Dual Edition (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.87,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9955hx",
+    "name": "Ryzen 9 9955HX (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9955hx3d",
+    "name": "Ryzen 9 9955HX3D (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-max-395",
+    "name": "Ryzen AI Max+ 395 (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.61,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-max-pro-395",
+    "name": "Ryzen AI Max+ PRO 395 (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.61,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-7-7840hx",
+    "name": "Ryzen 7 7840HX (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-8840hx",
+    "name": "Ryzen 7 8840HX (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-3900-processor-oem-only",
+    "name": "Ryzen 9 3900 Processor (OEM Only) (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.83,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-3900x",
+    "name": "Ryzen 9 3900X (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.88,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-3900xt",
+    "name": "Ryzen 9 3900XT (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-5900-oem-only",
+    "name": "Ryzen 9 5900 (OEM Only) (Zen 3, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-5900x",
+    "name": "Ryzen 9 5900X (Zen 3, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-7845hx",
+    "name": "Ryzen 9 7845HX (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7900",
+    "name": "Ryzen 9 7900 (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7900x",
+    "name": "Ryzen 9 7900X (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7900x3d",
+    "name": "Ryzen 9 7900X3D (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9850hx",
+    "name": "Ryzen 9 9850HX (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9900x",
+    "name": "Ryzen 9 9900X (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-9900x3d",
+    "name": "Ryzen 9 9900X3D (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.11,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-pro-3900",
+    "name": "Ryzen 9 PRO 3900 (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.83,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-pro-5945",
+    "name": "Ryzen 9 PRO 5945 (Zen 3, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-9-pro-7945",
+    "name": "Ryzen 9 PRO 7945 (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-pro-9945",
+    "name": "Ryzen 9 PRO 9945 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-9-hx-370",
+    "name": "Ryzen AI 9 HX 370 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-375",
+    "name": "Ryzen AI 9 HX 375 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-470",
+    "name": "Ryzen AI 9 HX 470 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-475",
+    "name": "Ryzen AI 9 HX 475 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-pro-370",
+    "name": "Ryzen AI 9 HX PRO 370 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-pro-375",
+    "name": "Ryzen AI 9 HX PRO 375 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-pro-470",
+    "name": "Ryzen AI 9 HX PRO 470 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-hx-pro-475",
+    "name": "Ryzen AI 9 HX PRO 475 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-max-390",
+    "name": "Ryzen AI Max 390 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.92,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-max-pro-390",
+    "name": "Ryzen AI Max PRO 390 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.92,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-max-392",
+    "name": "Ryzen AI Max+ 392 (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.92,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-9-365",
+    "name": "Ryzen AI 9 365 (Zen 5, 10C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-465",
+    "name": "Ryzen AI 9 465 (Zen 5, 10C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-9-pro-465",
+    "name": "Ryzen AI 9 PRO 465 (Zen 5, 10C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-160",
+    "name": "Ryzen 7 160 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-7-170",
+    "name": "Ryzen 7 170 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-7-1700-processor",
+    "name": "Ryzen 7 1700 Processor (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-1700x",
+    "name": "Ryzen 7 1700X (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-1800x",
+    "name": "Ryzen 7 1800X (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-250",
+    "name": "Ryzen 7 250 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-260",
+    "name": "Ryzen 7 260 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-2700",
+    "name": "Ryzen 7 2700 (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-7-2700e-processor",
+    "name": "Ryzen 7 2700E Processor (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-2700x",
+    "name": "Ryzen 7 2700X (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.28,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-7-3700x",
+    "name": "Ryzen 7 3700X (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-3800x",
+    "name": "Ryzen 7 3800X (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-3800xt",
+    "name": "Ryzen 7 3800XT (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-4700g-oem-only",
+    "name": "Ryzen 7 4700G (OEM Only) (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-4700ge-oem-only",
+    "name": "Ryzen 7 4700GE (OEM Only) (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-4700le-oem-only",
+    "name": "Ryzen 7 4700LE (OEM Only) (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.54,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-4700u",
+    "name": "Ryzen 7 4700U (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-4800h",
+    "name": "Ryzen 7 4800H (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.54,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-4800hs",
+    "name": "Ryzen 7 4800HS (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.54,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-4800u",
+    "name": "Ryzen 7 4800U (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.54,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-4980u-microsoft-surface-edition",
+    "name": "Ryzen 7 4980U Microsoft Surface Edition (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-5700",
+    "name": "Ryzen 7 5700 (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5700g",
+    "name": "Ryzen 7 5700G (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5700ge",
+    "name": "Ryzen 7 5700GE (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5700u",
+    "name": "Ryzen 7 5700U (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-5700x",
+    "name": "Ryzen 7 5700X (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5700x3d",
+    "name": "Ryzen 7 5700X3D (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5705g",
+    "name": "Ryzen 7 5705G (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5705ge",
+    "name": "Ryzen 7 5705GE (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5800-oem-only",
+    "name": "Ryzen 7 5800 (OEM Only) (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5800h",
+    "name": "Ryzen 7 5800H (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-5800hs",
+    "name": "Ryzen 7 5800HS (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-5800u",
+    "name": "Ryzen 7 5800U (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-5800x",
+    "name": "Ryzen 7 5800X (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5800x3d",
+    "name": "Ryzen 7 5800X3D (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5800xt",
+    "name": "Ryzen 7 5800XT (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-5825u",
+    "name": "Ryzen 7 5825U (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-6800h",
+    "name": "Ryzen 7 6800H (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-6800hs",
+    "name": "Ryzen 7 6800HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-6800u",
+    "name": "Ryzen 7 6800U​ (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7435hs",
+    "name": "Ryzen 7 7435HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.15,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7700",
+    "name": "Ryzen 7 7700 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.36,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7700x",
+    "name": "Ryzen 7 7700X (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.38,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7730u",
+    "name": "Ryzen 7 7730U (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-7735hs",
+    "name": "Ryzen 7 7735HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.22,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-7-7735u",
+    "name": "Ryzen 7 7735U (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.22,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-7-7736u",
+    "name": "Ryzen 7 7736U​ (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7745hx",
+    "name": "Ryzen 7 7745HX (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7800x3d",
+    "name": "Ryzen 7 7800X3D (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7840hs",
+    "name": "Ryzen 7 7840HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-7840u",
+    "name": "Ryzen 7 7840U (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-8700f",
+    "name": "Ryzen 7 8700F (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-8700g",
+    "name": "Ryzen 7 8700G (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-8705g",
+    "name": "Ryzen 7 8705G (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-8745hx",
+    "name": "Ryzen 7 8745HX (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-8840hs",
+    "name": "Ryzen 7 8840HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-8840u",
+    "name": "Ryzen 7 8840U (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-8845hs",
+    "name": "Ryzen 7 8845HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-9700f",
+    "name": "Ryzen 7 9700F (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.41,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-9700x",
+    "name": "Ryzen 7 9700X (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.41,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-9800x3d",
+    "name": "Ryzen 7 9800X3D (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-9850x3d",
+    "name": "Ryzen 7 9850X3D (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.43,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-1700",
+    "name": "Ryzen 7 PRO 1700 (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-pro-1700x-processor",
+    "name": "Ryzen 7 PRO 1700X Processor (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-7-pro-250",
+    "name": "Ryzen 7 PRO 250 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-2700",
+    "name": "Ryzen 7 PRO 2700 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.05,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-7-pro-2700x",
+    "name": "Ryzen 7 PRO 2700X (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.05,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-7-pro-3700",
+    "name": "Ryzen 7 PRO 3700 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-4750g",
+    "name": "Ryzen 7 PRO 4750G (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-4750ge",
+    "name": "Ryzen 7 PRO 4750GE (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-4750u",
+    "name": "Ryzen 7 PRO 4750U (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-7-pro-5750g",
+    "name": "Ryzen 7 PRO 5750G (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5750ge",
+    "name": "Ryzen 7 PRO 5750GE (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5755g",
+    "name": "Ryzen 7 PRO 5755G (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5755ge",
+    "name": "Ryzen 7 PRO 5755GE (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5845",
+    "name": "Ryzen 7 PRO 5845 (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5850u",
+    "name": "Ryzen 7 PRO 5850U (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-5875u",
+    "name": "Ryzen 7 PRO 5875U (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-6850h",
+    "name": "Ryzen 7 PRO 6850H (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-6850hs",
+    "name": "Ryzen 7 PRO 6850HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-6850u",
+    "name": "Ryzen 7 PRO 6850U (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.2,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-6860z",
+    "name": "Ryzen 7 PRO 6860Z (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.22,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-7730u",
+    "name": "Ryzen 7 PRO 7730U (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-pro-7735u",
+    "name": "Ryzen 7 PRO 7735U (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.22,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-7745",
+    "name": "Ryzen 7 PRO 7745 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.36,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-7840hs",
+    "name": "Ryzen 7 PRO 7840HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-7840u",
+    "name": "Ryzen 7 PRO 7840U (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-8700g",
+    "name": "Ryzen 7 PRO 8700G (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-8700ge",
+    "name": "Ryzen 7 PRO 8700GE (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-8705g",
+    "name": "Ryzen 7 PRO 8705G (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-8705ge",
+    "name": "Ryzen 7 PRO 8705GE (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-pro-8840hs",
+    "name": "Ryzen 7 PRO 8840HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-8840u",
+    "name": "Ryzen 7 PRO 8840U (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-8845hs",
+    "name": "Ryzen 7 PRO 8845HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-7-pro-9745",
+    "name": "Ryzen 7 PRO 9745 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.38,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-270",
+    "name": "Ryzen 9 270 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-9-4900h",
+    "name": "Ryzen 9 4900H (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-4900hs",
+    "name": "Ryzen 9 4900HS (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-5900hs",
+    "name": "Ryzen 9 5900HS (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-5900hx",
+    "name": "Ryzen 9 5900HX (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.59,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-5980hs",
+    "name": "Ryzen 9 5980HS (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-5980hx",
+    "name": "Ryzen 9 5980HX (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-9-6900hs",
+    "name": "Ryzen 9 6900HS​ (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.25,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-6900hx",
+    "name": "Ryzen 9 6900HX (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.25,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-6980hs",
+    "name": "Ryzen 9 6980HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-6980hx",
+    "name": "Ryzen 9 6980HX (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-7940hs",
+    "name": "Ryzen 9 7940HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-9-8945hs",
+    "name": "Ryzen 9 8945HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-9-pro-6950h",
+    "name": "Ryzen 9 PRO 6950H (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.25,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-pro-6950hs",
+    "name": "Ryzen 9 PRO 6950HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.25,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-9-pro-7940hs",
+    "name": "Ryzen 9 PRO 7940HS (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-9-pro-8945hs",
+    "name": "Ryzen 9 PRO 8945HS (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.33,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-350",
+    "name": "Ryzen AI 7 350 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-450",
+    "name": "Ryzen AI 7 450 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-450g",
+    "name": "Ryzen AI 7 450G (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-7-450ge",
+    "name": "Ryzen AI 7 450GE (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-7-pro-350",
+    "name": "Ryzen AI 7 PRO 350 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-pro-360",
+    "name": "Ryzen AI 7 PRO 360 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-pro-450",
+    "name": "Ryzen AI 7 PRO 450 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-7-pro-450g",
+    "name": "Ryzen AI 7 PRO 450G (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-7-pro-450ge",
+    "name": "Ryzen AI 7 PRO 450GE (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-max-385",
+    "name": "Ryzen AI Max 385 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-max-pro-385",
+    "name": "Ryzen AI Max PRO 385 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-max-388",
+    "name": "Ryzen AI Max+ 388 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 240
+  },
+  {
+    "id": "ryzen-ai-z2-extreme",
+    "name": "Ryzen AI Z2 Extreme (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "ryzen-z1-extreme",
+    "name": "Ryzen Z1 Extreme (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "ryzen-z2",
+    "name": "Ryzen Z2 (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.31,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "ryzen-z2-extreme",
+    "name": "Ryzen Z2 Extreme (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.28,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "ryzen-5-130",
+    "name": "Ryzen 5 130 (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-150",
+    "name": "Ryzen 5 150 (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-1600-af",
+    "name": "Ryzen 5 1600 (AF) (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.17,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-1600",
+    "name": "Ryzen 5 1600 (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.17,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-1600x",
+    "name": "Ryzen 5 1600X (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.19,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-220",
+    "name": "Ryzen 5 220 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-230",
+    "name": "Ryzen 5 230 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-240",
+    "name": "Ryzen 5 240 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-2600",
+    "name": "Ryzen 5 2600 (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.19,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-2600e",
+    "name": "Ryzen 5 2600E (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.19,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-2600x",
+    "name": "Ryzen 5 2600X (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.2,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-3500-processor-oem-only",
+    "name": "Ryzen 5 3500 Processor (OEM Only) (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.39,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-3600",
+    "name": "Ryzen 5 3600 (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-3600x",
+    "name": "Ryzen 5 3600X (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-3600xt",
+    "name": "Ryzen 5 3600XT (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.43,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-4500",
+    "name": "Ryzen 5 4500 (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.39,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-4500u",
+    "name": "Ryzen 5 4500U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-4600g",
+    "name": "Ryzen 5 4600G (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-4600ge-oem-only",
+    "name": "Ryzen 5 4600GE (OEM Only) (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-4600h",
+    "name": "Ryzen 5 4600H (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-4600u",
+    "name": "Ryzen 5 4600U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-4680u-microsoft-surface-edition",
+    "name": "Ryzen 5 4680U Microsoft Surface Edition (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5500",
+    "name": "Ryzen 5 5500 (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5500gt",
+    "name": "Ryzen 5 5500GT (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5500u",
+    "name": "Ryzen 5 5500U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5500x3d",
+    "name": "Ryzen 5 5500X3D (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5560u",
+    "name": "Ryzen 5 5560U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5600",
+    "name": "Ryzen 5 5600 (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600f",
+    "name": "Ryzen 5 5600F (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600g",
+    "name": "Ryzen 5 5600G (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600ge",
+    "name": "Ryzen 5 5600GE (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600gt",
+    "name": "Ryzen 5 5600GT (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600h",
+    "name": "Ryzen 5 5600H (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5600hs",
+    "name": "Ryzen 5 5600HS (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5600t",
+    "name": "Ryzen 5 5600T (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.43,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600u",
+    "name": "Ryzen 5 5600U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-5600x",
+    "name": "Ryzen 5 5600X (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600x3d",
+    "name": "Ryzen 5 5600X3D (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5600xt",
+    "name": "Ryzen 5 5600XT (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.45,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5605g",
+    "name": "Ryzen 5 5605G (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5605ge",
+    "name": "Ryzen 5 5605GE (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-5625u",
+    "name": "Ryzen 5 5625U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-6600h",
+    "name": "Ryzen 5 6600H (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-6600hs",
+    "name": "Ryzen 5 6600HS​ (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-6600u",
+    "name": "Ryzen 5 6600U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7400",
+    "name": "Ryzen 5 7400 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.83,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7400f",
+    "name": "Ryzen 5 7400F (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7430u",
+    "name": "Ryzen 5 7430U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-7500f",
+    "name": "Ryzen 5 7500F (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7500x3d",
+    "name": "Ryzen 5 7500X3D (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7530u",
+    "name": "Ryzen 5 7530U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.43,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-7533hs",
+    "name": "Ryzen 5 7533HS (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.84,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-7535hs",
+    "name": "Ryzen 5 7535HS (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.87,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-7535u",
+    "name": "Ryzen 5 7535U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.87,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-7540u",
+    "name": "Ryzen 5 7540U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-7545u",
+    "name": "Ryzen 5 7545U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-7600",
+    "name": "Ryzen 5 7600 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.98,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7600x",
+    "name": "Ryzen 5 7600X (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.02,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7600x3d",
+    "name": "Ryzen 5 7600X3D (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7640hs",
+    "name": "Ryzen 5 7640HS (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-7640u",
+    "name": "Ryzen 5 7640U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-7645hx",
+    "name": "Ryzen 5 7645HX (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8400f",
+    "name": "Ryzen 5 8400F (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8500g",
+    "name": "Ryzen 5 8500G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8500ge",
+    "name": "Ryzen 5 8500GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8505g",
+    "name": "Ryzen 5 8505G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8505ge",
+    "name": "Ryzen 5 8505GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8540u",
+    "name": "Ryzen 5 8540U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-8600g",
+    "name": "Ryzen 5 8600G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8605g",
+    "name": "Ryzen 5 8605G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-8640hs",
+    "name": "Ryzen 5 8640HS (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-8640u",
+    "name": "Ryzen 5 8640U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-8645hs",
+    "name": "Ryzen 5 8645HS (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-9500f",
+    "name": "Ryzen 5 9500F (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-9600",
+    "name": "Ryzen 5 9600 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-9600x",
+    "name": "Ryzen 5 9600X (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.04,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-1600",
+    "name": "Ryzen 5 PRO 1600 (Zen 1, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.17,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-pro-215",
+    "name": "Ryzen 5 PRO 215 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-220",
+    "name": "Ryzen 5 PRO 220 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-230",
+    "name": "Ryzen 5 PRO 230 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-2600",
+    "name": "Ryzen 5 PRO 2600 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.75,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-3600",
+    "name": "Ryzen 5 PRO 3600 (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-4650g",
+    "name": "Ryzen 5 PRO 4650G (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-4650ge",
+    "name": "Ryzen 5 PRO 4650GE (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-4650u",
+    "name": "Ryzen 5 PRO 4650U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-pro-4655g",
+    "name": "Ryzen 5 PRO 4655G (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-4655ge",
+    "name": "Ryzen 5 PRO 4655GE (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5645",
+    "name": "Ryzen 5 PRO 5645 (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5650g",
+    "name": "Ryzen 5 PRO 5650G (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5650ge",
+    "name": "Ryzen 5 PRO 5650GE (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5650u",
+    "name": "Ryzen 5 PRO 5650U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.4,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5655g",
+    "name": "Ryzen 5 PRO 5655G (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5655ge",
+    "name": "Ryzen 5 PRO 5655GE (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.42,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-5675u",
+    "name": "Ryzen 5 PRO 5675U (Zen 3, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-6650h",
+    "name": "Ryzen 5 PRO 6650H (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-6650hs",
+    "name": "Ryzen 5 PRO 6650HS (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-6650u",
+    "name": "Ryzen 5 PRO 6650U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-7445",
+    "name": "Ryzen 5 PRO 7445 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.83,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-7530u",
+    "name": "Ryzen 5 PRO 7530U (Zen 2, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.43,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-pro-7535u",
+    "name": "Ryzen 5 PRO 7535U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.87,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-7540u",
+    "name": "Ryzen 5 PRO 7540U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-7545u",
+    "name": "Ryzen 5 PRO 7545U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-7640hs",
+    "name": "Ryzen 5 PRO 7640HS (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-7640u",
+    "name": "Ryzen 5 PRO 7640U (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-7645",
+    "name": "Ryzen 5 PRO 7645 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.98,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8500g",
+    "name": "Ryzen 5 PRO 8500G (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8500ge",
+    "name": "Ryzen 5 PRO 8500GE (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8505g",
+    "name": "Ryzen 5 PRO 8505G (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8505ge",
+    "name": "Ryzen 5 PRO 8505GE (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8540u",
+    "name": "Ryzen 5 PRO 8540U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-8600g",
+    "name": "Ryzen 5 PRO 8600G (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8600ge",
+    "name": "Ryzen 5 PRO 8600GE (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8605g",
+    "name": "Ryzen 5 PRO 8605G (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8605ge",
+    "name": "Ryzen 5 PRO 8605GE (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-pro-8640hs",
+    "name": "Ryzen 5 PRO 8640HS (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-8640u",
+    "name": "Ryzen 5 PRO 8640U (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-8645hs",
+    "name": "Ryzen 5 PRO 8645HS (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.96,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-5-pro-9645",
+    "name": "Ryzen 5 PRO 9645 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.04,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-7-7445hs",
+    "name": "Ryzen 7 7445HS (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.9,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-340",
+    "name": "Ryzen AI 5 340 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-435",
+    "name": "Ryzen AI 5 435 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-435g",
+    "name": "Ryzen AI 5 435G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-435ge",
+    "name": "Ryzen AI 5 435GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-440g",
+    "name": "Ryzen AI 5 440G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-440ge",
+    "name": "Ryzen AI 5 440GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-pro-340",
+    "name": "Ryzen AI 5 PRO 340 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-pro-435",
+    "name": "Ryzen AI 5 PRO 435 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-pro-435g",
+    "name": "Ryzen AI 5 PRO 435G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-pro-435ge",
+    "name": "Ryzen AI 5 PRO 435GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-pro-440",
+    "name": "Ryzen AI 5 PRO 440 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-pro-440g",
+    "name": "Ryzen AI 5 PRO 440G (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-5-pro-440ge",
+    "name": "Ryzen AI 5 PRO 440GE (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-ai-7-445",
+    "name": "Ryzen AI 7 445 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.88,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-max-pro-380",
+    "name": "Ryzen AI Max PRO 380 (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-z1",
+    "name": "Ryzen Z1 (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.94,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "athlon-gold-3150g-oem-only",
+    "name": "Athlon Gold 3150G (OEM Only) (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "athlon-gold-3150ge-oem-only",
+    "name": "Athlon Gold 3150GE (OEM Only) (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "athlon-gold-pro-3150g",
+    "name": "Athlon Gold PRO 3150G (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "athlon-gold-pro-3150ge",
+    "name": "Athlon Gold PRO 3150GE (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-110",
+    "name": "Ryzen 3 110 (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.28,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-3-1200",
+    "name": "Ryzen 3 1200 (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-3-1300x",
+    "name": "Ryzen 3 1300X (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-3-210",
+    "name": "Ryzen 3 210 (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-3-2200g-with-radeon-vega-8-graphics",
+    "name": "Ryzen 3 2200G with Radeon Vega 8 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-2200ge-with-radeon-vega-8-graphics",
+    "name": "Ryzen 3 2200GE with Radeon Vega 8 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-2300u",
+    "name": "Ryzen 3 2300U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-2300x",
+    "name": "Ryzen 3 2300X (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-30",
+    "name": "Ryzen 3 30 (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-3-3100",
+    "name": "Ryzen 3 3100 (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.25,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-3200g-with-radeon-vega-8-graphics",
+    "name": "Ryzen 3 3200G with Radeon Vega 8 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-3200ge-oem-only",
+    "name": "Ryzen 3 3200GE (OEM Only) (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-3300u",
+    "name": "Ryzen 3 3300U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-3300x",
+    "name": "Ryzen 3 3300X (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.28,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-3350u",
+    "name": "Ryzen 3 3350U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-4100",
+    "name": "Ryzen 3 4100 (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-4300g-oem-only",
+    "name": "Ryzen 3 4300G (OEM Only) (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-4300ge-oem-only",
+    "name": "Ryzen 3 4300GE (OEM Only) (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-4300u",
+    "name": "Ryzen 3 4300U (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-3-5300g-oem-only",
+    "name": "Ryzen 3 5300G (OEM Only) (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5300ge-oem-only",
+    "name": "Ryzen 3 5300GE (OEM Only) (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5300u",
+    "name": "Ryzen 3 5300U (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-3-5305g",
+    "name": "Ryzen 3 5305G (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5305ge",
+    "name": "Ryzen 3 5305GE (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-5400u",
+    "name": "Ryzen 3 5400U (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-3-5425u",
+    "name": "Ryzen 3 5425U (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-7320u",
+    "name": "Ryzen 3 7320U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-3-7330u",
+    "name": "Ryzen 3 7330U (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.28,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-7335u",
+    "name": "Ryzen 3 7335U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-3-7440u",
+    "name": "Ryzen 3 7440U (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-3-8300g",
+    "name": "Ryzen 3 8300G (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-8300ge",
+    "name": "Ryzen 3 8300GE (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-8305g",
+    "name": "Ryzen 3 8305G (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-8305ge",
+    "name": "Ryzen 3 8305GE (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-8440u",
+    "name": "Ryzen 3 8440U (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-3-pro-1200",
+    "name": "Ryzen 3 PRO 1200 (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-3-pro-1300",
+    "name": "Ryzen 3 PRO 1300 (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-3-pro-210",
+    "name": "Ryzen 3 PRO 210 (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.6,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-3-pro-2200g-with-radeon-vega-8-graphics",
+    "name": "Ryzen 3 PRO 2200G with Radeon Vega 8 Graphics (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.47,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-pro-2200ge-with-radeon-vega-8-graphics",
+    "name": "Ryzen 3 PRO 2200GE with Radeon Vega 8 Graphics (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.46,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-pro-2300u",
+    "name": "Ryzen 3 PRO 2300U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-pro-3200g",
+    "name": "Ryzen 3 PRO 3200G (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-pro-3200ge",
+    "name": "Ryzen 3 PRO 3200GE (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-3-pro-3300u",
+    "name": "Ryzen 3 PRO 3300U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-pro-4350g",
+    "name": "Ryzen 3 PRO 4350G (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-4350ge",
+    "name": "Ryzen 3 PRO 4350GE (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-4355g",
+    "name": "Ryzen 3 PRO 4355G (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-4355ge",
+    "name": "Ryzen 3 PRO 4355GE (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-4450u",
+    "name": "Ryzen 3 PRO 4450U (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-3-pro-5350g",
+    "name": "Ryzen 3 PRO 5350G (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-5350ge",
+    "name": "Ryzen 3 PRO 5350GE (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-5355g",
+    "name": "Ryzen 3 PRO 5355G (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-5355ge",
+    "name": "Ryzen 3 PRO 5355GE (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-5450u",
+    "name": "Ryzen 3 PRO 5450U (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-5475u",
+    "name": "Ryzen 3 PRO 5475U (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-7330u",
+    "name": "Ryzen 3 PRO 7330U (Zen 2, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.28,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-3-pro-7335u",
+    "name": "Ryzen 3 PRO 7335U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-pro-8300g",
+    "name": "Ryzen 3 PRO 8300G (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-pro-8300ge",
+    "name": "Ryzen 3 PRO 8300GE (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-pro-8305g",
+    "name": "Ryzen 3 PRO 8305G (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-3-pro-8305ge",
+    "name": "Ryzen 3 PRO 8305GE (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.63,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-1400",
+    "name": "Ryzen 5 1400 (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-1500x",
+    "name": "Ryzen 5 1500X (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-2400g-with-radeon-rx-vega-11-graphics",
+    "name": "Ryzen 5 2400G with Radeon RX Vega 11 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-2400ge-with-radeon-rx-vega-11-graphics",
+    "name": "Ryzen 5 2400GE with Radeon RX Vega 11 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-2500u",
+    "name": "Ryzen 5 2500U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-2500x",
+    "name": "Ryzen 5 2500X (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-2600h",
+    "name": "Ryzen 5 2600H (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-3400g-with-radeon-rx-vega-11-graphics",
+    "name": "Ryzen 5 3400G with Radeon RX Vega 11 Graphics (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-5-3400ge-oem-only",
+    "name": "Ryzen 5 3400GE (OEM Only) (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-3450u",
+    "name": "Ryzen 5 3450U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-3500u",
+    "name": "Ryzen 5 3500U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-3550h",
+    "name": "Ryzen 5 3550H (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-3580u-microsoft-surface-edition",
+    "name": "Ryzen 5 3580U Microsoft Surface Edition (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-40",
+    "name": "Ryzen 5 40 (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-5500h",
+    "name": "Ryzen 5 5500H (Zen 3, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.27,
+    "defaultRamBwGBps": 68.3
+  },
+  {
+    "id": "ryzen-5-7235hs",
+    "name": "Ryzen 5 7235HS (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.54,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "ryzen-5-7520u",
+    "name": "Ryzen 5 7520U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-5-pro-1500",
+    "name": "Ryzen 5 PRO 1500 (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-5-pro-2400g-with-radeon-vega-11-graphics",
+    "name": "Ryzen 5 PRO 2400G with Radeon Vega 11 Graphics (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.5,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-2400ge-with-radeon-vega-11-graphics",
+    "name": "Ryzen 5 PRO 2400GE with Radeon Vega 11 Graphics (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.49,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-2500u",
+    "name": "Ryzen 5 PRO 2500U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.46,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-5-pro-3350g",
+    "name": "Ryzen 5 PRO 3350G (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-3350ge",
+    "name": "Ryzen 5 PRO 3350GE (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-3400g",
+    "name": "Ryzen 5 PRO 3400G (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-3400ge",
+    "name": "Ryzen 5 PRO 3400GE (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 46.9
+  },
+  {
+    "id": "ryzen-5-pro-3500u",
+    "name": "Ryzen 5 PRO 3500U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-2700u",
+    "name": "Ryzen 7 2700U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-2800h",
+    "name": "Ryzen 7 2800H (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 51.2
+  },
+  {
+    "id": "ryzen-7-3700u",
+    "name": "Ryzen 7 3700U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-3750h",
+    "name": "Ryzen 7 3750H (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-3780u-microsoft-surface-edition",
+    "name": "Ryzen 7 3780U Microsoft Surface Edition (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-pro-2700u",
+    "name": "Ryzen 7 PRO 2700U (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.49,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-7-pro-3700u",
+    "name": "Ryzen 7 PRO 3700U (Zen 1, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.13,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-ai-5-330",
+    "name": "Ryzen AI 5 330 (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-ai-5-430",
+    "name": "Ryzen AI 5 430 (Zen 5, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 120
+  },
+  {
+    "id": "ryzen-z2-a",
+    "name": "Ryzen Z2 A (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.49,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "ryzen-z2-go",
+    "name": "Ryzen Z2 Go (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.55,
+    "defaultRamBwGBps": 51
+  },
+  {
+    "id": "athlon-gold-20",
+    "name": "Athlon Gold 20 (Zen 2, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.12,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-gold-3150u",
+    "name": "Athlon Gold 3150U (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "athlon-gold-7220u",
+    "name": "Athlon Gold 7220U (Zen 4, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.24,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-pro-3045b",
+    "name": "Athlon PRO 3045B (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "athlon-pro-3145b",
+    "name": "Athlon PRO 3145B (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "athlon-silver-10",
+    "name": "Athlon Silver 10 (Zen 2, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.11,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-silver-3050e",
+    "name": "Athlon Silver 3050e (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.04,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "athlon-silver-3050ge-oem-only",
+    "name": "Athlon Silver 3050GE (OEM Only) (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "athlon-silver-3050u",
+    "name": "Athlon Silver 3050U (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "athlon-silver-7120u",
+    "name": "Athlon Silver 7120U (Zen 4, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.22,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "athlon-silver-pro-3125ge",
+    "name": "Athlon Silver PRO 3125GE (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 42.7
+  },
+  {
+    "id": "ryzen-3-2200u",
+    "name": "Ryzen 3 2200U (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.05,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-3200u",
+    "name": "Ryzen 3 3200U (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.06,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-3-3250u",
+    "name": "Ryzen 3 3250U (Zen 1, 2C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.06,
+    "defaultRamBwGBps": 38.4
+  },
+  {
+    "id": "ryzen-threadripper-pro-7995wx",
+    "name": "Ryzen Threadripper PRO 7995WX (Zen 4, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 15.67,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9995wx",
+    "name": "Ryzen Threadripper PRO 9995WX (Zen 5, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 16.59,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-3990x",
+    "name": "Ryzen Threadripper 3990X (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.4,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "ryzen-threadripper-7980x",
+    "name": "Ryzen Threadripper 7980X (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 10.44,
+    "defaultRamBwGBps": 166.4
+  },
+  {
+    "id": "ryzen-threadripper-9980x",
+    "name": "Ryzen Threadripper 9980X (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.06,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-3995wx",
+    "name": "Ryzen Threadripper PRO 3995WX (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.3,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-5995wx",
+    "name": "Ryzen Threadripper PRO 5995WX (Zen 3, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.61,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-7985wx",
+    "name": "Ryzen Threadripper PRO 7985WX (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 10.44,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9985wx",
+    "name": "Ryzen Threadripper PRO 9985WX (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.06,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-2990wx",
+    "name": "Ryzen Threadripper 2990WX (Zen 1, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.08,
+    "defaultRamBwGBps": 93.9
+  },
+  {
+    "id": "ryzen-threadripper-3970x",
+    "name": "Ryzen Threadripper 3970X (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.3,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-threadripper-7970x",
+    "name": "Ryzen Threadripper 7970X (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.43,
+    "defaultRamBwGBps": 166.4
+  },
+  {
+    "id": "ryzen-threadripper-9970x",
+    "name": "Ryzen Threadripper 9970X (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.53,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-3975wx",
+    "name": "Ryzen Threadripper PRO 3975WX (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-5975wx",
+    "name": "Ryzen Threadripper PRO 5975WX (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.3,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-7975wx",
+    "name": "Ryzen Threadripper PRO 7975WX (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.43,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9975wx",
+    "name": "Ryzen Threadripper PRO 9975WX (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.53,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-2970wx",
+    "name": "Ryzen Threadripper 2970WX (Zen 1, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.81,
+    "defaultRamBwGBps": 93.9
+  },
+  {
+    "id": "ryzen-threadripper-3960x",
+    "name": "Ryzen Threadripper 3960X (Zen 2, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.73,
+    "defaultRamBwGBps": 102.4
+  },
+  {
+    "id": "ryzen-threadripper-7960x",
+    "name": "Ryzen Threadripper 7960X (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.07,
+    "defaultRamBwGBps": 166.4
+  },
+  {
+    "id": "ryzen-threadripper-9960x",
+    "name": "Ryzen Threadripper 9960X (Zen 5, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.15,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-5965wx",
+    "name": "Ryzen Threadripper PRO 5965WX (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.73,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-7965wx",
+    "name": "Ryzen Threadripper PRO 7965WX (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.07,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9965wx",
+    "name": "Ryzen Threadripper PRO 9965WX (Zen 5, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.15,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-1950x",
+    "name": "Ryzen Threadripper 1950X (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.51,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "ryzen-threadripper-2950x",
+    "name": "Ryzen Threadripper 2950X (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.56,
+    "defaultRamBwGBps": 93.9
+  },
+  {
+    "id": "ryzen-threadripper-pro-3955wx",
+    "name": "Ryzen Threadripper PRO 3955WX (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.1,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-5955wx",
+    "name": "Ryzen Threadripper PRO 5955WX (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.15,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-7955wx",
+    "name": "Ryzen Threadripper PRO 7955WX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.71,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9955wx",
+    "name": "Ryzen Threadripper PRO 9955WX (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-1920x",
+    "name": "Ryzen Threadripper 1920X (Zen 1, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.38,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "ryzen-threadripper-2920x",
+    "name": "Ryzen Threadripper 2920X (Zen 1, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 93.9
+  },
+  {
+    "id": "ryzen-threadripper-pro-3945wx",
+    "name": "Ryzen Threadripper PRO 3945WX (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.83,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-5945wx",
+    "name": "Ryzen Threadripper PRO 5945WX (Zen 3, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.86,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-7945wx",
+    "name": "Ryzen Threadripper PRO 7945WX (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.04,
+    "defaultRamBwGBps": 332.8
+  },
+  {
+    "id": "ryzen-threadripper-pro-9945wx",
+    "name": "Ryzen Threadripper PRO 9945WX (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 409.6
+  },
+  {
+    "id": "ryzen-threadripper-1900x",
+    "name": "Ryzen Threadripper 1900X (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.26,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "epyc-9965",
+    "name": "EPYC 9965 (Zen 5, 192C)",
+    "vendor": "AMD",
+    "fp16Tflops": 22.73,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9845",
+    "name": "EPYC 9845 (Zen 5, 160C)",
+    "vendor": "AMD",
+    "fp16Tflops": 18.94,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9825",
+    "name": "EPYC 9825 (Zen 5, 144C)",
+    "vendor": "AMD",
+    "fp16Tflops": 17.05,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9745",
+    "name": "EPYC 9745 (Zen 5, 128C)",
+    "vendor": "AMD",
+    "fp16Tflops": 15.16,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9754",
+    "name": "EPYC 9754 (Zen 4, 128C)",
+    "vendor": "AMD",
+    "fp16Tflops": 12.7,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9754s",
+    "name": "EPYC 9754S (Zen 4, 128C)",
+    "vendor": "AMD",
+    "fp16Tflops": 12.7,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9755",
+    "name": "EPYC 9755 (Zen 5, 128C)",
+    "vendor": "AMD",
+    "fp16Tflops": 16.79,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9734",
+    "name": "EPYC 9734 (Zen 4, 112C)",
+    "vendor": "AMD",
+    "fp16Tflops": 10.75,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9645",
+    "name": "EPYC 9645 (Zen 5, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.37,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9654",
+    "name": "EPYC 9654 (Zen 4, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.37,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9654p",
+    "name": "EPYC 9654P (Zen 4, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.37,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9655",
+    "name": "EPYC 9655 (Zen 5, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 13.82,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9655p",
+    "name": "EPYC 9655P (Zen 5, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 13.82,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9684x",
+    "name": "EPYC 9684X (Zen 4, 96C)",
+    "vendor": "AMD",
+    "fp16Tflops": 11.37,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9634",
+    "name": "EPYC 9634 (Zen 4, 84C)",
+    "vendor": "AMD",
+    "fp16Tflops": 9.95,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9565",
+    "name": "EPYC 9565 (Zen 5, 72C)",
+    "vendor": "AMD",
+    "fp16Tflops": 9.91,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-7662",
+    "name": "EPYC 7662 (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.38,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7702",
+    "name": "EPYC 7702 (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.43,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7702p",
+    "name": "EPYC 7702P (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.43,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7713",
+    "name": "EPYC 7713 (Zen 3, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.76,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7713p",
+    "name": "EPYC 7713P (Zen 3, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.76,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7742",
+    "name": "EPYC 7742 (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.48,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7763",
+    "name": "EPYC 7763 (Zen 3, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.58,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7773x",
+    "name": "EPYC 7773X (Zen 3, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.58,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7h12",
+    "name": "EPYC 7H12 (Zen 2, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.38,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-8534p",
+    "name": "EPYC 8534P (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 6.35,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8534pn",
+    "name": "EPYC 8534PN (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 6.35,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9534",
+    "name": "EPYC 9534 (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 7.58,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9535",
+    "name": "EPYC 9535 (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 8.81,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9554",
+    "name": "EPYC 9554 (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 7.68,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9554p",
+    "name": "EPYC 9554P (Zen 4, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 7.68,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9555",
+    "name": "EPYC 9555 (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 9.01,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9555p",
+    "name": "EPYC 9555P (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 9.01,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9575f",
+    "name": "EPYC 9575F (Zen 5, 64C)",
+    "vendor": "AMD",
+    "fp16Tflops": 10.24,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-7663",
+    "name": "EPYC 7663 (Zen 3, 56C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.14,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7663p",
+    "name": "EPYC 7663P (Zen 3, 56C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.14,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7552",
+    "name": "EPYC 7552 (Zen 2, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.53,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7642",
+    "name": "EPYC 7642 (Zen 2, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.53,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7643",
+    "name": "EPYC 7643 (Zen 3, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7643p",
+    "name": "EPYC 7643P (Zen 3, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-8434p",
+    "name": "EPYC 8434P (Zen 4, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.76,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8434pn",
+    "name": "EPYC 8434PN (Zen 4, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.61,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9454",
+    "name": "EPYC 9454 (Zen 4, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.84,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9454p",
+    "name": "EPYC 9454P (Zen 4, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 5.84,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9455",
+    "name": "EPYC 9455 (Zen 5, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 6.76,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9455p",
+    "name": "EPYC 9455P (Zen 5, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 6.76,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9474f",
+    "name": "EPYC 9474F (Zen 4, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 6.3,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9475f",
+    "name": "EPYC 9475F (Zen 5, 48C)",
+    "vendor": "AMD",
+    "fp16Tflops": 7.37,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9365",
+    "name": "EPYC 9365 (Zen 5, 36C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.95,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-7452",
+    "name": "EPYC 7452 (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.72,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7501",
+    "name": "EPYC 7501 (Zen 1, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.77,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7502",
+    "name": "EPYC 7502 (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.72,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7502p",
+    "name": "EPYC 7502P (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.72,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7513",
+    "name": "EPYC 7513 (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.87,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7532",
+    "name": "EPYC 7532 (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.69,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7542",
+    "name": "EPYC 7542 (Zen 2, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.74,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7543",
+    "name": "EPYC 7543 (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.89,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7543p",
+    "name": "EPYC 7543P (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.89,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7551",
+    "name": "EPYC 7551 (Zen 1, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.77,
+    "defaultRamBwGBps": 170.6
+  },
+  {
+    "id": "epyc-7551p",
+    "name": "EPYC 7551P (Zen 1, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.77,
+    "defaultRamBwGBps": 170.6
+  },
+  {
+    "id": "epyc-7573x",
+    "name": "EPYC 7573X (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.84,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-75f3",
+    "name": "EPYC 75F3 (Zen 3, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.05,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7601",
+    "name": "EPYC 7601 (Zen 1, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.82,
+    "defaultRamBwGBps": 170.6
+  },
+  {
+    "id": "epyc-8324p",
+    "name": "EPYC 8324P (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.07,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8324pn",
+    "name": "EPYC 8324PN (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.07,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9334",
+    "name": "EPYC 9334 (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.99,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9335",
+    "name": "EPYC 9335 (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.51,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9354",
+    "name": "EPYC 9354 (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.89,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9354p",
+    "name": "EPYC 9354P (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.89,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9355",
+    "name": "EPYC 9355 (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.51,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9355p",
+    "name": "EPYC 9355P (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.51,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9374f",
+    "name": "EPYC 9374F (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.4,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9375f",
+    "name": "EPYC 9375F (Zen 5, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 4.92,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9384x",
+    "name": "EPYC 9384X (Zen 4, 32C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.99,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-7453",
+    "name": "EPYC 7453 (Zen 3, 28C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.55,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7352",
+    "name": "EPYC 7352 (Zen 2, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.23,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7401",
+    "name": "EPYC 7401 (Zen 1, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7401p",
+    "name": "EPYC 7401P (Zen 1, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.58,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7402",
+    "name": "EPYC 7402 (Zen 2, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.29,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7402p",
+    "name": "EPYC 7402P (Zen 2, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.29,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7413",
+    "name": "EPYC 7413 (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.38,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7443",
+    "name": "EPYC 7443 (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.54,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7443p",
+    "name": "EPYC 7443P (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.54,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7451",
+    "name": "EPYC 7451 (Zen 1, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 170.6
+  },
+  {
+    "id": "epyc-7473x",
+    "name": "EPYC 7473X (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.42,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-74f3",
+    "name": "EPYC 74F3 (Zen 3, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.54,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7f72",
+    "name": "EPYC 7F72 (Zen 2, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.42,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-8224p",
+    "name": "EPYC 8224P (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.3,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8224pn",
+    "name": "EPYC 8224PN (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.3,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9224",
+    "name": "EPYC 9224 (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.84,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9254",
+    "name": "EPYC 9254 (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.19,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9255",
+    "name": "EPYC 9255 (Zen 5, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.3,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9274f",
+    "name": "EPYC 9274F (Zen 4, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.3,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9275f",
+    "name": "EPYC 9275F (Zen 5, 24C)",
+    "vendor": "AMD",
+    "fp16Tflops": 3.69,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-4545p",
+    "name": "EPYC 4545P (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.76,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-4564p",
+    "name": "EPYC 4564P (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-4565p",
+    "name": "EPYC 4565P (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-4584px",
+    "name": "EPYC 4584PX (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-4585px",
+    "name": "EPYC 4585PX (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.92,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-7281",
+    "name": "EPYC 7281 (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.35,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7282",
+    "name": "EPYC 7282 (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.82,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "epyc-7301",
+    "name": "EPYC 7301 (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.35,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7302",
+    "name": "EPYC 7302 (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.84,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7302p",
+    "name": "EPYC 7302P (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.84,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7303",
+    "name": "EPYC 7303 (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.87,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7303p",
+    "name": "EPYC 7303P (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.87,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7313",
+    "name": "EPYC 7313 (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.95,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7313p",
+    "name": "EPYC 7313P (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.95,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7343",
+    "name": "EPYC 7343 (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7351",
+    "name": "EPYC 7351 (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.37,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7351p",
+    "name": "EPYC 7351P (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.37,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7371",
+    "name": "EPYC 7371 (Zen 1, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.49,
+    "defaultRamBwGBps": 170.6
+  },
+  {
+    "id": "epyc-7373x",
+    "name": "EPYC 7373X (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.97,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-73f3",
+    "name": "EPYC 73F3 (Zen 3, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.02,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7f52",
+    "name": "EPYC 7F52 (Zen 2, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-8124p",
+    "name": "EPYC 8124P (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.54,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8124pn",
+    "name": "EPYC 8124PN (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.54,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9115",
+    "name": "EPYC 9115 (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.1,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9124",
+    "name": "EPYC 9124 (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.89,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9135",
+    "name": "EPYC 9135 (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.2,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9174f",
+    "name": "EPYC 9174F (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.25,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-9175f",
+    "name": "EPYC 9175F (Zen 5, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.56,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-9184x",
+    "name": "EPYC 9184X (Zen 4, 16C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 460.8
+  },
+  {
+    "id": "epyc-4464p",
+    "name": "EPYC 4464P (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-4465p",
+    "name": "EPYC 4465P (Zen 5, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.07,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-4484px",
+    "name": "EPYC 4484PX (Zen 4, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 2.15,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-7272",
+    "name": "EPYC 7272 (Zen 2, 12C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.61,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "epyc-4344p",
+    "name": "EPYC 4344P (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.36,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-4345p",
+    "name": "EPYC 4345P (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.41,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-4364p",
+    "name": "EPYC 4364P (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.38,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-7203",
+    "name": "EPYC 7203 (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7203p",
+    "name": "EPYC 7203P (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7232p",
+    "name": "EPYC 7232P (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "epyc-7251",
+    "name": "EPYC 7251 (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.19,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7252",
+    "name": "EPYC 7252 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.41,
+    "defaultRamBwGBps": 85.3
+  },
+  {
+    "id": "epyc-7261",
+    "name": "EPYC 7261 (Zen 1, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.19,
+    "defaultRamBwGBps": 153.6
+  },
+  {
+    "id": "epyc-7262",
+    "name": "EPYC 7262 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.44,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-72f3",
+    "name": "EPYC 72F3 (Zen 3, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.52,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-7f32",
+    "name": "EPYC 7F32 (Zen 2, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.5,
+    "defaultRamBwGBps": 204.8
+  },
+  {
+    "id": "epyc-8024p",
+    "name": "EPYC 8024P (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.77,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-8024pn",
+    "name": "EPYC 8024PN (Zen 4, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.77,
+    "defaultRamBwGBps": 230.4
+  },
+  {
+    "id": "epyc-9015",
+    "name": "EPYC 9015 (Zen 5, 8C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.05,
+    "defaultRamBwGBps": 614
+  },
+  {
+    "id": "epyc-4244p",
+    "name": "EPYC 4244P (Zen 4, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.98,
+    "defaultRamBwGBps": 83.2
+  },
+  {
+    "id": "epyc-4245p",
+    "name": "EPYC 4245P (Zen 5, 6C)",
+    "vendor": "AMD",
+    "fp16Tflops": 1.04,
+    "defaultRamBwGBps": 89.6
+  },
+  {
+    "id": "epyc-4124p",
+    "name": "EPYC 4124P (Zen 4, 4C)",
+    "vendor": "AMD",
+    "fp16Tflops": 0.65,
+    "defaultRamBwGBps": 83.2
+  }
+]
