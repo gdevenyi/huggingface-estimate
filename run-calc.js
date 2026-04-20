@@ -1,4 +1,4 @@
-import { resolveHFModel, parseGGUF, buildResolveUrl, GGMLQuantizationType } from './parsing.js';
+import { resolveHFModel, parseGGUF, buildResolveUrl, GGMLQuantizationType, KV_VALID_QUANTS } from './parsing.js';
 import {
   getArchHandler,
   getModelArch,
@@ -47,12 +47,29 @@ function findGpuPreset(query) {
 }
 
 // ── CLI argument parsing ──
+// Accepts: standard quant names (F16, Q8_0, ...), numeric GGML type IDs, and
+// fork-specific extension names stripped of their "(ik_llama)" / "(rotorquant)"
+// suffix (Q6_0, Q8_KV, TURBO3_0, ...). Only KV-legal types are accepted.
 function parseKvType(val, flag) {
-  if (GGMLQuantizationType[val] !== undefined) return GGMLQuantizationType[val];
-  if (BPE[val] !== undefined) return val;
+  // Standard @huggingface/gguf enum name → numeric ID.
+  if (GGMLQuantizationType[val] !== undefined) {
+    const id = GGMLQuantizationType[val];
+    if (KV_VALID_QUANTS.includes(id)) return id;
+  }
+  // Direct BPE key (e.g. rotorquant string key "TURBO3_0").
+  if (KV_VALID_QUANTS.includes(val)) return val;
+  // Numeric ID (e.g. "133" for Q6_0, "151" for Q8_KV).
   const num = parseInt(val, 10);
-  if (!Number.isNaN(num) && BPE[num] !== undefined) return num;
-  const validNames = Object.keys(GGMLQuantizationType).filter(k => isNaN(Number(k))).sort().join(', ');
+  if (!Number.isNaN(num) && KV_VALID_QUANTS.includes(num)) return num;
+  // Fork-extension name lookup via QUANT_NAMES reverse map ("Q6_0" → 133).
+  for (const k of KV_VALID_QUANTS) {
+    const name = QUANT_NAMES[k] || '';
+    const base = name.replace(/\s*\(.*\)$/, '').trim();
+    if (base === val) return k;
+  }
+  const validNames = KV_VALID_QUANTS
+    .map(k => (QUANT_NAMES[k] || String(k)).replace(/\s*\(.*\)$/, '').trim())
+    .join(', ');
   console.error(`Error: invalid ${flag} value "${val}". Valid: ${validNames}`);
   process.exit(1);
 }

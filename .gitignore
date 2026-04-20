@@ -3,3 +3,4 @@ llama.cpp/
 ik_llama.cpp/
 gguf-parser-go/
 llama-cpp-rotorquant/
+llama-cpp-turboquant/
