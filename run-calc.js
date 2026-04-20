@@ -7,6 +7,9 @@ import {
   calcActivations,
   calcMoEInfo,
   calcMmProj,
+  calcPerLayerFootprint,
+  calcMemoryBreakdown,
+  calcActualMemory,
   estimatePerformance,
   formatBytes,
   formatElements,
@@ -73,7 +76,8 @@ function parseArgs(argv) {
     cpuFlops: null,
     ramBw: null,
     ngl: 'auto',
-    moeOffload: 'auto',
+    cpuMoe: false,
+    nCpuMoe: 0,
   };
 
   let i = 2;
@@ -117,13 +121,15 @@ function parseArgs(argv) {
     } else if (arg === '--ngl') {
       const v = argv[++i];
       args.ngl = v === 'auto' ? 'auto' : parseInt(v, 10);
-    } else if (arg === '--moe-offload') {
-      const v = argv[++i];
-      if (!['auto', 'force-on', 'force-off'].includes(v)) {
-        console.error(`Error: --moe-offload must be "auto", "force-on", or "force-off" (got "${v}")`);
+    } else if (arg === '--cpu-moe') {
+      args.cpuMoe = true;
+    } else if (arg === '--n-cpu-moe') {
+      const v = parseInt(argv[++i], 10);
+      if (Number.isNaN(v) || v < 0) {
+        console.error('Error: --n-cpu-moe requires a non-negative integer');
         process.exit(1);
       }
-      args.moeOffload = v;
+      args.nCpuMoe = v;
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
     }
@@ -161,7 +167,8 @@ function resolveDevice(args) {
     },
     cpu: cpu ? { ...cpu, preset: cpuPreset } : null,
     nGpuLayers: args.ngl === 'auto' ? 'auto' : args.ngl,
-    moeOffloadMode: args.moeOffload,
+    cpuMoe: args.cpuMoe,
+    nCpuMoe: args.nCpuMoe,
   };
 }
 
@@ -206,17 +213,24 @@ async function calcModel(repo) {
 
   // MoE info
   const moeInfo = calcMoEInfo(metadata, tensorInfos);
-
-  // VRAM / RAM breakdown
   const isMoe = moeInfo !== null;
-  const nonMoEWeightBytes = isMoe
-    ? weightInfo.total - moeInfo.expertWeightBytes - moeInfo.routerBytes - moeInfo.sharedBytes
-    : 0;
-  const vramWeightBytes = isMoe
-    ? nonMoEWeightBytes + moeInfo.activeExpertWeightBytes + moeInfo.routerBytes + moeInfo.sharedBytes
-    : weightInfo.total;
-  let vramBytes = vramWeightBytes + kvCache.totalBytes + activations.totalBytes;
-  let ramBytes = isMoe ? (moeInfo.expertWeightBytes - moeInfo.activeExpertWeightBytes) : 0;
+
+  // Per-layer footprint for MoE expert distribution
+  const layerFootprint = calcPerLayerFootprint(metadata, tensorInfos, kvCache, moeInfo);
+
+  // VRAM / RAM breakdown — default: all weights (including all experts) in VRAM.
+  // --cpu-moe: all expert weights in RAM. --n-cpu-moe N: first N layers' experts in RAM.
+  const memBreakdown = calcMemoryBreakdown({
+    weights: weightInfo,
+    moe: moeInfo,
+    kv: kvCache,
+    activations,
+    footprint: layerFootprint,
+    cpuMoe: args.cpuMoe,
+    nCpuMoe: args.nCpuMoe,
+  });
+  let vramBytes = memBreakdown.vramBytes;
+  let ramBytes = memBreakdown.ramBytes;
 
   // mmproj (optional multimodal projector)
   let mmProjInfo = null;
@@ -253,7 +267,8 @@ async function calcModel(repo) {
       nHybridLayers: perf.nHybridLayers || 0,
       nCpuLayers: perf.nCpuLayers,
       autoSplit: perf.autoSplit,
-      moeOffloadMode: perf.moeOffloadMode,
+      cpuMoe: perf.cpuMoe,
+      nCpuMoe: perf.nCpuMoe,
       perLayerMs: {
         gpu: +perf.perLayerMs.gpu.toFixed(3),
         hybrid: +(perf.perLayerMs.hybrid || 0).toFixed(3),
@@ -366,26 +381,47 @@ async function calcModel(repo) {
     vramBytesFormatted: formatBytes(vramBytes),
     ramBytes,
     ramBytesFormatted: formatBytes(ramBytes),
-    vramFit: args.vram > 0 ? (() => {
-      const vramAvailBytes = args.vram * (1024 ** 3);
-      const usagePct = vramBytes / vramAvailBytes * 100;
-      return {
-        availableGiB: args.vram,
-        requiredGiB: +(vramBytes / (1024 ** 3)).toFixed(2),
-        fits: vramBytes <= vramAvailBytes,
-        usagePct: +usagePct.toFixed(1),
-      };
-    })() : null,
-    ramFit: args.ram > 0 && ramBytes > 0 ? (() => {
-      const ramAvailBytes = args.ram * (1024 ** 3);
-      const usagePct = ramBytes / ramAvailBytes * 100;
-      return {
-        availableGiB: args.ram,
-        requiredGiB: +(ramBytes / (1024 ** 3)).toFixed(2),
-        fits: ramBytes <= ramAvailBytes,
-        usagePct: +usagePct.toFixed(1),
-      };
-    })() : null,
+    ...(() => {
+      if (args.vram <= 0 && args.ram <= 0) return { vramFit: null, ramFit: null };
+      const mmprojActBytes = mmProjInfo ? (mmProjInfo.weightBytes + (mmProjInfo.perImageActBytes || 0)) : 0;
+      const reservedBytes = activations.totalBytes + (args.mmprojDevice !== 'ram' ? mmprojActBytes : 0);
+      let actualRamTotal = ramBytes;
+      let vramFit = null;
+      if (args.vram > 0) {
+        const vramAvailBytes = args.vram * (1024 ** 3);
+        const actual = calcActualMemory({
+          vramBytes: vramAvailBytes,
+          footprint: layerFootprint,
+          activationBytes: reservedBytes,
+          cpuMoe: args.cpuMoe,
+          nCpuMoe: args.nCpuMoe,
+        });
+        const usagePct = actual.actualVram / vramAvailBytes * 100;
+        actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);
+        vramFit = {
+          availableGiB: args.vram,
+          actualVramGiB: +(actual.actualVram / (1024 ** 3)).toFixed(2),
+          actualRamGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+          fits: actual.actualVram <= vramAvailBytes,
+          usagePct: +usagePct.toFixed(1),
+          nGpuLayers: actual.nGpuLayers,
+          nHybridLayers: actual.nHybridLayers,
+          nCpuLayers: actual.nCpuLayers,
+        };
+      }
+      let ramFit = null;
+      if (args.ram > 0) {
+        const ramAvailBytes = args.ram * (1024 ** 3);
+        const usagePct = actualRamTotal / ramAvailBytes * 100;
+        ramFit = {
+          availableGiB: args.ram,
+          requiredGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+          fits: actualRamTotal <= ramAvailBytes,
+          usagePct: +usagePct.toFixed(1),
+        };
+      }
+      return { vramFit, ramFit };
+    })(),
     performance,
   };
 }
@@ -453,6 +489,8 @@ Performance estimation (supply --gpu or --gpu-flops + --gpu-bw to enable):
   --cpu-flops <TF>   Override CPU FP16 TFLOPS
   --ram-bw <GB/s>    Override system RAM bandwidth
   --ngl <n|auto>     GPU layer override (default: auto, sized from --vram)
+  --cpu-moe          Keep all MoE expert weights in CPU (llama.cpp -cmoe)
+  --n-cpu-moe <N>    Keep MoE expert weights of first N layers in CPU (llama.cpp -ncmoe)
 
 Quantization type names: F32, F16, BF16, Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, Q4_K, Q5_K, Q6_K, Q8_K, ...
 `);

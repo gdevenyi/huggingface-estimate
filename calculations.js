@@ -931,76 +931,202 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
   };
 }
 
-// Greedy VRAM fill with three tiers per MoE layer:
+// Greedy VRAM fill matching llama.cpp's layer offloading semantics
+// (`llama_params_fit_impl` in llama.cpp/src/llama.cpp):
 //   'gpu'    — full layer (including all experts) resident in VRAM
-//   'hybrid' — non-expert + active experts in VRAM, inactive experts in RAM;
-//              expert matmul runs on CPU (llama.cpp `--n-cpu-moe` / -ot exps=CPU)
+//   'hybrid' — non-expert weights + KV in VRAM, ALL expert weights in RAM;
+//              expert matmul runs on CPU (llama.cpp `--cpu-moe` / `--n-cpu-moe`)
 //   'cpu'    — whole layer spills to CPU
 //
-// Fit order: layers 0..N first try 'gpu', then 'hybrid' (only for MoE layers
-// and only when mode permits), then 'cpu'. Output weights + activations
-// reserved up front, matching llama.cpp's `-ngl` heuristic.
+// Layers are offloaded back-to-front (highest-numbered layers first), matching
+// llama.cpp's `i_gpu_start = max(n_layer + 1 - n_gpu_layers, 0)`.
 //
-// moeOffloadMode:
-//   'auto'      — try gpu → hybrid → cpu (default)
-//   'force-on'  — MoE layers: skip 'gpu', always try 'hybrid' first. Dense
-//                 layers still fit as 'gpu' (no expert to spill).
-//   'force-off' — never hybrid; 'gpu' or 'cpu' only (legacy behaviour).
+// cpuMoe:    if true, ALL MoE expert tensors across all layers go to CPU RAM
+//            (llama.cpp `--cpu-moe` / `-cmoe`)
+// nCpuMoe:   if > 0, MoE expert tensors for layers 0..N-1 go to CPU RAM
+//            (llama.cpp `--n-cpu-moe N` / `-ncmoe N`).
+//
+// Auto-fit (`--fit on`, the llama.cpp default) for MoE models always runs a
+// two-pass algorithm — `--cpu-moe` / `--n-cpu-moe` only restrict pass 2:
+//   Pass 1: Fill all layers as dense-only back-to-front (experts on CPU,
+//           non-expert + KV in VRAM). Stops at the first layer that doesn't
+//           fit; earlier layers spill to CPU entirely.
+//   Pass 2: Convert dense-only layers to full (move experts back to VRAM)
+//           front-to-back, skipping layers forced hybrid by --cpu-moe /
+//           --n-cpu-moe.
 export function computeOffloadSplit({
   vramBytes, footprint, activationBytes = 0, nLayerOverride,
-  moeOffloadMode = 'auto',
+  cpuMoe = false, nCpuMoe = 0,
 }) {
   const {
     nLayers, kvBytesPerLayer, outputBytes,
-    layerNonExpertBytes, layerExpertBytesFull, layerExpertBytesActive,
+    layerNonExpertBytes, layerExpertBytesFull,
   } = footprint;
 
   const modes = new Array(nLayers).fill('cpu');
   const hasExpert = (i) => (layerExpertBytesFull[i] || 0) > 0;
 
+  const shouldHybridize = (i) => {
+    if (!hasExpert(i)) return false;
+    if (cpuMoe) return true;
+    if (nCpuMoe > 0 && i < nCpuMoe) return true;
+    return false;
+  };
+
+  const gpuNeed = (i) => layerNonExpertBytes[i] + layerExpertBytesFull[i] + kvBytesPerLayer;
+  const hybridNeed = (i) => layerNonExpertBytes[i] + kvBytesPerLayer;
+
+  // Manual --ngl override: last N layers to GPU (back-to-front), then apply
+  // expert placement overrides for cpuMoe / nCpuMoe.
   if (nLayerOverride != null && nLayerOverride !== 'auto') {
     const n = Math.max(0, Math.min(nLayers, Number(nLayerOverride)));
-    for (let i = 0; i < n; i++) modes[i] = 'gpu';
+    const gpuStart = nLayers - n;
+    for (let i = gpuStart; i < nLayers; i++) {
+      modes[i] = shouldHybridize(i) ? 'hybrid' : 'gpu';
+    }
+    const nGpu = modes.filter(m => m === 'gpu').length;
+    const nHyb = modes.filter(m => m === 'hybrid').length;
     return {
-      nGpuLayers: n, nHybridLayers: 0, nCpuLayers: nLayers - n,
-      auto: false, modes, moeOffloadMode,
+      nGpuLayers: nGpu, nHybridLayers: nHyb, nCpuLayers: nLayers - nGpu - nHyb,
+      auto: false, modes, cpuMoe, nCpuMoe,
     };
   }
+
   if (!vramBytes || vramBytes <= 0) {
     return {
       nGpuLayers: 0, nHybridLayers: 0, nCpuLayers: nLayers,
-      auto: true, modes, moeOffloadMode,
+      auto: true, modes, cpuMoe, nCpuMoe,
     };
   }
 
-  let remaining = vramBytes - outputBytes - activationBytes;
-  let nGpu = 0, nHybrid = 0;
-  const allowGpuFirst = (moeOffloadMode !== 'force-on');
-  const allowHybrid = (moeOffloadMode !== 'force-off');
+  const reserved = outputBytes + activationBytes;
+  const hasExperts = footprint.hasExperts;
 
-  for (let i = 0; i < nLayers; i++) {
-    const gpuNeed = layerNonExpertBytes[i] + layerExpertBytesFull[i] + kvBytesPerLayer;
-    const hybridNeed = layerNonExpertBytes[i] + layerExpertBytesActive[i] + kvBytesPerLayer;
-    const canGpu = allowGpuFirst && remaining >= gpuNeed;
-    const canHybrid = allowHybrid && hasExpert(i) && remaining >= hybridNeed;
-    // force-on: prefer hybrid over gpu for MoE layers; dense still uses gpu
-    if (moeOffloadMode === 'force-on' && hasExpert(i) && canHybrid) {
-      modes[i] = 'hybrid'; remaining -= hybridNeed; nHybrid++;
-    } else if (canGpu) {
-      modes[i] = 'gpu'; remaining -= gpuNeed; nGpu++;
-    } else if (canHybrid) {
-      modes[i] = 'hybrid'; remaining -= hybridNeed; nHybrid++;
+  if (!hasExperts) {
+    // Dense model: simple back-to-front fill, no hybridization possible.
+    let remaining = vramBytes - reserved;
+    let nGpu = 0;
+    for (let i = nLayers - 1; i >= 0; i--) {
+      const need = gpuNeed(i);
+      if (remaining >= need) {
+        modes[i] = 'gpu';
+        remaining -= need;
+        nGpu++;
+      } else {
+        break;
+      }
+    }
+    return {
+      nGpuLayers: nGpu, nHybridLayers: 0, nCpuLayers: nLayers - nGpu,
+      auto: true, modes, cpuMoe, nCpuMoe,
+    };
+  }
+
+  // MoE model — always run llama.cpp's two-pass `--fit on` algorithm:
+  //   Pass 1: dense-only fill back-to-front.
+  //   Pass 2: upgrade non-forced layers to full gpu front-to-back.
+  // --cpu-moe / --n-cpu-moe only restrict which layers pass 2 may upgrade;
+  // the same algorithm runs whether or not those flags are set.
+  let remaining = vramBytes - reserved;
+
+  // Pass 1: dense-only fill back-to-front. Dense layers use gpuNeed,
+  // MoE layers use hybridNeed (experts not counted toward VRAM).
+  const layerModes = new Array(nLayers).fill('cpu');
+  for (let i = nLayers - 1; i >= 0; i--) {
+    const need = hasExpert(i) ? hybridNeed(i) : gpuNeed(i);
+    if (remaining >= need) {
+      layerModes[i] = hasExpert(i) ? 'hybrid' : 'gpu';
+      remaining -= need;
     } else {
-      // No more GPU room — remaining layers all go to CPU. Stop probing to
-      // preserve contiguous ordering (matches llama.cpp's layer-ordered offload).
       break;
     }
   }
 
-  const nCpu = nLayers - nGpu - nHybrid;
+  // Pass 2: upgrade hybrid layers to full gpu (add experts back to VRAM)
+  // front-to-back, but only for layers NOT forced by --cpu-moe / --n-cpu-moe.
+  for (let i = 0; i < nLayers; i++) {
+    if (layerModes[i] !== 'hybrid') continue;
+    if (shouldHybridize(i)) continue;
+    const expertBytes = layerExpertBytesFull[i];
+    if (remaining >= expertBytes) {
+      remaining -= expertBytes;
+      layerModes[i] = 'gpu';
+    }
+  }
+
+  // Count and assign
+  for (let i = 0; i < nLayers; i++) modes[i] = layerModes[i];
+  const nGpu = modes.filter(m => m === 'gpu').length;
+  const nHyb = modes.filter(m => m === 'hybrid').length;
+
   return {
-    nGpuLayers: nGpu, nHybridLayers: nHybrid, nCpuLayers: nCpu,
-    auto: true, modes, moeOffloadMode,
+    nGpuLayers: nGpu, nHybridLayers: nHyb, nCpuLayers: nLayers - nGpu - nHyb,
+    auto: true, modes, cpuMoe, nCpuMoe,
+  };
+}
+
+// Top-level VRAM/RAM memory breakdown for display, matching llama.cpp's
+// default behaviour: ALL weights (including all experts) go to VRAM for a
+// fully-offloaded model. The cpuMoe / nCpuMoe flags shift expert weights
+// to RAM, mirroring llama.cpp's --cpu-moe / --n-cpu-moe flags.
+export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, cpuMoe = false, nCpuMoe = 0 }) {
+  let vramWeightBytes, ramExpertBytes = 0;
+
+  if (!moe) {
+    vramWeightBytes = weights.total;
+  } else if (cpuMoe) {
+    vramWeightBytes = weights.total - moe.expertWeightBytes;
+    ramExpertBytes = moe.expertWeightBytes;
+  } else if (nCpuMoe > 0 && footprint) {
+    const expertPerLayer = [];
+    for (let i = 0; i < footprint.nLayers; i++) {
+      expertPerLayer.push(footprint.layerExpertBytesFull[i] || 0);
+    }
+    const cpuExpertLayers = Math.min(nCpuMoe, footprint.nLayers);
+    for (let i = 0; i < cpuExpertLayers; i++) {
+      ramExpertBytes += expertPerLayer[i];
+    }
+    vramWeightBytes = weights.total - ramExpertBytes;
+  } else {
+    vramWeightBytes = weights.total;
+    ramExpertBytes = 0;
+  }
+
+  const vramBytes = vramWeightBytes + kv.totalBytes + activations.totalBytes;
+
+  return {
+    vramBytes,
+    ramBytes: ramExpertBytes,
+    vramWeightBytes,
+    ramExpertBytes,
+  };
+}
+
+// Given a VRAM budget, compute the actual offload split and derive real
+// VRAM/RAM usage. Unlike calcMemoryBreakdown (theoretical full-offload),
+// this answers "given X GiB VRAM, what actually goes where?"
+export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nLayerOverride, cpuMoe = false, nCpuMoe = 0 }) {
+  const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe });
+
+  let actualVram = footprint.outputBytes + activationBytes;
+  let actualRam = 0;
+
+  for (let i = 0; i < split.modes.length; i++) {
+    const mode = split.modes[i];
+    if (mode === 'gpu') {
+      actualVram += footprint.layerNonExpertBytes[i] + footprint.layerExpertBytesFull[i] + footprint.kvBytesPerLayer;
+    } else if (mode === 'hybrid') {
+      actualVram += footprint.layerNonExpertBytes[i] + footprint.kvBytesPerLayer;
+      actualRam += footprint.layerExpertBytesFull[i];
+    } else {
+      actualRam += footprint.layerNonExpertBytes[i] + footprint.layerExpertBytesFull[i] + footprint.kvBytesPerLayer;
+    }
+  }
+
+  return {
+    ...split,
+    actualVram,
+    actualRam,
   };
 }
 
@@ -1010,11 +1136,9 @@ export function computeOffloadSplit({
 //   gpu: { flopsFp16Tflops, bwGBps, vramBytes },
 //   cpu: { flopsFp16Tflops, bwGBps } | null,
 //   nGpuLayers: number | 'auto',
-//   moeOffloadMode: 'auto' | 'force-on' | 'force-off'  (MoE expert placement)
+//   cpuMoe: boolean   (llama.cpp --cpu-moe: all experts to CPU)
+//   nCpuMoe: number   (llama.cpp --n-cpu-moe N: first N layers' experts to CPU)
 // }
-//
-// Returns SI units internally (seconds, bytes, FLOPS). Formatting is done by
-// callers — same pattern as calcWeightSize / calcKVCache.
 export function estimatePerformance({
   metadata, tensorInfos, ctx, batchSize = 1,
   kv, moe, activations, mmproj, device,
@@ -1035,9 +1159,10 @@ export function estimatePerformance({
     vramBytes, footprint,
     activationBytes: reservedGpuBytes,
     nLayerOverride: device.nGpuLayers,
-    moeOffloadMode: device.moeOffloadMode || 'auto',
+    cpuMoe: device.cpuMoe || false,
+    nCpuMoe: device.nCpuMoe || 0,
   });
-  const { nGpuLayers, nHybridLayers, nCpuLayers, auto, modes, moeOffloadMode } = split;
+  const { nGpuLayers, nHybridLayers, nCpuLayers, auto, modes } = split;
 
   const {
     nLayers, layerActiveBytes, layerActiveElems,
@@ -1152,7 +1277,7 @@ export function estimatePerformance({
     decodeTPS: tDecode > 0 ? 1 / tDecode : 0,
     prefillTPS: tPrefill > 0 ? ctx / tPrefill : 0,
     ttftSec: tPrefill,
-    nGpuLayers, nHybridLayers, nCpuLayers, autoSplit: auto, moeOffloadMode,
+    nGpuLayers, nHybridLayers, nCpuLayers, autoSplit: auto, cpuMoe: split.cpuMoe, nCpuMoe: split.nCpuMoe,
     perLayerMs: {
       gpu: nGpuLayers > 0 ? (tDecodeGpu / nGpuLayers) * 1000 : 0,
       hybrid: nHybridLayers > 0 ? (tHybridTotal / nHybridLayers) * 1000 : 0,

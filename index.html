@@ -534,12 +534,16 @@ button.resolve-btn {
           <input type="text" id="nglOverride" placeholder="auto" />
         </div>
         <div class="form-group hidden" id="moeOffloadGroup">
-          <label for="moeOffload">MoE expert placement</label>
-          <select id="moeOffload">
-            <option value="auto" selected>Auto (fit full layer if possible)</option>
-            <option value="force-on">Force experts to RAM (llama.cpp --n-cpu-moe)</option>
-            <option value="force-off">Force experts to VRAM (no hybrid spill)</option>
-          </select>
+          <label>MoE expert placement</label>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
+              <input type="checkbox" id="cpuMoe" /> --cpu-moe (all experts in RAM)
+            </label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
+              --n-cpu-moe
+              <input type="number" id="nCpuMoe" min="0" step="1" placeholder="0" style="width:60px" />
+            </label>
+          </div>
         </div>
 
         <hr class="divider">
@@ -781,7 +785,7 @@ button.resolve-btn {
 
 <script type="module">
 import { GGMLQuantizationType, KV_VALID_QUANTS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
-import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, estimatePerformance, formatBytes, formatElements } from './calculations.js';
+import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
 import { CPU_PRESETS } from './hardware-presets.js';
 
 // GPU preset data (loaded once from gpu-data.json)
@@ -819,8 +823,9 @@ const cpuPresetEl = $('#cpuPreset');
 const cpuFlopsEl = $('#cpuFlops');
 const ramBwEl = $('#ramBw');
 const nglOverrideEl = $('#nglOverride');
-const moeOffloadEl = $('#moeOffload');
 const moeOffloadGroup = $('#moeOffloadGroup');
+const cpuMoeEl = $('#cpuMoe');
+const nCpuMoeEl = $('#nCpuMoe');
 const perfPanel = $('#perfPanel');
 
 const calcBtn = $('#calcBtn');
@@ -913,7 +918,7 @@ cpuPresetEl.addEventListener('change', () => {
 for (const el of [gpuFlopsEl, gpuBwEl, vramEl]) {
   el.addEventListener('input', () => { gpuPresetEl.value = 'custom'; });
 }
-for (const el of [cpuFlopsEl, ramBwEl, ramEl]) {
+for (const el of [cpuFlopsEl, ramBwEl]) {
   el.addEventListener('input', () => { cpuPresetEl.value = 'custom'; });
 }
 
@@ -1043,33 +1048,18 @@ function renderResults() {
   const moe = calcMoEInfo(currentMetadata, currentTensorInfos);
 
   // VRAM vs RAM split
-  // Dense: all weights + KV + activations in VRAM
-  // MoE: non-MoE weights + active experts + router + shared + KV + activations in VRAM, inactive experts in RAM
-  let vramBytes = 0;
-  let ramBytes = 0;
-
-  // MoE expert placement: 'auto' and 'force-on' put inactive experts in RAM
-  // (llama.cpp --n-cpu-moe mode). 'force-off' keeps the full expert bank in
-  // VRAM, matching standard llama.cpp behaviour for MoE models.
-  const moeOffloadMode = moeOffloadEl.value || 'auto';
-  if (moe) {
-    const nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
-    if (moeOffloadMode === 'force-off') {
-      vramBytes += nonMoEWeightBytes + moe.expertWeightBytes + moe.routerBytes + moe.sharedBytes;
-    } else {
-      vramBytes += nonMoEWeightBytes + moe.activeExpertWeightBytes + moe.routerBytes + moe.sharedBytes;
-      ramBytes += moe.expertWeightBytes - moe.activeExpertWeightBytes;
-    }
-  } else {
-    // Dense: all weights in VRAM
-    vramBytes += weights.total;
-  }
-
-  // KV cache always in VRAM
-  vramBytes += kv.totalBytes;
-
-  // Activations always in VRAM
-  vramBytes += acts.totalBytes;
+  // Default (llama.cpp): ALL weights (including all experts) in VRAM.
+  // --cpu-moe: all expert weights in RAM. --n-cpu-moe N: first N layers' experts in RAM.
+  const cpuMoe = cpuMoeEl.checked;
+  const nCpuMoe = parseInt(nCpuMoeEl.value, 10) || 0;
+  const layerFootprint = calcPerLayerFootprint(currentMetadata, currentTensorInfos, kv, moe);
+  const memBreakdown = calcMemoryBreakdown({
+    weights, moe, kv, activations: acts,
+    footprint: layerFootprint,
+    cpuMoe, nCpuMoe,
+  });
+  let vramBytes = memBreakdown.vramBytes;
+  let ramBytes = memBreakdown.ramBytes;
 
   // mmproj weights + per-image output activation, placed per user toggle
   const mmProjDevice = mmProjDeviceEl.value;
@@ -1223,10 +1213,10 @@ function renderResults() {
   const totalBytes = vramBytes + ramBytes;
 
   // VRAM breakdown components
-  let vramWeightBytes, vramActiveExpertBytes = 0, vramRouterSharedBytes = 0;
+  let vramWeightBytes, vramExpertBytes = 0, vramRouterSharedBytes = 0;
   if (moe) {
     vramWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
-    vramActiveExpertBytes = moe.activeExpertWeightBytes;
+    vramExpertBytes = memBreakdown.vramWeightBytes - vramWeightBytes - moe.routerBytes - moe.sharedBytes;
     vramRouterSharedBytes = moe.routerBytes + moe.sharedBytes;
   } else {
     vramWeightBytes = weights.total;
@@ -1242,8 +1232,9 @@ function renderResults() {
   if (moe) {
     $('#vramWeightsRow .label').textContent = 'Attention + embedding weights';
     $('#vramActiveExpertRow').style.display = '';
-    $('#vramActiveExpertLabel').textContent = `Active experts (${moe.expertUsedCount} of ${moe.expertCount})`;
-    $('#vramActiveExpertSize').textContent = `${formatBytes(vramActiveExpertBytes)} (${vramPct(vramActiveExpertBytes)})`;
+    const expertLabel = cpuMoe ? 'Expert weights (in VRAM)' : (nCpuMoe > 0 ? `Experts in VRAM (layers ${nCpuMoe}+)` : `All experts (${moe.expertCount})`);
+    $('#vramActiveExpertLabel').textContent = expertLabel;
+    $('#vramActiveExpertSize').textContent = `${formatBytes(vramExpertBytes)} (${vramPct(vramExpertBytes)})`;
     if (vramRouterSharedBytes > 0) {
       $('#vramRouterRow').style.display = '';
       $('#vramRouterSize').textContent = `${formatBytes(vramRouterSharedBytes)} (${vramPct(vramRouterSharedBytes)})`;
@@ -1267,12 +1258,17 @@ function renderResults() {
 
   // RAM section
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
-  if (moe && (moe.expertWeightBytes - moe.activeExpertWeightBytes) > 0) {
-    const inactiveCount = moe.expertCount - moe.expertUsedCount;
-    const inactiveWeight = moe.expertWeightBytes - moe.activeExpertWeightBytes;
+  if (moe && ramBytes > 0) {
     $('#ramInactiveRow').style.display = '';
-    $('#ramInactiveLabel').textContent = `Inactive experts (${inactiveCount})`;
-    $('#ramInactiveSize').textContent = `${formatBytes(inactiveWeight)} (${ramBytes > 0 ? (inactiveWeight / ramBytes * 100).toFixed(1) : '0'}%)`;
+    const expertInRam = memBreakdown.ramExpertBytes;
+    if (cpuMoe) {
+      $('#ramInactiveLabel').textContent = `All experts (${moe.expertCount})`;
+    } else if (nCpuMoe > 0) {
+      $('#ramInactiveLabel').textContent = `Experts in RAM (layers 0–${nCpuMoe - 1})`;
+    } else {
+      $('#ramInactiveLabel').textContent = 'Inactive experts';
+    }
+    $('#ramInactiveSize').textContent = `${formatBytes(expertInRam)} (${ramBytes > 0 ? (expertInRam / ramBytes * 100).toFixed(1) : '0'}%)`;
   } else {
     $('#ramInactiveRow').style.display = 'none';
   }
@@ -1322,75 +1318,88 @@ function renderResults() {
   // ── System Fit Check ──
   const fitPanel = $('#fitCheckPanel');
   const showVramBar = vramGB > 0;
-  const showRamBar = ramGB > 0 && ramBytes > 0;
 
-  if (!showVramBar && !showRamBar) {
+  if (!showVramBar) {
     fitPanel.style.display = 'none';
   } else {
     fitPanel.style.display = '';
 
-    // VRAM bar
-    if (showVramBar) {
-      $('#vramFitSection').style.display = '';
-      const vramGBNum = vramBytes / (1024 ** 3);
-      const usagePct = (vramGBNum / vramGB * 100);
-      const clampedPct = Math.min(usagePct, 100);
+    // Use computeOffloadSplit to determine actual layer distribution
+    const mmProjActBytes = currentMmProjInfo ? (currentMmProjInfo.weightBytes + (currentMmProjInfo.perImageActBytes || 0)) : 0;
+    const reservedBytes = acts.totalBytes + (mmProjDevice !== 'ram' ? mmProjActBytes : 0);
+    const actual = calcActualMemory({
+      vramBytes: vramGB * (1024 ** 3),
+      footprint: layerFootprint,
+      activationBytes: reservedBytes,
+      cpuMoe,
+      nCpuMoe,
+    });
 
-      const bar = $('#vramBar');
-      const barText = $('#vramBarText');
-      const status = $('#vramStatus');
+    // VRAM bar — shows actual usage from offload split
+    $('#vramFitSection').style.display = '';
+    const vramAvailBytes = vramGB * (1024 ** 3);
+    const vramUsagePct = (actual.actualVram / vramAvailBytes * 100);
+    const clampedVramPct = Math.min(vramUsagePct, 100);
 
-      bar.style.width = `${clampedPct}%`;
+    const vramBar = $('#vramBar');
+    const vramBarText = $('#vramBarText');
+    const vramStatus = $('#vramStatus');
 
-      if (usagePct <= 80) {
-        bar.className = 'vram-bar green';
-        status.className = 'vram-status green';
-        status.textContent = `\u2713 Fits comfortably \u2014 ${formatBytes(vramBytes)} of ${vramGB} GiB (${usagePct.toFixed(0)}% used)`;
-      } else if (usagePct <= 100) {
-        bar.className = 'vram-bar yellow';
-        status.className = 'vram-status yellow';
-        status.textContent = `\u26A0 Marginal \u2014 ${formatBytes(vramBytes)} of ${vramGB} GiB (${usagePct.toFixed(0)}% used)`;
-      } else {
-        bar.className = 'vram-bar red';
-        status.className = 'vram-status red';
-        status.textContent = `\u2717 Does not fit \u2014 ${formatBytes(vramBytes)} needed, ${vramGB} GiB available (${(usagePct - 100).toFixed(0)}% over)`;
-      }
+    vramBar.style.width = `${clampedVramPct}%`;
 
-      barText.textContent = `${usagePct.toFixed(1)}%`;
-      $('#vramFitLabel').textContent = `${formatBytes(vramBytes)} / ${vramGB} GiB`;
+    const layerSplitStr = actual.nHybridLayers > 0
+      ? `${actual.nGpuLayers} GPU / ${actual.nHybridLayers} hybrid / ${actual.nCpuLayers} CPU`
+      : actual.nCpuLayers > 0
+        ? `${actual.nGpuLayers} GPU / ${actual.nCpuLayers} CPU`
+        : `${actual.nGpuLayers} GPU (full offload)`;
+
+    if (vramUsagePct > 100) {
+      vramBar.className = 'vram-bar red';
+      vramStatus.className = 'vram-status red';
+      vramStatus.textContent = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
+    } else if (actual.nCpuLayers === 0 && (actual.nHybridLayers === 0 || cpuMoe || nCpuMoe > 0)) {
+      vramBar.className = 'vram-bar green';
+      vramStatus.className = 'vram-status green';
+      vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
     } else {
-      $('#vramFitSection').style.display = 'none';
+      vramBar.className = 'vram-bar yellow';
+      vramStatus.className = 'vram-status yellow';
+      vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
     }
 
-    // RAM bar
+    vramBarText.textContent = `${vramUsagePct.toFixed(1)}%`;
+    $('#vramFitLabel').textContent = `${formatBytes(actual.actualVram)} / ${vramGB} GiB`;
+
+    // RAM bar — shows actual spill from offload split (always shown when there's CPU spill)
+    const actualRamBytes = actual.actualRam + (mmProjDevice === 'ram' ? mmProjActBytes : 0);
+    const showRamBar = ramGB > 0 && actualRamBytes > 0;
     if (showRamBar) {
       $('#ramFitSection').style.display = '';
-      const ramGBNum = ramBytes / (1024 ** 3);
-      const usagePct = (ramGBNum / ramGB * 100);
-      const clampedPct = Math.min(usagePct, 100);
+      const ramUsagePct = (actualRamBytes / (ramGB * (1024 ** 3)) * 100);
+      const clampedRamPct = Math.min(ramUsagePct, 100);
 
-      const bar = $('#ramBar');
-      const barText = $('#ramBarText');
-      const status = $('#ramStatus');
+      const ramBar = $('#ramBar');
+      const ramBarText = $('#ramBarText');
+      const ramStatus = $('#ramStatus');
 
-      bar.style.width = `${clampedPct}%`;
+      ramBar.style.width = `${clampedRamPct}%`;
 
-      if (usagePct <= 80) {
-        bar.className = 'vram-bar green';
-        status.className = 'vram-status green';
-        status.textContent = `\u2713 Fits comfortably \u2014 ${formatBytes(ramBytes)} of ${ramGB} GiB (${usagePct.toFixed(0)}% used)`;
-      } else if (usagePct <= 100) {
-        bar.className = 'vram-bar yellow';
-        status.className = 'vram-status yellow';
-        status.textContent = `\u26A0 Marginal \u2014 ${formatBytes(ramBytes)} of ${ramGB} GiB (${usagePct.toFixed(0)}% used)`;
+      if (ramUsagePct <= 80) {
+        ramBar.className = 'vram-bar green';
+        ramStatus.className = 'vram-status green';
+        ramStatus.textContent = `\u2713 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
+      } else if (ramUsagePct <= 100) {
+        ramBar.className = 'vram-bar yellow';
+        ramStatus.className = 'vram-status yellow';
+        ramStatus.textContent = `\u26A0 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
       } else {
-        bar.className = 'vram-bar red';
-        status.className = 'vram-status red';
-        status.textContent = `\u2717 Does not fit \u2014 ${formatBytes(ramBytes)} needed, ${ramGB} GiB available (${(usagePct - 100).toFixed(0)}% over)`;
+        ramBar.className = 'vram-bar red';
+        ramStatus.className = 'vram-status red';
+        ramStatus.textContent = `\u2717 RAM overflow \u2014 ${formatBytes(actualRamBytes)} needed, ${ramGB} GiB available`;
       }
 
-      barText.textContent = `${usagePct.toFixed(1)}%`;
-      $('#ramFitLabel').textContent = `${formatBytes(ramBytes)} / ${ramGB} GiB`;
+      ramBarText.textContent = `${ramUsagePct.toFixed(1)}%`;
+      $('#ramFitLabel').textContent = `${formatBytes(actualRamBytes)} / ${ramGB} GiB`;
     } else {
       $('#ramFitSection').style.display = 'none';
     }
@@ -1425,7 +1434,8 @@ function renderResults() {
         cpu: hasCpuPerf ? { flopsFp16Tflops: cpuFlopsV, bwGBps: ramBwV } : null,
         nGpuLayers: nglOverride,
         mmprojOnGpu: mmProjDevice !== 'ram',
-        moeOffloadMode: moeOffloadEl.value || 'auto',
+        cpuMoe,
+        nCpuMoe,
       },
     });
     $('#perfDecode').textContent = `${perf.decodeTPS.toFixed(1)} tok/s`;
@@ -1480,10 +1490,13 @@ calcBtn.addEventListener('click', async () => {
 
 // Auto-calculate on input change
 ['contextLen', 'batchSize', 'vram', 'ram', 'kvTypeK', 'kvTypeV',
- 'gpuFlops', 'gpuBw', 'cpuFlops', 'ramBw', 'nglOverride', 'moeOffload'].forEach(id => {
+ 'gpuFlops', 'gpuBw', 'cpuFlops', 'ramBw', 'nglOverride', 'nCpuMoe'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     if (currentMetadata && currentTensorInfos) renderResults();
   });
+});
+cpuMoeEl.addEventListener('change', () => {
+  if (currentMetadata && currentTensorInfos) renderResults();
 });
 
 // Re-parse GGUF when model file is changed from dropdown

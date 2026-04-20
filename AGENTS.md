@@ -31,7 +31,7 @@ node run-calc.js --batch testModels.list
 
 Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16), `--mmproj FILE`, `--mmprojDevice vram|ram` (default vram). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
 
-Performance flags (add a `performance` block to the JSON): `--gpu <name|id>` (fuzzy-matches `gpu-data.json`), `--cpu <name|id>` (matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` for manual overrides, `--ngl <n|auto>`. Omit all GPU flags to disable the performance block (preserves the pre-feature output shape).
+Performance flags (add a `performance` block to the JSON): `--gpu <name|id>` (fuzzy-matches `gpu-data.json`), `--cpu <name|id>` (matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` for manual overrides, `--ngl <n|auto>`, `--cpu-moe`, `--n-cpu-moe N`. Omit all GPU flags to disable the performance block (preserves the pre-feature output shape).
 
 ## BigInt gotcha
 
@@ -50,10 +50,22 @@ url = path.replace(/\/blob\//, '/resolve/').replace(/#.*$/, '');
 
 ## MoE VRAM/RAM split
 
-- **Dense**: all weights + KV + activations → VRAM
-- **MoE**: only `expert_used_count` experts in VRAM, `(expert_count - expert_used_count)` in RAM
-- KV cache and activations always in VRAM
-- VRAM fit check compares against `vramBytes` (not `totalBytes`)
+Two views, both matching llama.cpp:
+
+1. **`calcMemoryBreakdown` (top "VRAM/RAM" card)** — ideal placement assuming the model fully fits, used to compute the `vramBytes` displayed.
+   - Dense: all weights + KV + activations → VRAM
+   - MoE default (no flags): all expert weights in VRAM
+   - `--cpu-moe`: all expert weights → RAM, rest → VRAM
+   - `--n-cpu-moe N`: expert weights for layers 0..N-1 → RAM
+2. **`computeOffloadSplit` / `calcActualMemory` (fit check, perf)** — actual placement given a finite VRAM budget. Mirrors llama.cpp's `--fit on` algorithm in `src/llama.cpp` (`llama_params_fit_impl`):
+   - Layer modes: `gpu` (full layer in VRAM, including all experts), `hybrid` (non-expert + KV in VRAM, experts in RAM, expert matmul on CPU — llama.cpp's "dense-only" layer), `cpu` (everything on CPU).
+   - Layers offloaded back-to-front (`i_gpu_start = max(n_layer + 1 - n_gpu_layers, 0)`).
+   - **Two-pass auto-fit always runs for MoE models** (regardless of `--cpu-moe` / `--n-cpu-moe`):
+     - Pass 1: fill all layers dense-only back-to-front (matches llama.cpp step 3).
+     - Pass 2: convert dense-only layers to full front-to-back, skipping layers forced hybrid by `--cpu-moe` (all expert layers) or `--n-cpu-moe N` (layers 0..N-1) (matches llama.cpp step 4).
+   - With a manual `--ngl N`: last N layers placed back-to-front, then expert-placement overrides applied. No auto-fit.
+- KV cache always per-layer (lives wherever the layer lives).
+- Performance: `activeExpertWeightBytes` (active fraction = `expertUsedCount / expertCount`) drives per-token bandwidth/compute regardless of where experts are stored — sparse MoE only reads active experts each step.
 
 ## Bytes-per-element hardcoded
 

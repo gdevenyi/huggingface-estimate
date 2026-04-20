@@ -25,13 +25,13 @@ node run-calc.js --batch testModels.list
 
 Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`, `--mmproj FILE`, `--mmprojDevice vram|ram`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1, Q8_KV, Q8_KV_R8, plus rotorquant (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0).
 
-Performance flags: `--gpu <name>` (e.g. `"RTX 4090"`, matches `gpu-data.json`), `--cpu <name>` (e.g. `"Ryzen 9 7950X"`, matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` (manual overrides), `--ngl <n|auto>` (GPU layer count; auto uses `--vram`). Supplying any GPU spec enables a `performance` block in the JSON output with decode/prefill/TTFT and layer split.
+Performance flags: `--gpu <name>` (e.g. `"RTX 4090"`, matches `gpu-data.json`), `--cpu <name>` (e.g. `"Ryzen 9 7950X"`, matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` (manual overrides), `--ngl <n|auto>` (GPU layer count; auto uses `--vram`), `--cpu-moe` (llama.cpp `-cmoe`: all MoE expert weights → CPU), `--n-cpu-moe N` (llama.cpp `-ncmoe`: expert weights of first N layers → CPU). Supplying any GPU spec enables a `performance` block in the JSON output with decode/prefill/TTFT and layer split (`gpu` / `hybrid` / `cpu`).
 
 ## What it calculates
 
 | Component | Where | Details |
 |-----------|-------|---------|
-| **Model weights** | Dense: VRAM / MoE: VRAM (active) + RAM (inactive) | Sum of all tensor sizes from GGUF metadata, exact bytes-per-element per quantization type |
+| **Model weights** | Dense: VRAM / MoE: VRAM by default, expert weights spillable to RAM via `--cpu-moe` / `--n-cpu-moe` | Sum of all tensor sizes from GGUF metadata, exact bytes-per-element per quantization type |
 | **KV cache** | VRAM | Separate K and V quantization. `layers × kv_heads × head_size × context × bytes_per_elem` per cache |
 | **Activations** | VRAM | `layers × batch × (hidden + ff_size) × 4` bytes (FP32). For MoE, uses `expert_used_count × expert_ff_size` |
 | **Multimodal projector (mmproj)** | VRAM default, RAM with `--no-mmproj-offload` | Weights + per-image output activation (`n_output_tokens × projection_dim × 4` bytes). `n_output_tokens` is arch-specific, mirroring `clip_n_output_tokens()` from llama.cpp |
@@ -43,20 +43,27 @@ When a HuggingFace repo contains both a language-model GGUF and an `mmproj-*.ggu
 
 ## Dense vs MoE
 
-- **Dense**: all weights + KV cache + activations in VRAM
-- **MoE**: only active experts in VRAM, inactive experts in RAM. KV cache and activations always in VRAM
+Mirrors llama.cpp semantics for layer placement (`llama_params_fit_impl` + `--cpu-moe` / `--n-cpu-moe`):
 
-## Example: Mixtral 8x7B (MoE)
+- **Dense**: all weights + KV + activations in VRAM. With insufficient VRAM, last N layers fit on GPU back-to-front; the rest spill to CPU as whole layers.
+- **MoE default**: all expert weights in VRAM. With insufficient VRAM, the auto-fit (matching llama.cpp's `--fit on`) runs a two-pass algorithm:
+  1. Fill all layers as **hybrid** back-to-front (non-expert weights + KV in VRAM, expert weights in RAM, expert matmul on CPU).
+  2. Convert hybrid layers to full (experts back into VRAM) front-to-back until VRAM is exhausted.
+  Sparse routing means only `expert_used_count / expert_count` experts are read per token regardless of where they live.
+- **`--cpu-moe`**: forces ALL expert weights to RAM. Pass 2 above is skipped — every MoE layer stays hybrid.
+- **`--n-cpu-moe N`**: forces expert weights of layers 0..N-1 to RAM. Pass 2 still upgrades the other layers when VRAM allows.
 
-| | Size |
-|---|---|
-| Total parameters | 467B |
-| **Active parameters** | **12.3B** |
-| In VRAM (Q4_K + F16 KV) | ~10 GB |
-| In RAM (inactive experts) | ~37 GB |
-| KV cache (4096 ctx) | ~2.5 GB |
+Per-token bandwidth/compute (the `performance` block) always uses `activeExpertWeightBytes` for the expert portion regardless of where experts live.
 
-The model fits on a 24GB GPU even though total weight size is ~22GB — only the active experts need to be in VRAM.
+## Example: Qwen3.5-35B-A3B (MoE, 256 experts, 8 active) on RTX 4090 / 24 GB
+
+| Mode | Layer split | Decode tok/s |
+|------|-------------|--------------|
+| Default (`--fit on`) | 12 GPU + 28 hybrid | ~44 |
+| `--cpu-moe` | 0 GPU + 40 hybrid | ~34 |
+| `--ngl 40` (force full) | 40 GPU (won't actually fit — 64 GiB needed) | ~144 |
+
+Default beats `--cpu-moe` because pass 2 promotes 12 layers to full GPU, while `--cpu-moe` forces every layer to keep experts on CPU.
 
 ## Supported architectures
 
