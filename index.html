@@ -989,7 +989,9 @@ function populateCpuSelect() {
   cpuPresetEl.innerHTML = '';
   cpuPresetEl.appendChild(new Option('Custom', 'custom'));
   const byVendor = partitionByGroup(getCpuPresets());
-  const fmt = c => `${c.name} — ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`;
+  const fmt = c => (c.fp16Tflops != null && c.defaultRamBwGBps != null)
+    ? `${c.name} — ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`
+    : c.name;
   for (const [vendor, all] of Object.entries(byVendor)) {
     const desktop = all.filter(c => (!c.mobile && !c.server) || c.desktop);
     const mobile = all.filter(c => c.mobile);
@@ -1014,8 +1016,8 @@ gpuPresetEl.addEventListener('change', () => {
 cpuPresetEl.addEventListener('change', () => {
   const c = findCpuPreset(cpuPresetEl.value);
   if (c) {
-    cpuFlopsEl.value = c.fp16Tflops;
-    ramBwEl.value = c.defaultRamBwGBps;
+    cpuFlopsEl.value = c.fp16Tflops ?? '';
+    ramBwEl.value = c.defaultRamBwGBps ?? '';
   } else {
     cpuFlopsEl.value = '';
     ramBwEl.value = '';

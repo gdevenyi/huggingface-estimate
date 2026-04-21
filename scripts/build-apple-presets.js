@@ -1,6 +1,6 @@
-// Reads apple_silicon_specs.csv and emits apple-cpu-presets.json and
-// apple-gpu-presets.json. Apple Silicon is unified (GPU+CPU on-chip), so
-// each chip variant produces both a CPU preset and a GPU preset.
+// Reads apple_silicon_macs.csv and emits apple-cpu-presets.json and
+// apple-gpu-presets.json. One GPU preset per Mac model/variant row.
+// CPU preset is a single "Apple Unified Memory" entry (no CPU offloading on Apple).
 //
 // Run: `node scripts/build-apple-presets.js`
 
@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CSV_PATH = join(ROOT, 'resources', 'apple_silicon_specs.csv');
+const CSV_PATH = join(ROOT, 'resources', 'apple_silicon_macs.csv');
 const CPU_OUT = join(ROOT, 'apple-cpu-presets.json');
 const GPU_OUT = join(ROOT, 'apple-gpu-presets.json');
 
@@ -25,7 +25,8 @@ function parseCSV(text) {
       else if (c === '"') { inQuotes = false; }
       else { field += c; }
     } else {
-      if (c === '"') { inQuotes = true; }
+      if (c === '"' && field.length === 0) { inQuotes = true; }
+      else if (c === '"') { field += c; }
       else if (c === ',') { row.push(field); field = ''; }
       else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
       else if (c === '\r') { /* skip */ }
@@ -53,8 +54,8 @@ function round(n, d) {
   return Math.round(n * m) / m;
 }
 
-function slug(chip) {
-  return `apple-${chip}`
+function slug(text) {
+  return text
     .toLowerCase()
     .replace(/[^\w\s]/g, '')
     .replace(/[\s_]+/g, '-')
@@ -62,32 +63,14 @@ function slug(chip) {
     .replace(/^-|-$/g, '');
 }
 
-const GEN_ORDER = { M5: 0, M4: 1, M3: 2, M2: 3, M1: 4 };
+const TIER_ORDER = { ultra: 0, max: 1, pro: 2 };
 
-function tierRank(name) {
-  const n = name.toLowerCase();
-  if (n.includes('ultra')) return 0;
-  if (n.includes('max')) return 1;
-  if (n.includes('pro')) return 2;
-  if (n.includes('a18')) return 4;
-  return 3;
-}
-
-function generationKey(name) {
-  for (const [k, v] of Object.entries(GEN_ORDER)) {
-    if (name.includes(k)) return v;
+function tierRank(chip) {
+  const n = chip.toLowerCase();
+  for (const [k, v] of Object.entries(TIER_ORDER)) {
+    if (n.includes(k)) return v;
   }
-  return 99;
-}
-
-function sortKey(rec) {
-  const name = rec._chip;
-  return [
-    generationKey(name),
-    tierRank(name),
-    -(rec._gpuCores || 0),
-    name,
-  ];
+  return 3;
 }
 
 // ── Parse CSV ──
@@ -96,102 +79,78 @@ const rows = parseCSV(text);
 const header = rows[0].map(h => h.replace(/^\uFEFF/, ''));
 const COL = Object.fromEntries(header.map((h, i) => [h, i]));
 
-const cpuPresets = [];
 const gpuPresets = [];
 
 for (let r = 1; r < rows.length; r++) {
   const row = rows[r];
   if (!row || row.length < 10) continue;
 
+  const machine = (row[COL.Machine] || '').trim();
+  const formFactor = (row[COL['Form Factor']] || '').trim();
+  const year = parseInt_(row[COL.Year]);
   const chip = (row[COL.Chip] || '').trim();
-  const generation = (row[COL.Generation] || '').trim();
-  const perfCores = parseInt_(row[COL.Performance_Cores]);
-  const effCores = parseInt_(row[COL.Efficiency_Cores]);
-  const cpuFp32Tflops = parseFloat_(row[COL.CPU_FP32_TFLOPS_NEON]);
-  const gpuCores = parseInt_(row[COL.GPU_Cores]);
-  const gpuFp32Tflops = parseFloat_(row[COL.GPU_FP32_TFLOPS]);
-  const memBwGBps = parseFloat_(row[COL.Memory_Bandwidth_GBps]);
-  const maxMemGB = parseInt_(row[COL.Max_Unified_Memory_GB]);
-  const year = parseInt_(row[COL.Release_Year]);
-  const formFactor = (row[COL.Form_Factor] || '').trim();
+  const chipVariant = (row[COL['Chip Variant']] || '').trim();
+  const COL_MEM_BW = COL['Memory Bandwidth (GB/s)'];
+  const COL_MEM_MAX = COL['Unified Memory Max (GB)'];
+  const gpuCores = parseInt_(row[COL['GPU Cores']]);
+  const memBwGBps = parseFloat_(row[COL_MEM_BW]);
+  const maxMemGB = parseInt_(row[COL_MEM_MAX]);
+  const fp32Tflops = parseFloat_(row[COL['FP32 TFLOPS']]);
+  const fp16Tflops = parseFloat_(row[COL['FP16 TFLOPS']]);
 
-  if (!chip || !memBwGBps) continue;
+  if (!machine || !memBwGBps) continue;
 
-  const isMobile = formFactor === 'Mobile' || formFactor === 'Both';
-  const isDesktop = formFactor === 'Desktop' || formFactor === 'Both';
+  const isMobile = formFactor === 'Laptop';
+  const isDesktop = formFactor === 'Desktop' || formFactor === 'AIO Desktop';
 
-  const id = slug(chip);
-  const name = `Apple ${chip}`;
+  const fullName = chipVariant ? `${machine}, ${chipVariant}` : machine;
+  const id = slug(fullName);
 
-  // CPU FP16 = FP32 × 2 (NEON doubles throughput for FP16 vs FP32)
-  const cpuFp16 = cpuFp32Tflops != null ? round(cpuFp32Tflops * 2, 2) : null;
-  // GPU FP16 = FP32 × 2 (Apple GPU ALUs double throughput for FP16)
-  const gpuFp16 = gpuFp32Tflops != null ? round(gpuFp32Tflops * 2, 2) : null;
-
-  const cpuFlags = {};
-  if (isMobile) cpuFlags.mobile = true;
-  if (isDesktop) cpuFlags.desktop = true;
-
-  const gpuFlags = {};
-  if (isMobile) gpuFlags.mobile = true;
-  if (isDesktop) gpuFlags.desktop = true;
-
-  const sortMeta = { _chip: chip, _gpuCores: gpuCores };
-
-  cpuPresets.push({
-    id, name, vendor: 'Apple',
-    fp16Tflops: cpuFp16,
-    defaultRamBwGBps: round(memBwGBps, 1),
-    ...cpuFlags,
-    ...sortMeta,
-  });
+  const flags = {};
+  if (isMobile) flags.mobile = true;
+  if (isDesktop) flags.desktop = true;
 
   gpuPresets.push({
-    id, name, vendor: 'Apple',
+    id,
+    name: fullName,
+    vendor: 'Apple',
     year: year ?? null,
     vramGB: maxMemGB,
     memBwGBps: round(memBwGBps, 1),
-    fp16Tflops: gpuFp16,
-    fp32Tflops: gpuFp32Tflops != null ? round(gpuFp32Tflops, 2) : null,
+    fp16Tflops: fp16Tflops != null ? round(fp16Tflops, 2) : null,
+    fp32Tflops: fp32Tflops != null ? round(fp32Tflops, 2) : null,
     memType: 'Unified',
-    ...gpuFlags,
-    ...sortMeta,
+    ...flags,
+    _year: year,
+    _chip: chip,
+    _gpuCores: gpuCores,
   });
 }
 
-// Sort: newer gen first, then higher tier, then more GPU cores
-function cmp(a, b) {
-  const ka = sortKey(a), kb = sortKey(b);
-  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
-    const x = ka[i], y = kb[i];
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    if (typeof x === 'number' && typeof y === 'number') {
-      if (x !== y) return x - y;
-    } else {
-      const c = String(x).localeCompare(String(y));
-      if (c !== 0) return c;
-    }
-  }
-  return 0;
-}
+gpuPresets.sort((a, b) => {
+  if ((b._year ?? 0) !== (a._year ?? 0)) return (b._year ?? 0) - (a._year ?? 0);
+  const ta = tierRank(a._chip), tb = tierRank(b._chip);
+  if (ta !== tb) return ta - tb;
+  if ((b._gpuCores ?? 0) !== (a._gpuCores ?? 0)) return (b._gpuCores ?? 0) - (a._gpuCores ?? 0);
+  return a.name.localeCompare(b.name);
+});
 
-cpuPresets.sort(cmp);
-gpuPresets.sort(cmp);
-
-// Strip internal sort metadata before writing
 function stripMeta(arr) {
-  return arr.map(({ _chip, _gpuCores, ...rest }) => rest);
+  return arr.map(({ _year, _chip, _gpuCores, ...rest }) => rest);
 }
 
-writeFileSync(CPU_OUT, JSON.stringify(stripMeta(cpuPresets), null, 2) + '\n');
+const cpuPresets = [
+  { id: 'apple-unified-memory', name: 'Apple Unified Memory', vendor: 'Apple' },
+];
+
+writeFileSync(CPU_OUT, JSON.stringify(cpuPresets, null, 2) + '\n');
 console.error(`Wrote ${cpuPresets.length} Apple CPU presets to ${CPU_OUT}`);
 
 writeFileSync(GPU_OUT, JSON.stringify(stripMeta(gpuPresets), null, 2) + '\n');
 console.error(`Wrote ${gpuPresets.length} Apple GPU presets to ${GPU_OUT}`);
 
 const byGen = {};
-for (const p of cpuPresets) {
+for (const p of gpuPresets) {
   const gen = p._chip.split(' ')[0];
   byGen[gen] = (byGen[gen] || 0) + 1;
 }
