@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const DESKTOP_CSV = join(ROOT, 'amd/Processor Specifications.csv');
-const SERVER_CSV = join(ROOT, 'amd/Server Processor Specifications.csv');
+const DESKTOP_CSV = join(ROOT, 'resources', 'amd', 'Processor Specifications.csv');
+const SERVER_CSV = join(ROOT, 'resources', 'amd', 'Server Processor Specifications.csv');
 const OUT_PATH = join(ROOT, 'amd-cpu-presets.json');
 
 function parseCSV(text) {

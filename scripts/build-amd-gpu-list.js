@@ -5,9 +5,9 @@ import { dirname, join } from 'node:path';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_PATH = join(ROOT, 'amd-gpu-presets.json');
 
-const GRAPHICS_CSV = join(ROOT, 'amd/Graphics Specifications.csv');
-const ACCEL_CSV = join(ROOT, 'amd/Accelerator Specifications.csv');
-const PRO_CSV = join(ROOT, 'amd/Compare AMD Radeon\u2122 PRO GPUs  Specifications  Features.csv');
+const GRAPHICS_CSV = join(ROOT, 'resources', 'amd', 'Graphics Specifications.csv');
+const ACCEL_CSV = join(ROOT, 'resources', 'amd', 'Accelerator Specifications.csv');
+const PRO_CSV = join(ROOT, 'resources', 'amd', 'Compare AMD Radeon\u2122 PRO GPUs  Specifications  Features.csv');
 
 function parseCSV(text) {
   const rows = [];

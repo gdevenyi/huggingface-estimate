@@ -12,7 +12,7 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
-**Gitignored reference dirs**: `llama.cpp/`, `ik_llama.cpp/`, `gguf-parser-go/` — local clones for quantization type reference, not part of the app.
+**Gitignored reference dirs**: `resources/llama.cpp/`, `resources/ik_llama.cpp/`, `resources/gguf-parser-go/` — local clones for quantization type reference, not part of the app.
 
 ## Must serve via HTTP
 
@@ -235,8 +235,8 @@ Detection by source:
 
 ### Example model and quantization refrence code
 
-The directores `ik_llama.cpp/` `llama.cpp/` and `ik_llama.cpp/` contain variants of the llama.cpp inference engine
+The directores `resources/ik_llama.cpp/` `resources/llama.cpp/` contain variants of the llama.cpp inference engine
 with quantization and KV cache quantization implementations. Use these as reference code for proper model calcuations.
 
-The directory `gguf-parser-go/` contains an alternative memory calculator implemenmtation which can be used for
+The directory `resources/gguf-parser-go/` contains an alternative memory calculator implemenmtation which can be used for
 comaparisons. Do not presume it is 100% correct.

@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CSV_PATH = join(ROOT, 'gpu_1986-2026.csv');
+const CSV_PATH = join(ROOT, 'resources', 'gpu_1986-2026.csv');
 const OUT_PATH = join(ROOT, 'gpu-data.json');
 
 // ── CSV parser: handles quoted fields with embedded commas/newlines ──

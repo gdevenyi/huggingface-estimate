@@ -90,6 +90,8 @@ The following resources were used in building this tool:
 - https://github.com/ggml-org/llama.cpp
 - https://github.com/ikawrakow/ik_llama.cpp
 - https://github.com/johndpope/llama-cpp-turboquant
+- https://github.com/TheTom/llama-cpp-turboquant
+- CSVs from all pages here https://www.amd.com/en/products/specifications.html
 - https://www.kaggle.com/datasets/ellimaaac/gpus-specs-from-1986-to-2026
 
 ## See also
