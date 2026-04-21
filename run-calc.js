@@ -14,8 +14,6 @@ import {
   formatBytes,
   formatElements,
   QUANT_NAMES,
-  getMeta,
-  BPE,
 } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
@@ -226,13 +224,11 @@ async function calcModel(repo) {
 
   // Determine primary quant (largest by bytes)
   let primaryQuant = 'unknown';
-  let primaryQuantKey = 0;
   let maxBytes = 0;
   for (const [name, info] of Object.entries(weightInfo.byQuant)) {
     if (info.bytes > maxBytes) {
       maxBytes = info.bytes;
       primaryQuant = name;
-      primaryQuantKey = Object.keys(QUANT_NAMES).find(k => QUANT_NAMES[k] === name) || 0;
     }
   }
 

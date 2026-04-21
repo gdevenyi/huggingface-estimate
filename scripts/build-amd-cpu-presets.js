@@ -122,16 +122,7 @@ function detectZen(rec, isServer) {
   // Server EPYC: series-based detection
   if (isServer) {
     if (/9005/i.test(series)) {
-      // EPYC 9005: Zen 5 or Zen 5c. TDP 360W+ = Zen 5c (high-density), lower = Zen 5
-      // Actually check the name suffix for 'c' variants
-      const tdp = parseTDP(rec);
-      // Names with 9755, 9655, etc. are Zen 5; 9965, 9845, 9745, 9645 are Zen 5c
-      // Zen 5c parts have core counts that are multiples of 8 with high density
-      // Simple heuristic: if name has digit followed by 'c' or the all-core boost is lower
-      // Better: Zen 5c parts are 9965, 9845, 9745, 9645, 9475F
-      // Zen 5 parts are 9755, 9655, 9575F, 9565, 9555, 9535, 9455, 9375F, 9365, 9355, 9335, 9275F, 9255, 9175F, 9135, 9115, 9015
-      // 8004 series = Zen 4c
-      if (/9005/i.test(series)) return { zen: 5, flopsPerCycle: 32 };
+      return { zen: 5, flopsPerCycle: 32 };
     }
     if (/9004/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
     if (/8004/i.test(series)) return { zen: 4, flopsPerCycle: 32 };  // Zen 4c but same ISA

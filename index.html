@@ -925,9 +925,6 @@ gpuPresetEl.addEventListener('change', () => {
     gpuFlopsEl.value = g.fp16Tflops;
     gpuBwEl.value = g.memBwGBps;
     if (g.vramGB) vramEl.value = g.vramGB;
-  } else if (gpuPresetEl.value === '') {
-    gpuFlopsEl.value = '';
-    gpuBwEl.value = '';
   }
   if (currentMetadata) renderResults();
 });

@@ -636,20 +636,7 @@ export function globMatch(pattern, str) {
   return new RegExp('^' + regex + '$').test(str);
 }
 
-export function matchTensorGroups(tensorInfos, groups) {
-  const result = { expert: [], router: [], shared: [] };
-  for (const t of tensorInfos) {
-    for (const [group, patterns] of Object.entries(groups)) {
-      for (const p of patterns) {
-        if (globMatch(p, t.name)) {
-          result[group].push(t);
-          break;
-        }
-      }
-    }
-  }
-  return result;
-}
+
 
 // ── Memory calculations ──
 export function getModelArch(metadata) {

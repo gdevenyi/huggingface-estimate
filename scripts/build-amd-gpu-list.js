@@ -62,17 +62,6 @@ function parseTFLOPS(s) {
   return n * mult;
 }
 
-function parseTOPS(s) {
-  if (!s) return null;
-  s = s.replace(/,/g, '').replace(/\u200B/g, '');
-  const m = s.match(/([\d.]+)\s*(P|T|G|M|K)?TOPS/i);
-  if (!m) return null;
-  const n = parseFloat(m[1]);
-  const unit = (m[2] || 'T').toUpperCase();
-  const mult = { P: 1e3, T: 1, G: 1e-3, M: 1e-6, K: 1e-9 }[unit] ?? 1;
-  return n * mult;
-}
-
 function parseBandwidth(s) {
   if (!s) return null;
   s = s.replace(/,/g, '');
@@ -198,7 +187,7 @@ const seen = new Set();
   for (const r of rows) {
     const rawName = r['Name'];
     if (!rawName) continue;
-    const name = cleanName(rawName).replace(/^Instinct/, 'Instinct');
+    const name = cleanName(rawName);
 
     const vramGB = parseGB(r['Dedicated Memory Size']);
     const memBw = parseBandwidth(r['Peak Memory Bandwidth']);

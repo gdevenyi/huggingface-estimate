@@ -105,12 +105,7 @@ function acceptNvidia(name, year) {
   return false;
 }
 
-// AMD entries are now built from first-party AMD CSVs via build-amd-gpu-list.js.
-// Skip all AMD rows from the generic CSV.
-function acceptAmd(name, year) {
-  return false;
-}
-
+// AMD entries are built from first-party AMD CSVs via build-amd-gpu-list.js.
 // Intel: Arc A-series / B-series discrete.
 function acceptIntel(name) {
   if (!name) return false;
@@ -151,7 +146,6 @@ for (let r = 1; r < rows.length; r++) {
 
   let vendor;
   if (brand === 'NVIDIA' && acceptNvidia(name, year ?? 0)) vendor = 'NVIDIA';
-  else if (brand === 'AMD' && acceptAmd(name, year ?? 0)) vendor = 'AMD';
   else if (brand === 'Intel' && acceptIntel(name)) vendor = 'Intel';
   else continue;
 
@@ -290,7 +284,6 @@ function sortKey(g) {
   }
   if (g.vendor === 'Apple') {
     const genOrder = { M5: 0, M4: 1, M3: 2, M2: 3, M1: 4 };
-    const tierOrder = { Ultra: 0, Max: 1, Pro: 2, base: 3 };
     let gen = 99, tier = 3;
     for (const [k, v] of Object.entries(genOrder)) {
       if (g.name.includes(k)) { gen = v; break; }

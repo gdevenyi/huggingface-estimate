@@ -62,8 +62,7 @@ function slug(chip) {
     .replace(/^-|-$/g, '');
 }
 
-const GEN_ORDER = { M5: 0, M4: 1, M3: 2, M2: 3, M1: 4, 'A-series in Mac': 5 };
-const TIER_ORDER = { ultra: 0, max: 1, pro: 2, base: 3 };
+const GEN_ORDER = { M5: 0, M4: 1, M3: 2, M2: 3, M1: 4 };
 
 function tierRank(name) {
   const n = name.toLowerCase();
