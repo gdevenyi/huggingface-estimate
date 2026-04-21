@@ -15,7 +15,7 @@ import {
   formatElements,
   QUANT_NAMES,
 } from './calculations.js';
-import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -193,7 +193,17 @@ function resolveDevice(args) {
   }
   const cpuFlops = args.cpuFlops != null ? args.cpuFlops : (cpuPreset ? cpuPreset.fp16Tflops : null);
   const ramBw = args.ramBw != null ? args.ramBw : (cpuPreset ? cpuPreset.defaultRamBwGBps : null);
-  const cpu = (cpuFlops != null && ramBw != null) ? { flopsFp16Tflops: cpuFlops, bwGBps: ramBw } : null;
+  let cpu = (cpuFlops != null && ramBw != null) ? { flopsFp16Tflops: cpuFlops, bwGBps: ramBw } : null;
+  let cpuFallback = null;
+
+  if (!cpu) {
+    const slow = getSlowestCpuPreset();
+    if (slow) {
+      cpu = { flopsFp16Tflops: slow.fp16Tflops, bwGBps: slow.defaultRamBwGBps };
+      cpuFallback = slow;
+      console.error(`No CPU specified, falling back to slowest preset: ${slow.name} (${slow.fp16Tflops} TF, ${slow.defaultRamBwGBps} GB/s)`);
+    }
+  }
 
   return {
     gpu: {
@@ -202,7 +212,7 @@ function resolveDevice(args) {
       vramBytes: args.vram > 0 ? args.vram * (1024 ** 3) : 0,
       preset: gpuPreset,
     },
-    cpu: cpu ? { ...cpu, preset: cpuPreset } : null,
+    cpu: cpu ? { ...cpu, preset: cpuPreset || cpuFallback, fallback: !!cpuFallback } : null,
     nGpuLayers: args.ngl === 'auto' ? 'auto' : args.ngl,
     mmprojOnGpu: args.mmprojDevice !== 'ram',
     cpuMoe: args.cpuMoe,
@@ -319,7 +329,7 @@ async function calcModel(repo, args) {
         vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / (1024 ** 3)).toFixed(2) : 0,
       },
       cpu: device.cpu ? {
-        name: device.cpu.preset ? device.cpu.preset.name : 'Custom',
+        name: device.cpu.preset ? (device.cpu.fallback ? `${device.cpu.preset.name} (fallback)` : device.cpu.preset.name) : 'Custom',
         id: device.cpu.preset ? device.cpu.preset.id : null,
         fp16Tflops: device.cpu.flopsFp16Tflops,
         ramBwGBps: device.cpu.bwGBps,

@@ -124,3 +124,15 @@ export function findRamPreset(query) {
       || RAM_PRESETS.find(p => p.name.toLowerCase().includes(q))
       || null;
 }
+
+export function getSlowestCpuPreset() {
+  let best = null;
+  for (const p of _cpuPresets) {
+    if (p.fp16Tflops == null || p.defaultRamBwGBps == null) continue;
+    if (!best || p.fp16Tflops < best.fp16Tflops
+        || (p.fp16Tflops === best.fp16Tflops && p.defaultRamBwGBps < best.defaultRamBwGBps)) {
+      best = p;
+    }
+  }
+  return best;
+}

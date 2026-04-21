@@ -863,7 +863,7 @@ button.resolve-btn {
 <script type="module">
 import { GGMLQuantizationType, KV_VALID_QUANTS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
 import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
-import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset, getSlowestCpuPreset } from './hardware-presets.js';
 
 // Preset data loaded from per-vendor JSON files
 const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
@@ -1526,10 +1526,20 @@ function renderResults() {
   // ── Performance panel ──
   const gpuFlopsV = parseFloat(gpuFlopsEl.value);
   const gpuBwV = parseFloat(gpuBwEl.value);
-  const cpuFlopsV = parseFloat(cpuFlopsEl.value);
-  const ramBwV = parseFloat(ramBwEl.value);
+  let cpuFlopsV = parseFloat(cpuFlopsEl.value);
+  let ramBwV = parseFloat(ramBwEl.value);
   const hasGpuPerf = Number.isFinite(gpuFlopsV) && Number.isFinite(gpuBwV) && gpuFlopsV > 0 && gpuBwV > 0;
-  const hasCpuPerf = Number.isFinite(cpuFlopsV) && Number.isFinite(ramBwV) && cpuFlopsV > 0 && ramBwV > 0;
+  let hasCpuPerf = Number.isFinite(cpuFlopsV) && Number.isFinite(ramBwV) && cpuFlopsV > 0 && ramBwV > 0;
+  let cpuFallback = null;
+  if (!hasCpuPerf && hasGpuPerf) {
+    const slow = getSlowestCpuPreset();
+    if (slow) {
+      cpuFlopsV = slow.fp16Tflops;
+      ramBwV = slow.defaultRamBwGBps;
+      cpuFallback = slow;
+      hasCpuPerf = true;
+    }
+  }
 
   if (!hasGpuPerf) {
     perfPanel.classList.add('hidden');
@@ -1567,18 +1577,26 @@ function renderResults() {
     const hybridRow = $('#perfHybridRow');
     if (nHybrid > 0) {
       hybridRow.classList.remove('hidden');
-      $('#perfHybridLayer').textContent = hasCpuPerf
+      $('#perfHybridLayer').textContent = hasCpuPerf && !cpuFallback
         ? `${perf.perLayerMs.hybrid.toFixed(2)} ms (${perf.bottleneck.cpu || '-'})`
-        : '— (CPU not set — expert cost unaccounted)';
+        : cpuFallback
+          ? `${perf.perLayerMs.hybrid.toFixed(2)} ms (${perf.bottleneck.cpu || '-'}, est. from ${cpuFallback.name})`
+          : '— (CPU not set — expert cost unaccounted)';
     } else {
       hybridRow.classList.add('hidden');
     }
-    $('#perfCpuLayer').textContent = perf.nCpuLayers > 0 && hasCpuPerf
+    $('#perfCpuLayer').textContent = perf.nCpuLayers > 0 && hasCpuPerf && !cpuFallback
       ? `${perf.perLayerMs.cpu.toFixed(2)} ms (${perf.bottleneck.cpu || '-'})`
-      : (perf.nCpuLayers > 0 ? '— (CPU not set — spill unaccounted)' : '— (no spill)');
+      : perf.nCpuLayers > 0 && cpuFallback
+        ? `${perf.perLayerMs.cpu.toFixed(2)} ms (${perf.bottleneck.cpu || '-'}, est. from ${cpuFallback.name})`
+        : (perf.nCpuLayers > 0 ? '— (CPU not set — spill unaccounted)' : '— (no spill)');
     $('#perfBottleneck').textContent = perf.bottleneck.overall;
     const gpuLabel = gpuPresetEl.options[gpuPresetEl.selectedIndex]?.textContent || 'Custom';
-    const cpuLabel = hasCpuPerf ? (cpuPresetEl.options[cpuPresetEl.selectedIndex]?.textContent || 'Custom') : 'none';
+    const cpuLabel = cpuFallback
+      ? cpuFallback.name + ' (fallback)'
+      : hasCpuPerf
+        ? (cpuPresetEl.options[cpuPresetEl.selectedIndex]?.textContent || 'Custom')
+        : 'none';
     $('#perfHardware').textContent = `GPU: ${gpuLabel.replace(/ —.*$/, '')} · CPU: ${cpuLabel.replace(/ —.*$/, '')}`;
   }
 }
