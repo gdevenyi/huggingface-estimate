@@ -417,7 +417,84 @@ button.resolve-btn {
 
 /* Hidden */
 .hidden { display: none !important; }
+
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.css" />
+<style>
+.ss-main {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+.ss-main .ss-values .ss-value .ss-value-text {
+  color: var(--text);
+}
+.ss-main .ss-values .ss-placeholder {
+  color: var(--text2);
+  padding: 8px 10px;
+}
+.ss-content {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+}
+.ss-content .ss-search {
+  padding: 8px;
+}
+.ss-content .ss-search input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  width: 100%;
+}
+.ss-content .ss-search input::placeholder {
+  color: var(--text2);
+}
+.ss-content .ss-list {
+  max-height: 280px;
+}
+.ss-content .ss-list .ss-optgroup-label {
+  color: var(--text2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 10px 4px;
+}
+.ss-content .ss-list .ss-option {
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 6px 10px;
+}
+.ss-content .ss-list .ss-option:hover,
+.ss-content .ss-list .ss-option.ss-highlighted {
+  background: var(--bg3);
+  color: var(--accent);
+}
+.ss-content .ss-list .ss-option.ss-selected {
+  color: var(--text2);
+}
+.ss-content .ss-list .ss-option.ss-selected.ss-highlighted {
+  color: var(--accent);
+}
+.ss-content .ss-list .ss-error {
+  color: var(--text2);
+  font-size: 0.85rem;
+  padding: 8px 10px;
+}
+.ss-main:focus-within,
+.ss-main.ss-open {
+  border-color: var(--accent);
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.global.min.js"></script>
 <script type="importmap">
 { "imports": { "@huggingface/gguf": "https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm" } }
 </script>
@@ -853,6 +930,8 @@ const archBadge = $('#archBadge');
 const moeSection = $('#moeSection');
 const quantTableBody = $('#quantTableBody');
 
+let ssGpu = null, ssCpu = null;
+
 // Populate KV quantization dropdowns
 function populateQuantSelect(sel, defaultType) {
   for (const q of KV_VALID_QUANTS) {
@@ -889,6 +968,7 @@ function partitionByGroup(entries) {
 }
 
 function populateGpuSelect() {
+  if (ssGpu) { ssGpu.destroy(); ssGpu = null; }
   gpuPresetEl.innerHTML = '';
   gpuPresetEl.appendChild(new Option('Custom', 'custom'));
   const byVendor = partitionByGroup(getGpuPresets());
@@ -901,9 +981,11 @@ function populateGpuSelect() {
     addOptgroup(gpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
     addOptgroup(gpuPresetEl, `${vendor} (server)`, server, fmt);
   }
+  ssGpu = new SlimSelect({ select: '#gpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search GPU...' } });
 }
 
 function populateCpuSelect() {
+  if (ssCpu) { ssCpu.destroy(); ssCpu = null; }
   cpuPresetEl.innerHTML = '';
   cpuPresetEl.appendChild(new Option('Custom', 'custom'));
   const byVendor = partitionByGroup(getCpuPresets());
@@ -917,6 +999,7 @@ function populateCpuSelect() {
     addOptgroup(cpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
     addOptgroup(cpuPresetEl, `${vendor} (server)`, server, fmt);
   }
+  ssCpu = new SlimSelect({ select: '#cpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search CPU...' } });
 }
 
 gpuPresetEl.addEventListener('change', () => {
@@ -940,10 +1023,10 @@ cpuPresetEl.addEventListener('change', () => {
   if (currentMetadata) renderResults();
 });
 for (const el of [gpuFlopsEl, gpuBwEl, vramEl]) {
-  el.addEventListener('input', () => { gpuPresetEl.value = 'custom'; });
+  el.addEventListener('input', () => { if (ssGpu) ssGpu.setSelected('custom'); });
 }
 for (const el of [cpuFlopsEl, ramBwEl]) {
-  el.addEventListener('input', () => { cpuPresetEl.value = 'custom'; });
+  el.addEventListener('input', () => { if (ssCpu) ssCpu.setSelected('custom'); });
 }
 
 // ── State ──
