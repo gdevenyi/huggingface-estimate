@@ -1,36 +1,36 @@
 [
   {
     "id": "ryzen-5-7520c",
-    "name": "Ryzen 5 7520C (Zen 4, 4C)",
+    "name": "Ryzen 5 7520C (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.55,
+    "fp16Tflops": 0.28,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-3-7320c",
-    "name": "Ryzen 3 7320C (Zen 4, 4C)",
+    "name": "Ryzen 3 7320C (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.52,
+    "fp16Tflops": 0.26,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "athlon-gold-7220c",
-    "name": "Athlon Gold 7220C (Zen 4, 2C)",
+    "name": "Athlon Gold 7220C (Zen 3, 2C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.24,
+    "fp16Tflops": 0.12,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "athlon-silver-7120c",
-    "name": "Athlon Silver 7120C (Zen 4, 2C)",
+    "name": "Athlon Silver 7120C (Zen 3, 2C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.22,
+    "fp16Tflops": 0.11,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -802,27 +802,27 @@
   },
   {
     "id": "ryzen-7-6800h",
-    "name": "Ryzen 7 6800H (Zen 4, 8C)",
+    "name": "Ryzen 7 6800H (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-6800hs",
-    "name": "Ryzen 7 6800HS (Zen 4, 8C)",
+    "name": "Ryzen 7 6800HS (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-6800u",
-    "name": "Ryzen 7 6800U​ (Zen 4, 8C)",
+    "name": "Ryzen 7 6800U​ (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -861,27 +861,27 @@
   },
   {
     "id": "ryzen-7-7735hs",
-    "name": "Ryzen 7 7735HS (Zen 4, 8C)",
+    "name": "Ryzen 7 7735HS (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.22,
+    "fp16Tflops": 0.61,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-7735u",
-    "name": "Ryzen 7 7735U (Zen 4, 8C)",
+    "name": "Ryzen 7 7735U (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.22,
+    "fp16Tflops": 0.61,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-7736u",
-    "name": "Ryzen 7 7736U​ (Zen 4, 8C)",
+    "name": "Ryzen 7 7736U​ (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1127,36 +1127,36 @@
   },
   {
     "id": "ryzen-7-pro-6850h",
-    "name": "Ryzen 7 PRO 6850H (Zen 4, 8C)",
+    "name": "Ryzen 7 PRO 6850H (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-pro-6850hs",
-    "name": "Ryzen 7 PRO 6850HS (Zen 4, 8C)",
+    "name": "Ryzen 7 PRO 6850HS (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-pro-6850u",
-    "name": "Ryzen 7 PRO 6850U (Zen 4, 8C)",
+    "name": "Ryzen 7 PRO 6850U (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.2,
+    "fp16Tflops": 0.6,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-7-pro-6860z",
-    "name": "Ryzen 7 PRO 6860Z (Zen 4, 8C)",
+    "name": "Ryzen 7 PRO 6860Z (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.22,
+    "fp16Tflops": 0.61,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1172,9 +1172,9 @@
   },
   {
     "id": "ryzen-7-pro-7735u",
-    "name": "Ryzen 7 PRO 7735U (Zen 4, 8C)",
+    "name": "Ryzen 7 PRO 7735U (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.22,
+    "fp16Tflops": 0.61,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1331,36 +1331,36 @@
   },
   {
     "id": "ryzen-9-6900hs",
-    "name": "Ryzen 9 6900HS​ (Zen 4, 8C)",
+    "name": "Ryzen 9 6900HS​ (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.25,
+    "fp16Tflops": 0.63,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-9-6900hx",
-    "name": "Ryzen 9 6900HX (Zen 4, 8C)",
+    "name": "Ryzen 9 6900HX (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.25,
+    "fp16Tflops": 0.63,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-9-6980hs",
-    "name": "Ryzen 9 6980HS (Zen 4, 8C)",
+    "name": "Ryzen 9 6980HS (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.28,
+    "fp16Tflops": 0.64,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-9-6980hx",
-    "name": "Ryzen 9 6980HX (Zen 4, 8C)",
+    "name": "Ryzen 9 6980HX (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.28,
+    "fp16Tflops": 0.64,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1385,18 +1385,18 @@
   },
   {
     "id": "ryzen-9-pro-6950h",
-    "name": "Ryzen 9 PRO 6950H (Zen 4, 8C)",
+    "name": "Ryzen 9 PRO 6950H (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.25,
+    "fp16Tflops": 0.63,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-9-pro-6950hs",
-    "name": "Ryzen 9 PRO 6950HS (Zen 4, 8C)",
+    "name": "Ryzen 9 PRO 6950HS (Zen 3, 8C)",
     "vendor": "AMD",
-    "fp16Tflops": 1.25,
+    "fp16Tflops": 0.63,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1877,27 +1877,27 @@
   },
   {
     "id": "ryzen-5-6600h",
-    "name": "Ryzen 5 6600H (Zen 4, 6C)",
+    "name": "Ryzen 5 6600H (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-6600hs",
-    "name": "Ryzen 5 6600HS​ (Zen 4, 6C)",
+    "name": "Ryzen 5 6600HS​ (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-6600u",
-    "name": "Ryzen 5 6600U (Zen 4, 6C)",
+    "name": "Ryzen 5 6600U (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -1950,26 +1950,26 @@
   },
   {
     "id": "ryzen-5-7533hs",
-    "name": "Ryzen 5 7533HS (Zen 4, 6C)",
+    "name": "Ryzen 5 7533HS (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.84,
+    "fp16Tflops": 0.42,
     "defaultRamBwGBps": 102.4,
     "mobile": true
   },
   {
     "id": "ryzen-5-7535hs",
-    "name": "Ryzen 5 7535HS (Zen 4, 6C)",
+    "name": "Ryzen 5 7535HS (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.87,
+    "fp16Tflops": 0.44,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-7535u",
-    "name": "Ryzen 5 7535U (Zen 4, 6C)",
+    "name": "Ryzen 5 7535U (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.87,
+    "fp16Tflops": 0.44,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -2286,27 +2286,27 @@
   },
   {
     "id": "ryzen-5-pro-6650h",
-    "name": "Ryzen 5 PRO 6650H (Zen 4, 6C)",
+    "name": "Ryzen 5 PRO 6650H (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-pro-6650hs",
-    "name": "Ryzen 5 PRO 6650HS (Zen 4, 6C)",
+    "name": "Ryzen 5 PRO 6650HS (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-pro-6650u",
-    "name": "Ryzen 5 PRO 6650U (Zen 4, 6C)",
+    "name": "Ryzen 5 PRO 6650U (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.86,
+    "fp16Tflops": 0.43,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -2329,9 +2329,9 @@
   },
   {
     "id": "ryzen-5-pro-7535u",
-    "name": "Ryzen 5 PRO 7535U (Zen 4, 6C)",
+    "name": "Ryzen 5 PRO 7535U (Zen 3, 6C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.87,
+    "fp16Tflops": 0.44,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -2706,9 +2706,9 @@
   },
   {
     "id": "ryzen-3-30",
-    "name": "Ryzen 3 30 (Zen 4, 4C)",
+    "name": "Ryzen 3 30 (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.52,
+    "fp16Tflops": 0.26,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -2846,9 +2846,9 @@
   },
   {
     "id": "ryzen-3-7320u",
-    "name": "Ryzen 3 7320U (Zen 4, 4C)",
+    "name": "Ryzen 3 7320U (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.52,
+    "fp16Tflops": 0.26,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -2864,9 +2864,9 @@
   },
   {
     "id": "ryzen-3-7335u",
-    "name": "Ryzen 3 7335U (Zen 4, 4C)",
+    "name": "Ryzen 3 7335U (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.55,
+    "fp16Tflops": 0.28,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -3080,9 +3080,9 @@
   },
   {
     "id": "ryzen-3-pro-7335u",
-    "name": "Ryzen 3 PRO 7335U (Zen 4, 4C)",
+    "name": "Ryzen 3 PRO 7335U (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.55,
+    "fp16Tflops": 0.28,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
@@ -3220,9 +3220,9 @@
   },
   {
     "id": "ryzen-5-40",
-    "name": "Ryzen 5 40 (Zen 4, 4C)",
+    "name": "Ryzen 5 40 (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.55,
+    "fp16Tflops": 0.28,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -3238,18 +3238,18 @@
   },
   {
     "id": "ryzen-5-7235hs",
-    "name": "Ryzen 5 7235HS (Zen 4, 4C)",
+    "name": "Ryzen 5 7235HS (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.54,
+    "fp16Tflops": 0.27,
     "defaultRamBwGBps": 83.2,
     "mobile": true,
     "desktop": true
   },
   {
     "id": "ryzen-5-7520u",
-    "name": "Ryzen 5 7520U (Zen 4, 4C)",
+    "name": "Ryzen 5 7520U (Zen 3, 4C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.55,
+    "fp16Tflops": 0.28,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -3438,9 +3438,9 @@
   },
   {
     "id": "athlon-gold-7220u",
-    "name": "Athlon Gold 7220U (Zen 4, 2C)",
+    "name": "Athlon Gold 7220U (Zen 3, 2C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.24,
+    "fp16Tflops": 0.12,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true
@@ -3499,9 +3499,9 @@
   },
   {
     "id": "athlon-silver-7120u",
-    "name": "Athlon Silver 7120U (Zen 4, 2C)",
+    "name": "Athlon Silver 7120U (Zen 3, 2C)",
     "vendor": "AMD",
-    "fp16Tflops": 0.22,
+    "fp16Tflops": 0.11,
     "defaultRamBwGBps": 102.4,
     "mobile": true,
     "desktop": true

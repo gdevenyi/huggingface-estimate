@@ -158,7 +158,7 @@ function detectZen(rec, isServer) {
   if (/ryzen ai max/i.test(series) || /ryzen ai max/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
 
   // Ryzen 200 (mobile) = Zen 4 (actually Zen 4 for FP7/FP7r2)
-  if (/ryzen.*200 series/i.test(series) || /ryzen [23]\d{2}\b/i.test(name)) return { zen: 4, flopsPerCycle: 32 };
+  if (/ryzen.*200 series/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
   // Ryzen PRO 8000 = Zen 4
   if (/ryzen pro.*8000/i.test(series) || /pro.*8\d{3}/i.test(name)) return { zen: 4, flopsPerCycle: 32 };
   // Ryzen Embedded 8000 = Zen 4
@@ -171,13 +171,27 @@ function detectZen(rec, isServer) {
   if (/ryzen pro.*9000/i.test(series)) return { zen: 5, flopsPerCycle: 32 };
   // Ryzen PRO 200 mobile = Zen 4
   if (/ryzen pro.*200/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
-  // Ryzen 100 (mobile) = Zen 2
-  if (/ryzen.*100 series/i.test(series) || /athlon.*10/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
+  // Ryzen 6000 Series (Rembrandt) = Zen 3+
+  if (/ryzen.*6000/i.test(series)) return { zen: 3, flopsPerCycle: 16 };
+  // Ryzen 7035 Series (Rembrandt-R) = Zen 3+
+  if (/ryzen.*7035/i.test(series)) return { zen: 3, flopsPerCycle: 16 };
+  // Ryzen 7020 Series (Mendocino) = Zen 2
+  if (/ryzen.*7020/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
+  // Ryzen 100 Series / Athlon 10/100 (Mendocino/Rembrandt derivative) = Zen 2
+  if (/ryzen.*100 series/i.test(series) || /athlon.*(10|100)/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
 
   // Technology-based fallback
   if (/(?:^|\s)4nm/i.test(tech)) return { zen: 5, flopsPerCycle: 32 };
   if (/(?:^|\s)5nm/i.test(tech)) return { zen: 4, flopsPerCycle: 32 };
-  if (tech.includes('6nm') && !isServer) return { zen: 4, flopsPerCycle: 32 };
+  if (tech.includes('6nm') && !isServer) {
+    // 6nm desktop/laptop parts are Zen 3+ (Barcelo-R) or Zen 4 (Phoenix/Hawk Point).
+    // Phoenix/Hawk Point have model numbers 7x4x or 8x4x.
+    if (/\d{4}/.test(name)) {
+      const num = parseInt(name.match(/\d{4}/)[0]);
+      if (num >= 8500 || (num >= 7400 && num < 7500)) return { zen: 4, flopsPerCycle: 32 };
+    }
+    return { zen: 3, flopsPerCycle: 16 };
+  }
   if (tech.includes('7nm')) {
     if (/ryzen.*[579].*5\d{3}/i.test(name) || /ryzen.*5\d{3}/i.test(name)) return { zen: 3, flopsPerCycle: 16 };
     return { zen: 2, flopsPerCycle: 16 };
