@@ -613,7 +613,6 @@ const ARCHITECTURES = {
 
 // ── Alias map: GGUF-returned names → registry keys ──
 const ARCH_ALIASES = {
-  'qwen_image': 'qwen_image',
   'ernie4_5-moe': 'ernie4_5_moe',
   'hunyuan-moe': 'hunyuan_moe',
   'lfm2moe': 'lfm2_moe',
