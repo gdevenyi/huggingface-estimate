@@ -2,7 +2,7 @@
 //
 // CPU and GPU presets live in per-vendor JSON files:
 //   apple-cpu-presets.json, intel-cpu-presets.json, amd-cpu-presets.json
-//   nvidia-gpu-presets.json, intel-gpu-presets.json, amd-gpu-presets.json
+//   nvidia-gpu-presets.json, intel-gpu-presets.json, amd-gpu-presets.json, apple-gpu-presets.json
 //
 // CPU FP16 FLOPS approximation: cores x boostGHz x FLOPsPerCycle, where
 // FLOPsPerCycle is the effective FP16 throughput per core per cycle using

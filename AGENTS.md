@@ -212,8 +212,8 @@ Unknown architectures fall back to the `llama` handler. A warning logs to the co
 
 Three sources feed the estimator:
 
-- **Per-vendor GPU presets** — `<vendor>-gpu-presets.json` files loaded at runtime. `nvidia-gpu-presets.json` and `intel-gpu-presets.json` are generated from `gpu_1986-2026.csv` by `scripts/build-gpu-list.js`. `amd-gpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-gpu-list.js`. Regenerate: `node scripts/build-amd-gpu-list.js && node scripts/build-gpu-list.js`. A merged `gpu-data.json` is also produced for backward compat.
-- **Per-vendor CPU presets** — `<vendor>-cpu-presets.json` files loaded at runtime. `apple-cpu-presets.json` and `intel-cpu-presets.json` are hand-curated. `amd-cpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-cpu-presets.js`. CPU FP16 TFLOPS = `cores × boost_GHz × fp16_per_cycle` (AVX2 → 16, AVX-512 → 32, NEON → 8). Pessimistic vs. actual tensor-optimized kernels but bandwidth is typically the decode bottleneck anyway.
+- **Per-vendor GPU presets** — `<vendor>-gpu-presets.json` files loaded at runtime. `nvidia-gpu-presets.json` and `intel-gpu-presets.json` are generated from `gpu_1986-2026.csv` by `scripts/build-gpu-list.js`. `amd-gpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-gpu-list.js`. `apple-gpu-presets.json` is generated from `apple_silicon_specs.csv` by `scripts/build-apple-presets.js`. Regenerate all: `node scripts/build-amd-gpu-list.js && node scripts/build-amd-cpu-presets.js && node scripts/build-apple-presets.js && node scripts/build-gpu-list.js`. A merged `gpu-data.json` is also produced for backward compat.
+- **Per-vendor CPU presets** — `<vendor>-cpu-presets.json` files loaded at runtime. `intel-cpu-presets.json` is hand-curated. `amd-cpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-cpu-presets.js`. `apple-cpu-presets.json` is generated from `apple_silicon_specs.csv` by `scripts/build-apple-presets.js`. CPU FP16 TFLOPS = `cores × boost_GHz × fp16_per_cycle` (AVX2 → 16, AVX-512 → 32, NEON → 8). Apple CPU FP16 is derived from the CSV's `CPU_FP32_TFLOPS_NEON × 2`. Pessimistic vs. actual tensor-optimized kernels but bandwidth is typically the decode bottleneck anyway.
 - **`hardware-presets.js`** — `RAM_PRESETS` (kept here), plus `mergeCpuPresets()`/`mergeGpuPresets()` functions to load the vendor JSON files, and `findCpuPreset()`/`findRamPreset()` lookup functions.
 - **`calcPerLayerFootprint` / `estimatePerformance`** in `calculations.js` — group tensors by `/^blk\.(\d+)\./`, fold active-expert fraction into per-layer byte totals for MoE layers, then iterate `max(FLOPs/FLOPS, bytes/BW)` per layer. Bottleneck label compares aggregate compute-time vs. BW-time per device side; `cpu-dram-spill` fires when CPU layers exceed 50% of total decode time.
 
@@ -221,7 +221,7 @@ Three sources feed the estimator:
 
 ### Mobile / server group split
 
-Preset entries carry optional `mobile`, `server`, and `desktop` boolean flags. The UI partitions each vendor's dropdown into up to three `<optgroup>` sections: `"<Vendor>"` (desktop), `"<Vendor> (mobile)"`, and `"<Vendor> (server)"`. Empty groups are suppressed. Apple CPUs are all tagged `mobile` and shown under a single `"Apple (mobile)"` group.
+Preset entries carry optional `mobile`, `server`, and `desktop` boolean flags. The UI partitions each vendor's dropdown into up to three `<optgroup>` sections: `"<Vendor>"` (desktop), `"<Vendor> (mobile)"`, and `"<Vendor> (server)"`. Empty groups are suppressed.
 
 Detection by source:
 - **AMD CPU**: CSV `Form Factor` column — contains "Laptop" or "Handheld" → `mobile: true`; contains "Desktop" or "Boxed" → eligible for main group; both present → `desktop: true` too (dual-form-factor, appears in both groups). Server CSV entries and EPYC → `server: true`.
@@ -230,8 +230,8 @@ Detection by source:
 - **AMD GPU (Instinct)**: all tagged `server: true`.
 - **NVIDIA GPU**: bare letter+number data center names (`A100`, `H100`, `B200`, `L40`, `T4`, etc., excluding `RTX`/`Quadro`/`GeForce`/`Titan` prefixes and M-suffix like `A10M`) → `server: true`. "Tesla" prefix or "Server" in name → `server: true`. Jetson (LPDDR5X memType) → `mobile: true`.
 - **Intel GPU**: Arc name matches `/\dM\b/` (A370M, A550M, etc.) → `mobile: true`.
+- **Apple CPU/GPU**: CSV `Form_Factor` column — `"Mobile"` → `mobile: true`; `"Desktop"` → `desktop: true`; `"Both"` → both flags. Apple Silicon entries appear in both CPU and GPU preset lists (unified memory architecture).
 - **Intel CPU**: Xeon entries tagged `server: true` (hand-curated).
-- **Apple CPU**: all tagged `mobile: true` (hand-curated).
 
 ### Example model and quantization refrence code
 

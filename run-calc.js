@@ -25,7 +25,7 @@ import { dirname, join } from 'node:path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
-const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json'];
+const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
 for (const f of [...CPU_JSON_FILES, ...GPU_JSON_FILES]) {
   try {

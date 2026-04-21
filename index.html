@@ -790,7 +790,7 @@ import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpu
 
 // Preset data loaded from per-vendor JSON files
 const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
-const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json'];
+const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
 let _cpuLoaded = 0, _gpuLoaded = 0;
 
@@ -910,12 +910,10 @@ function populateCpuSelect() {
     const desktop = all.filter(c => (!c.mobile && !c.server) || c.desktop);
     const mobile = all.filter(c => c.mobile);
     const server = all.filter(c => c.server);
-    const mainLabel = vendor === 'Apple' ? `${vendor} (mobile)` : vendor;
-    addOptgroup(cpuPresetEl, mainLabel, vendor === 'Apple' ? all : desktop, fmt);
-    if (vendor !== 'Apple') {
-      addOptgroup(cpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
-      addOptgroup(cpuPresetEl, `${vendor} (server)`, server, fmt);
-    }
+    const mainLabel = vendor;
+    addOptgroup(cpuPresetEl, mainLabel, desktop, fmt);
+    addOptgroup(cpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
+    addOptgroup(cpuPresetEl, `${vendor} (server)`, server, fmt);
   }
 }
 

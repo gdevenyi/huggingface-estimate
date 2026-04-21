@@ -2,8 +2,8 @@
 // the performance estimator. Also produces a merged gpu-data.json for
 // backward compat. Filters to NVIDIA 1000-series+, AMD RX 5000+/MI,
 // Intel Arc. AMD entries are built separately from first-party AMD CSVs
-// via build-amd-gpu-list.js. Apple M-series GPUs aren't in the CSV
-// uniformly — the per-CPU defaultRamBwGBps value covers unified memory.
+// via build-amd-gpu-list.js. Apple M-series entries are built from
+// apple_silicon_specs.csv via build-apple-presets.js and merged below.
 //
 // Run once after updating the CSV: `node scripts/build-gpu-list.js`
 
@@ -287,6 +287,19 @@ function sortKey(g) {
     }
     return [1, g.name];
   }
+  if (g.vendor === 'Apple') {
+    const genOrder = { M5: 0, M4: 1, M3: 2, M2: 3, M1: 4 };
+    const tierOrder = { Ultra: 0, Max: 1, Pro: 2, base: 3 };
+    let gen = 99, tier = 3;
+    for (const [k, v] of Object.entries(genOrder)) {
+      if (g.name.includes(k)) { gen = v; break; }
+    }
+    if (/Ultra/i.test(g.name)) tier = 0;
+    else if (/Max/i.test(g.name)) tier = 1;
+    else if (/Pro/i.test(g.name)) tier = 2;
+    else if (/A18/i.test(g.name)) { gen = 5; tier = 4; }
+    return [gen, tier, -(g.fp16Tflops || 0), g.name];
+  }
   return [9, g.name];
 }
 function cmp(a, b) {
@@ -313,6 +326,17 @@ try {
 } catch (e) {
   if (e.code !== 'ENOENT') throw e;
   console.error(`Warning: ${AMD_DATA_PATH} not found, skipping AMD merge. Run scripts/build-amd-gpu-list.js first.`);
+}
+
+// ── Merge Apple entries from apple_silicon_specs.csv build ──
+const APPLE_DATA_PATH = join(ROOT, 'apple-gpu-presets.json');
+try {
+  const appleData = JSON.parse(readFileSync(APPLE_DATA_PATH, 'utf8'));
+  for (const g of appleData) out.push(g);
+  console.error(`Merged ${appleData.length} Apple GPUs from ${APPLE_DATA_PATH}`);
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
+  console.error(`Warning: ${APPLE_DATA_PATH} not found, skipping Apple merge. Run scripts/build-apple-presets.js first.`);
 }
 
 out.sort(cmp);
