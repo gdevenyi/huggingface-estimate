@@ -1245,13 +1245,13 @@ function renderResults() {
   const totalBytes = vramBytes + ramBytes;
 
   // VRAM breakdown components
-  let vramWeightBytes, vramExpertBytes = 0, vramRouterSharedBytes = 0;
+  let nonMoEWeightBytes, vramExpertBytes = 0, vramRouterSharedBytes = 0;
   if (moe) {
-    vramWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
-    vramExpertBytes = memBreakdown.vramWeightBytes - vramWeightBytes - moe.routerBytes - moe.sharedBytes;
+    nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
+    vramExpertBytes = memBreakdown.vramWeightBytes - nonMoEWeightBytes - moe.routerBytes - moe.sharedBytes;
     vramRouterSharedBytes = moe.routerBytes + moe.sharedBytes;
   } else {
-    vramWeightBytes = weights.total;
+    nonMoEWeightBytes = weights.total;
   }
   const vramKVBytes = kv.totalBytes;
   const vramActBytes = acts.totalBytes;
@@ -1278,7 +1278,7 @@ function renderResults() {
     $('#vramActiveExpertRow').style.display = 'none';
     $('#vramRouterRow').style.display = 'none';
   }
-  $('#vramWeightsSize').textContent = `${formatBytes(vramWeightBytes)} (${vramPct(vramWeightBytes)})`;
+  $('#vramWeightsSize').textContent = `${formatBytes(nonMoEWeightBytes)} (${vramPct(nonMoEWeightBytes)})`;
   $('#vramKVSize').textContent = `${formatBytes(vramKVBytes)} (${vramPct(vramKVBytes)})`;
   $('#vramActSize').textContent = `${formatBytes(vramActBytes)} (${vramPct(vramActBytes)})`;
   if (currentMmProjInfo && mmProjDevice === 'vram') {
