@@ -149,7 +149,15 @@ function parseArgs(argv) {
       args.ramBw = parseFloat(needValue(arg));
     } else if (arg === '--ngl') {
       const v = needValue(arg);
-      args.ngl = v === 'auto' ? 'auto' : parseInt(v, 10);
+      if (v === 'auto') { args.ngl = 'auto'; }
+      else {
+        const n = parseInt(v, 10);
+        if (Number.isNaN(n) || n < 0) {
+          console.error('Error: --ngl requires a non-negative integer or "auto"');
+          process.exit(1);
+        }
+        args.ngl = n;
+      }
     } else if (arg === '--cpu-moe') {
       args.cpuMoe = true;
     } else if (arg === '--n-cpu-moe') {
@@ -196,6 +204,7 @@ function resolveDevice(args) {
     },
     cpu: cpu ? { ...cpu, preset: cpuPreset } : null,
     nGpuLayers: args.ngl === 'auto' ? 'auto' : args.ngl,
+    mmprojOnGpu: args.mmprojDevice !== 'ram',
     cpuMoe: args.cpuMoe,
     nCpuMoe: args.nCpuMoe,
   };
@@ -208,7 +217,7 @@ async function calcModel(repo) {
   if (!result.url) {
     const err = new Error(`Model "${repo}" has multiple GGUF files. Auto-selecting first: ${result.ggufFiles[0]}`);
     console.error(err.message);
-    const url = `https://huggingface.co/${repo}/resolve/main/${result.ggufFiles[0]}`;
+    const url = buildResolveUrl(repo, result.ggufFiles[0]);
     result.url = url;
   }
 
