@@ -102,51 +102,60 @@ function parseArgs(argv) {
     nCpuMoe: 0,
   };
 
+  const needValue = (flag) => {
+    const val = argv[++i];
+    if (val === undefined || val.startsWith('-')) {
+      console.error(`Error: ${flag} requires a value`);
+      process.exit(1);
+    }
+    return val;
+  };
+
   let i = 2;
   while (i < argv.length) {
     const arg = argv[i];
     if (arg === '--batch') {
-      args.batch = argv[++i];
+      args.batch = needValue(arg);
     } else if (arg === '--ctx') {
-      args.ctx = parseInt(argv[++i], 10);
+      args.ctx = parseInt(needValue(arg), 10);
     } else if (arg === '--batchSize') {
-      args.batchSize = parseInt(argv[++i], 10);
+      args.batchSize = parseInt(needValue(arg), 10);
     } else if (arg === '--kvTypeK') {
-      args.kvTypeK = parseKvType(argv[++i], '--kvTypeK');
+      args.kvTypeK = parseKvType(needValue(arg), '--kvTypeK');
     } else if (arg === '--kvTypeV') {
-      args.kvTypeV = parseKvType(argv[++i], '--kvTypeV');
+      args.kvTypeV = parseKvType(needValue(arg), '--kvTypeV');
     } else if (arg === '--vram') {
-      args.vram = Math.max(0, parseFloat(argv[++i]) || 0);
+      args.vram = Math.max(0, parseFloat(needValue(arg)) || 0);
     } else if (arg === '--ram') {
-      args.ram = Math.max(0, parseFloat(argv[++i]) || 0);
+      args.ram = Math.max(0, parseFloat(needValue(arg)) || 0);
     } else if (arg === '--mmproj') {
-      args.mmproj = argv[++i];
+      args.mmproj = needValue(arg);
     } else if (arg === '--mmprojDevice') {
-      const v = argv[++i];
+      const v = needValue(arg);
       if (v !== 'vram' && v !== 'ram') {
         console.error(`Error: --mmprojDevice must be "vram" or "ram" (got "${v}")`);
         process.exit(1);
       }
       args.mmprojDevice = v;
     } else if (arg === '--gpu') {
-      args.gpu = argv[++i];
+      args.gpu = needValue(arg);
     } else if (arg === '--gpu-flops') {
-      args.gpuFlops = parseFloat(argv[++i]);
+      args.gpuFlops = parseFloat(needValue(arg));
     } else if (arg === '--gpu-bw') {
-      args.gpuBw = parseFloat(argv[++i]);
+      args.gpuBw = parseFloat(needValue(arg));
     } else if (arg === '--cpu') {
-      args.cpu = argv[++i];
+      args.cpu = needValue(arg);
     } else if (arg === '--cpu-flops') {
-      args.cpuFlops = parseFloat(argv[++i]);
+      args.cpuFlops = parseFloat(needValue(arg));
     } else if (arg === '--ram-bw') {
-      args.ramBw = parseFloat(argv[++i]);
+      args.ramBw = parseFloat(needValue(arg));
     } else if (arg === '--ngl') {
-      const v = argv[++i];
+      const v = needValue(arg);
       args.ngl = v === 'auto' ? 'auto' : parseInt(v, 10);
     } else if (arg === '--cpu-moe') {
       args.cpuMoe = true;
     } else if (arg === '--n-cpu-moe') {
-      const v = parseInt(argv[++i], 10);
+      const v = parseInt(needValue(arg), 10);
       if (Number.isNaN(v) || v < 0) {
         console.error('Error: --n-cpu-moe requires a non-negative integer');
         process.exit(1);
@@ -450,8 +459,7 @@ async function calcModel(repo) {
 
 // ── Batch mode ──
 async function runBatch(batchFile) {
-  const fs = await import('node:fs');
-  const lines = fs.default.readFileSync(batchFile, 'utf-8')
+  const lines = readFileSync(batchFile, 'utf-8')
     .split('\n')
     .map(l => l.trim())
     .filter(l => l && !l.startsWith('#'));

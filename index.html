@@ -1055,6 +1055,28 @@ function renderResults() {
   if (!currentMetadata || !currentTensorInfos) return;
 
   const arch = getModelArch(currentMetadata);
+
+  // ── Model info ──
+  const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
+  const n_head = getMeta(currentMetadata, `${arch}.attention.head_count`);
+  const n_head_kv = getMeta(currentMetadata, `${arch}.attention.head_count_kv`);
+  const n_layer = getMeta(currentMetadata, `${arch}.block_count`);
+  const n_ff = getMeta(currentMetadata, `${arch}.feed_forward_length`);
+  const ctx_len = getMeta(currentMetadata, `${arch}.context_length`);
+  const vocab = getMeta(currentMetadata, `${arch}.vocab_size`);
+  const modelName = currentMetadata['general.name'] || currentMetadata['general.basename'] || arch;
+
+  // Clamp context length to model's maximum before any calculations
+  if (ctx_len && ctx_len > 0) {
+    contextLenEl.max = ctx_len;
+    $('#ctxMaxLabel').textContent = `(max ${formatElements(BigInt(ctx_len))})`;
+    if (parseInt(contextLenEl.value, 10) > ctx_len) {
+      contextLenEl.value = ctx_len;
+    }
+  } else {
+    $('#ctxMaxLabel').textContent = '';
+  }
+
   const ctxSize = parseInt(contextLenEl.value, 10) || 4096;
   const batchSize = parseInt(batchSizeEl.value, 10) || 1;
   const kvTypeK = isNaN(kvTypeKEl.value) ? kvTypeKEl.value : parseInt(kvTypeKEl.value, 10);
@@ -1095,27 +1117,6 @@ function renderResults() {
     mmProjBytes = currentMmProjInfo.weightBytes + (currentMmProjInfo.perImageActBytes || 0);
     if (mmProjDevice === 'ram') ramBytes += mmProjBytes;
     else vramBytes += mmProjBytes;
-  }
-
-  // ── Model info ──
-  const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
-  const n_head = getMeta(currentMetadata, `${arch}.attention.head_count`);
-  const n_head_kv = getMeta(currentMetadata, `${arch}.attention.head_count_kv`);
-  const n_layer = getMeta(currentMetadata, `${arch}.block_count`);
-  const n_ff = getMeta(currentMetadata, `${arch}.feed_forward_length`);
-  const ctx_len = getMeta(currentMetadata, `${arch}.context_length`);
-  const vocab = getMeta(currentMetadata, `${arch}.vocab_size`);
-  const modelName = currentMetadata['general.name'] || currentMetadata['general.basename'] || arch;
-
-  // Clamp context length to model's maximum
-  if (ctx_len && ctx_len > 0) {
-    contextLenEl.max = ctx_len;
-    $('#ctxMaxLabel').textContent = `(max ${formatElements(BigInt(ctx_len))})`;
-    if (parseInt(contextLenEl.value, 10) > ctx_len) {
-      contextLenEl.value = ctx_len;
-    }
-  } else {
-    $('#ctxMaxLabel').textContent = '';
   }
 
   // Architecture badge with categories

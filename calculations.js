@@ -280,8 +280,8 @@ function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
     layers: n_layer,
     headDimK: kv_lora_rank + n_rot,
     headDimV: 0,
-    totalHeadsKV: kv_lora_rank + n_rot,
-    avgHeadsKV: (kv_lora_rank + n_rot) / n_layer,
+    totalHeadsKV: n_layer * (kv_lora_rank + n_rot),
+    avgHeadsKV: kv_lora_rank + n_rot,
   };
 }
 
