@@ -890,6 +890,7 @@ function partitionByGroup(entries) {
 
 function populateGpuSelect() {
   gpuPresetEl.innerHTML = '';
+  gpuPresetEl.appendChild(new Option('Custom', 'custom'));
   const byVendor = partitionByGroup(getGpuPresets());
   const fmt = g => `${g.name} — ${g.fp16Tflops} TF, ${g.memBwGBps} GB/s${g.vramGB ? `, ${g.vramGB} GiB` : ''}`;
   for (const [vendor, all] of Object.entries(byVendor)) {
@@ -904,6 +905,7 @@ function populateGpuSelect() {
 
 function populateCpuSelect() {
   cpuPresetEl.innerHTML = '';
+  cpuPresetEl.appendChild(new Option('Custom', 'custom'));
   const byVendor = partitionByGroup(getCpuPresets());
   const fmt = c => `${c.name} — ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`;
   for (const [vendor, all] of Object.entries(byVendor)) {
