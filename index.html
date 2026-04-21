@@ -997,6 +997,8 @@ async function doResolveHFModel(path) {
   mmProjSelectWrap.classList.remove('visible');
   mmProjSelect.value = '';
   resetMmProjState();
+  currentMetadata = null;
+  currentTensorInfos = null;
   resolveBtn.disabled = true;
 
   try {
@@ -1036,6 +1038,7 @@ async function doResolveHFModel(path) {
 
   } catch (err) {
     loadingEl.classList.remove('visible');
+    emptyState.classList.remove('hidden');
     showError(err.message);
   } finally {
     resolveBtn.disabled = false;
