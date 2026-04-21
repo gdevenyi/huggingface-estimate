@@ -2975,6 +2975,20 @@
     "tensorCore": true
   },
   {
+    "id": "nvidia-l4",
+    "vendor": "NVIDIA",
+    "name": "L4",
+    "year": 2023,
+    "vramGB": 24,
+    "memBwGBps": 300.1,
+    "fp16Tflops": 60.58,
+    "fp32Tflops": 30.29,
+    "memType": "GDDR6",
+    "tdpW": 72,
+    "tensorCore": true,
+    "server": true
+  },
+  {
     "id": "nvidia-rtx-a1000-embedded",
     "vendor": "NVIDIA",
     "name": "RTX A1000 Embedded",
@@ -3136,6 +3150,34 @@
     "tdpW": 165,
     "tensorCore": true,
     "mobile": true
+  },
+  {
+    "id": "nvidia-a2",
+    "vendor": "NVIDIA",
+    "name": "A2",
+    "year": 2021,
+    "vramGB": 16,
+    "memBwGBps": 200.1,
+    "fp16Tflops": 9.06,
+    "fp32Tflops": 4.53,
+    "memType": "GDDR6",
+    "tdpW": 60,
+    "tensorCore": true,
+    "server": true
+  },
+  {
+    "id": "nvidia-a2-pcie",
+    "vendor": "NVIDIA",
+    "name": "A2 PCIe",
+    "year": 2021,
+    "vramGB": 16,
+    "memBwGBps": 200.1,
+    "fp16Tflops": 9.06,
+    "fp32Tflops": 4.53,
+    "memType": "GDDR6",
+    "tdpW": 60,
+    "tensorCore": true,
+    "server": true
   },
   {
     "id": "nvidia-quadro-t1200-max-q",
@@ -3764,5 +3806,33 @@
     "memType": "GDDR6",
     "tdpW": 260,
     "tensorCore": true
+  },
+  {
+    "id": "nvidia-tesla-t4",
+    "vendor": "NVIDIA",
+    "name": "Tesla T4",
+    "year": 2018,
+    "vramGB": 16,
+    "memBwGBps": 320,
+    "fp16Tflops": 65.13,
+    "fp32Tflops": 8.14,
+    "memType": "GDDR6",
+    "tdpW": 70,
+    "tensorCore": true,
+    "server": true
+  },
+  {
+    "id": "nvidia-tesla-t4g",
+    "vendor": "NVIDIA",
+    "name": "Tesla T4G",
+    "year": 2018,
+    "vramGB": 16,
+    "memBwGBps": 320,
+    "fp16Tflops": 65.13,
+    "fp32Tflops": 8.14,
+    "memType": "GDDR6",
+    "tdpW": 70,
+    "tensorCore": true,
+    "server": true
   }
 ]

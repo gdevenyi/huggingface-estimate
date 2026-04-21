@@ -99,7 +99,7 @@ function acceptNvidia(name, year) {
   if (/\bMining\b/i.test(name)) return false;
   if (/\b(CMP|DRIVE|GRID|PG\d+)\b/i.test(name)) return false;
   if (/GeForce (GTX|RTX) [1-5]\d{3}/i.test(name)) return true;
-  if (/\b(A|H|B|L|T)\d{2,4}([A-Z]| |$)/.test(name)) return true;          // A100, H100, L40, T4, B200
+  if (/\b(A|H|B|L|T)\d{1,4}([A-Z]| |$)/.test(name)) return true;         // A100, H100, L40, L4, T4, B200, A2
   if (/\b(RTX|Quadro) (A|RTX |PRO )/i.test(name) && year >= 2018) return true;
   if (/\bTitan (V|RTX|Xp)/i.test(name)) return true;
   return false;
