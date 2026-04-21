@@ -1083,6 +1083,10 @@ function renderResults() {
   const kvTypeV = isNaN(kvTypeVEl.value) ? kvTypeVEl.value : parseInt(kvTypeVEl.value, 10);
   const vramGB = parseFloat(vramEl.value) || 0;
   const ramGB = parseFloat(ramEl.value) || 0;
+  const nglRaw = nglOverrideEl.value.trim();
+  const nglOverride = (nglRaw === '' || nglRaw.toLowerCase() === 'auto')
+    ? 'auto'
+    : (Number.isFinite(parseInt(nglRaw, 10)) ? parseInt(nglRaw, 10) : 'auto');
 
   // Weight calculation
   const weights = calcWeightSize(currentTensorInfos);
@@ -1359,6 +1363,7 @@ function renderResults() {
       vramBytes: vramGB * (1024 ** 3),
       footprint: layerFootprint,
       activationBytes: reservedBytes,
+      nLayerOverride: nglOverride,
       cpuMoe,
       nCpuMoe,
     });
@@ -1445,10 +1450,6 @@ function renderResults() {
     perfPanel.classList.add('hidden');
   } else {
     perfPanel.classList.remove('hidden');
-    const nglRaw = nglOverrideEl.value.trim();
-    const nglOverride = (nglRaw === '' || nglRaw.toLowerCase() === 'auto')
-      ? 'auto'
-      : (Number.isFinite(parseInt(nglRaw, 10)) ? parseInt(nglRaw, 10) : 'auto');
     const perf = estimatePerformance({
       metadata: currentMetadata, tensorInfos: currentTensorInfos,
       ctx: ctxSize, batchSize,
