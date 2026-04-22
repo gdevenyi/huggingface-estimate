@@ -106,7 +106,10 @@ export const BPE = {
   // Other
   230: 2 / 1,     // BF16_R16
   397: 258 / 256, // Q8_K_R16
-  // turboquant weight + KV cache quantization
+  // turboquant weight quantization (numeric IDs from llama-cpp-turboquant ggml.h)
+  45: 16 / 32, // TQ3_1S
+  46: 20 / 32, // TQ4_1S
+  // turboquant KV cache quantization (string keys used by KV_VALID_QUANTS dropdown)
   TQ3_1S: 16 / 32,
   TQ4_1S: 20 / 32,
   TURBO2_0: 34 / 128,
@@ -195,6 +198,11 @@ const TURBOQUANT_QUANT_NAMES = {
   TURBO2_0: 'TURBO2_0',
   TURBO3_0: 'TURBO3_0',
   TURBO4_0: 'TURBO4_0',
+  42: 'TURBO2_0',
+  43: 'TURBO3_0',
+  44: 'TURBO4_0',
+  45: 'TQ3_1S (turboquant)',
+  46: 'TQ4_1S (turboquant)',
 };
 Object.assign(QUANT_NAMES, TURBOQUANT_QUANT_NAMES);
 const ROTORQUANT_QUANT_NAMES = {
