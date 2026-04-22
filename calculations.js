@@ -273,14 +273,16 @@ function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
   const n_rot = getMeta(meta, `${arch}.rope.dimension_count`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
-  const totalElemsK = n_layer * (kv_lora_rank + n_rot) * ctxSize;
+  const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+  const n_layer_kv = Math.max(0, n_layer - nextn);
+  const totalElemsK = n_layer_kv * (kv_lora_rank + n_rot) * ctxSize;
   return {
     bytesK: totalElemsK * (BPE[kvTypeK] || 0),
     bytesV: 0,
     layers: n_layer,
     headDimK: kv_lora_rank + n_rot,
     headDimV: 0,
-    totalHeadsKV: n_layer * (kv_lora_rank + n_rot),
+    totalHeadsKV: n_layer_kv * (kv_lora_rank + n_rot),
     avgHeadsKV: kv_lora_rank + n_rot,
   };
 }
@@ -509,7 +511,7 @@ const ARCHITECTURES = {
   granitehybrid:  { name: 'granitehybrid',  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   mistral3:       { name: 'mistral3',       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   mistral4:       { name: 'mistral4',       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  glm4:           { name: 'glm4',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  glm4:           { name: 'glm4',           categories: ['transformer'],      kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'falcon-h1':    { name: 'falcon-h1',      categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   deci:           { name: 'deci',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   cohere2:        { name: 'cohere2',        categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -546,7 +548,7 @@ const ARCHITECTURES = {
   glm4moe: {
     name: 'glm4moe',
     categories: ['transformer', 'moe'],
-    kvCache: llamaKvCache,
+    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }),
     activations: buildActivations,
     moe: (m, ti) => buildMoe(m, ti, {
       isExpert: (t) => t.name.includes('_exps.') || t.name.includes('gate_up_exps'),
@@ -555,23 +557,40 @@ const ARCHITECTURES = {
     tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_gate_up_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] },
   },
 
-  // ── DSA (DeepSeek Sparse Attention) — shares MLA KV cache with DeepSeek2 ──
+  // ── DSA (DeepSeek Sparse Attention) — MLA + MoE (GLM-5 family) ──
   'glm-dsa': {
     name: 'glm-dsa',
-    categories: ['transformer', 'mla'],
+    categories: ['transformer', 'moe', 'mla'],
     kvCache: mlaKvCache,
     activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
+      const expertCount = getMeta(meta, `${arch}.expert_count`);
+      const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
+      const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
+      const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
+      const q_lora_rank = getMeta(meta, `${arch}.attention.q_lora_rank`);
+      const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
       const indexerTopK = getMeta(meta, `${arch}.attention.indexer.top_k`);
-      // DSA has additional indexer state (kv_cache_indexer_k, kv_cache_indexer_v)
-      const perLayerBytes = batchSize * (n_embd + n_ff + indexerTopK * 256);
-      return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe: false, expertCount: 0, expertUsedCount: 0, expertFF: 0 };
+      const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+      const isMoe = expertCount > 0;
+      const n_layer_kv = Math.max(0, n_layer - nextn);
+      const indexerBytes = indexerTopK * 256;
+      const n_dense = Math.min(leadingDense, n_layer_kv);
+      const denseBytes = n_dense * batchSize * (n_embd + q_lora_rank + kv_lora_rank + indexerBytes + n_ff) * 4;
+      const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0) ? expertUsedCount * expertFF : n_ff;
+      const moeBytes = Math.max(0, n_layer_kv - leadingDense) * batchSize * (n_embd + q_lora_rank + kv_lora_rank + indexerBytes + moeFF) * 4;
+      return {
+        totalBytes: denseBytes + moeBytes,
+        perLayerBytes: 0,
+        isMoe,
+        expertCount, expertUsedCount, expertFF, leadingDense,
+      };
     },
-    moe: () => null,
-    tensorGroups: { expert: [], router: [], shared: [] },
+    moe: moeShexpOnly,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
   },
 
   // ── Gemma3N: ISWA + altup mechanism + per-layer tensors ──
