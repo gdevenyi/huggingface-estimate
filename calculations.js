@@ -323,6 +323,28 @@ function buildActivations(meta, batchSize) {
   };
 }
 
+// ── Shared-expert MoE activations: residual + shared FFN + routed experts ──
+// Used by qwen35moe, qwen3next (shared expert may have different FFN dim)
+function sharedExpertActivations(meta, batchSize) {
+  const arch = meta['general.architecture'];
+  const n_embd = getMeta(meta, `${arch}.embedding_length`);
+  const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
+  const n_layer = getMeta(meta, `${arch}.block_count`);
+  const expertCount = getMeta(meta, `${arch}.expert_count`);
+  const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
+  const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
+  const expertSharedFF = getMeta(meta, `${arch}.expert_shared_feed_forward_length`) || n_embd;
+  const isMoe = expertCount > 0;
+  const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0)
+    ? batchSize * (n_embd + expertSharedFF + expertUsedCount * expertFF)
+    : batchSize * (n_embd + n_ff);
+  return {
+    totalBytes: perLayerBytes * n_layer * 4,
+    perLayerBytes: perLayerBytes * 4,
+    isMoe, expertCount, expertUsedCount, expertFF,
+  };
+}
+
 // ── Leading-dense activations: dense FFN for first N layers, MoE afterwards ──
 function leadingDenseActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
@@ -393,7 +415,7 @@ const moeShexpOnly = (m, ti) => buildMoe(m, ti, { isShared: shexpOnly });
 // Each architecture declares its categories and provides specialized handlers
 // for KV cache, activations, and MoE weight calculations.
 
-const ARCHITECTURES = {
+export const ARCHITECTURES = {
   // ── Default: standard transformer (llama, mistral, qwen2, phi3, etc.) ──
   llama: {
     name: 'llama',
@@ -540,21 +562,7 @@ const ARCHITECTURES = {
         layerFilter: (i) => ((i + 1) % interval === 0),
       });
     },
-    activations(meta, batchSize) {
-      const arch = meta['general.architecture'];
-      const n_embd = getMeta(meta, `${arch}.embedding_length`);
-      const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
-      const n_layer = getMeta(meta, `${arch}.block_count`);
-      const expertCount = getMeta(meta, `${arch}.expert_count`);
-      const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
-      const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
-      const isMoe = expertCount > 0;
-      // Residual + shared expert + routed experts
-      const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0)
-        ? batchSize * (2 * n_embd + expertUsedCount * expertFF)
-        : batchSize * (n_embd + n_ff);
-      return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF };
-    },
+    activations: sharedExpertActivations,
     moe: (m, ti) => buildMoe(m, ti, {
       isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'),
       isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'),
@@ -566,7 +574,7 @@ const ARCHITECTURES = {
   qwen2:          { name: 'qwen2',          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3:          { name: 'qwen3',          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen35:         { name: 'qwen35',         categories: ['transformer'],      kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.attention.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  qwen3next:      { name: 'qwen3next',      categories: ['transformer', 'moe'],kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.attention.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations(meta, batchSize) { const arch = meta['general.architecture']; const n_embd = getMeta(meta, `${arch}.embedding_length`); const n_ff = getMeta(meta, `${arch}.feed_forward_length`); const n_layer = getMeta(meta, `${arch}.block_count`); const expertCount = getMeta(meta, `${arch}.expert_count`); const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`); const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`); const isMoe = expertCount > 0; const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0) ? batchSize * (2 * n_embd + expertUsedCount * expertFF) : batchSize * (n_embd + n_ff); return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF }; }, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_inp_shexp*', '*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
+  qwen3next:      { name: 'qwen3next',      categories: ['transformer', 'moe'],kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.attention.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: sharedExpertActivations, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_inp_shexp*', '*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   qwen2vl:        { name: 'qwen2vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3vl:        { name: 'qwen3vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   gemma3:         { name: 'gemma3',         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 6 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -596,6 +604,8 @@ const ARCHITECTURES = {
   lumina2:        { name: 'lumina2',        categories: ['diffusion'],        kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen_image:     { name: 'qwen_image',     categories: ['diffusion'],        kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   wan:            { name: 'wan',            categories: ['diffusion'],        kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'acestep-lm':   { name: 'acestep-lm',    categories: ['audio'],            kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  t5encoder:      { name: 't5encoder',      categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   mimo2:          { name: 'mimo2',          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'hunyuan-dense':{ name: 'hunyuan-dense',  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   exaone4:        { name: 'exaone4',        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -712,7 +722,7 @@ const ARCHITECTURES = {
 };
 
 // ── Alias map: GGUF-returned names → registry keys ──
-const ARCH_ALIASES = {
+export const ARCH_ALIASES = {
   'ernie4_5-moe': 'ernie4_5_moe',
   'hunyuan-moe': 'hunyuan_moe',
   'lfm2moe': 'lfm2_moe',
