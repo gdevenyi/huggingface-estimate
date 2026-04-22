@@ -127,7 +127,7 @@ for (const [key, val] of Object.entries(GGMLQuantizationType)) {
 }
 // ── ik_llama.cpp extension names (labeled for clarity) ──
 const IK_LLAMA_QUANT_NAMES = {
-  151: 'Q8_KV (ik_llama)',
+  151: 'Q8_KV',
   398: 'Q8_KV_R8 (ik_llama)',
   136: 'Q8_K64 (ik_llama)',
   147: 'Q8_K16 (ik_llama)',
@@ -185,23 +185,23 @@ const IK_LLAMA_QUANT_NAMES = {
   352: 'IQ5_KS_R4 (ik_llama)',
   230: 'BF16_R16 (ik_llama)',
   36: 'I2_S (ik_llama)',
-  133: 'Q6_0 (ik_llama)',
+  133: 'Q6_0',
   397: 'Q8_K_R16 (ik_llama)',
 };
 Object.assign(QUANT_NAMES, IK_LLAMA_QUANT_NAMES);
 const TURBOQUANT_QUANT_NAMES = {
   TQ3_1S: 'TQ3_1S (turboquant)',
   TQ4_1S: 'TQ4_1S (turboquant)',
-  TURBO2_0: 'TURBO2_0 (turboquant)',
-  TURBO3_0: 'TURBO3_0 (turboquant)',
-  TURBO4_0: 'TURBO4_0 (turboquant)',
+  TURBO2_0: 'TURBO2_0',
+  TURBO3_0: 'TURBO3_0',
+  TURBO4_0: 'TURBO4_0',
 };
 Object.assign(QUANT_NAMES, TURBOQUANT_QUANT_NAMES);
 const ROTORQUANT_QUANT_NAMES = {
-  PLANAR3_0: 'PLANAR3_0 (rotorquant)',
-  PLANAR4_0: 'PLANAR4_0 (rotorquant)',
-  ISO3_0: 'ISO3_0 (rotorquant)',
-  ISO4_0: 'ISO4_0 (rotorquant)',
+  PLANAR3_0: 'PLANAR3_0',
+  PLANAR4_0: 'PLANAR4_0',
+  ISO3_0: 'ISO3_0',
+  ISO4_0: 'ISO4_0',
 };
 Object.assign(QUANT_NAMES, ROTORQUANT_QUANT_NAMES);
 
