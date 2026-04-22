@@ -9,6 +9,8 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 - `calculations.js` — Architecture registry, KV cache, activations, MoE, weight calculations. Imports `@huggingface/gguf` as a bare specifier.
 - `parsing.js` — GGUF metadata parsing + HF URL resolution. Same import convention.
 - `run-calc.js` — Node CLI entry point. Resolves the bare specifier via Node's normal package lookup (`node_modules/@huggingface/gguf`).
+- `ui.js` — Browser UI logic: preset loading, form handling, result rendering. Loaded as `<script type="module">`.
+- `style.css` — Dark-theme-only styles (GitHub-dark palette). Responsive two-column grid, sticky sidebar, SlimSelect overrides.
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
@@ -70,6 +72,20 @@ Two views, both matching llama.cpp:
 ## Bytes-per-element hardcoded
 
 `GGML_QUANT_SIZES` is NOT exported from the browser build. BPE values are hardcoded as the `BPE` object in `calculations.js`. Standard types use `GGMLQuantizationType` enum keys as indices; ik_llama.cpp extensions use numeric IDs (e.g., `151` for Q8_KV). The `BPE` object is the sole source of truth for bytes-per-element.
+
+`QUANT_NAMES` maps each quantization type ID (enum key or numeric string) to a human-readable display name. Auto-populated from `GGMLQuantizationType` plus manual entries for ik_llama.cpp and rotorquant types.
+
+## Utility exports from `calculations.js`
+
+- `globMatch(pattern, str)` — glob-pattern matching (`*` → `.*` regex) for tensor group matching.
+- `getModelArch(metadata)` — returns `general.architecture` from metadata.
+- `getMeta(metadata, key, fallback=0)` — safe metadata accessor with numeric coercion.
+- `getArchHandler(arch)` — returns architecture handler from registry (with alias resolution + fallback to `llama`).
+- `formatBytes(bytes)` / `formatElements(n)` — human-readable formatters (KiB/MiB/GiB/TiB, K/M/B/T).
+
+## Utility exports from `parsing.js`
+
+- `KV_VALID_QUANTS` — union of valid KV cache quantization types: standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151, Q8_KV_R8 via 398), plus rotorquant strings (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
 
 ## CDN version pin
 
@@ -212,8 +228,8 @@ Unknown architectures fall back to the `llama` handler. A warning logs to the co
 
 Three sources feed the estimator:
 
-- **Per-vendor GPU presets** — `<vendor>-gpu-presets.json` files loaded at runtime. `nvidia-gpu-presets.json` is generated from `gpu_1986-2026.csv` by `scripts/build-gpu-list.js`. `amd-gpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-gpu-list.js`. `intel-gpu-presets.json` is generated from Intel CSVs by `scripts/build-intel-gpu-presets.js`. `apple-gpu-presets.json` is generated from `apple_silicon_specs.csv` by `scripts/build-apple-presets.js`. Regenerate all: `node scripts/build-amd-gpu-list.js && node scripts/build-amd-cpu-presets.js && node scripts/build-intel-gpu-presets.js && node scripts/build-intel-cpu-presets.js && node scripts/build-apple-presets.js && node scripts/build-gpu-list.js`. A merged `gpu-data.json` is also produced for backward compat.
-- **Per-vendor CPU presets** — `<vendor>-cpu-presets.json` files loaded at runtime. `intel-cpu-presets.json` is generated from Intel CSVs by `scripts/build-intel-cpu-presets.js`. `amd-cpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-cpu-presets.js`. `apple-cpu-presets.json` is generated from `apple_silicon_specs.csv` by `scripts/build-apple-presets.js`. CPU FP16 TFLOPS = `cores × boost_GHz × fp16_per_cycle` (AVX2 → 16, AVX-512 → 32, NEON → 8). Apple CPU FP16 is derived from the CSV's `CPU_FP32_TFLOPS_NEON × 2`. Pessimistic vs. actual tensor-optimized kernels but bandwidth is typically the decode bottleneck anyway.
+- **Per-vendor GPU presets** — `<vendor>-gpu-presets.json` files loaded at runtime. `nvidia-gpu-presets.json` is generated from `gpu_1986-2026.csv` by `scripts/build-gpu-list.js`. `amd-gpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-gpu-list.js`. `intel-gpu-presets.json` is generated from Intel CSVs by `scripts/build-intel-gpu-presets.js`. `apple-gpu-presets.json` is generated from `apple_silicon_macs.csv` by `scripts/build-apple-presets.js`. Regenerate all: `node scripts/build-amd-gpu-list.js && node scripts/build-amd-cpu-presets.js && node scripts/build-intel-gpu-presets.js && node scripts/build-intel-cpu-presets.js && node scripts/build-apple-presets.js && node scripts/build-gpu-list.js`. A merged `gpu-data.json` is also produced for backward compat.
+- **Per-vendor CPU presets** — `<vendor>-cpu-presets.json` files loaded at runtime. `intel-cpu-presets.json` is generated from Intel CSVs by `scripts/build-intel-cpu-presets.js`. `amd-cpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-cpu-presets.js`. `apple-cpu-presets.json` is generated from `apple_silicon_macs.csv` by `scripts/build-apple-presets.js`. CPU FP16 TFLOPS = `cores × boost_GHz × fp16_per_cycle` (AVX2 → 16, AVX-512 → 32, NEON → 8). Apple CPU FP16 is derived from the CSV's `CPU_FP32_TFLOPS_NEON × 2`. Pessimistic vs. actual tensor-optimized kernels but bandwidth is typically the decode bottleneck anyway.
 - **`hardware-presets.js`** — `RAM_PRESETS` (kept here), plus `mergeCpuPresets()`/`mergeGpuPresets()` functions to load the vendor JSON files, and `findCpuPreset()`/`findRamPreset()` lookup functions.
 - **`calcPerLayerFootprint` / `estimatePerformance`** in `calculations.js` — group tensors by `/^blk\.(\d+)\./`, fold active-expert fraction into per-layer byte totals for MoE layers, then iterate `max(FLOPs/FLOPS, bytes/BW)` per layer. Bottleneck label compares aggregate compute-time vs. BW-time per device side; `cpu-dram-spill` fires when CPU layers exceed 50% of total decode time.
 
@@ -233,10 +249,10 @@ Detection by source:
 - **Apple CPU/GPU**: CSV `Form_Factor` column — `"Mobile"` → `mobile: true`; `"Desktop"` → `desktop: true`; `"Both"` → both flags. Apple Silicon entries appear in both CPU and GPU preset lists (unified memory architecture).
 - **Intel CPU**: Xeon entries tagged `server: true` (hand-curated).
 
-### Example model and quantization refrence code
+### Example model and quantization reference code
 
-The directores `resources/ik_llama.cpp/` `resources/llama.cpp/` contain variants of the llama.cpp inference engine
-with quantization and KV cache quantization implementations. Use these as reference code for proper model calcuations.
+The directories `resources/ik_llama.cpp/` and `resources/llama.cpp/` contain variants of the llama.cpp inference engine
+with quantization and KV cache quantization implementations. Use these as reference code for proper model calculations.
 
-The directory `resources/gguf-parser-go/` contains an alternative memory calculator implemenmtation which can be used for
-comaparisons. Do not presume it is 100% correct.
+The directory `resources/gguf-parser-go/` contains an alternative memory calculator implementation which can be used for
+comparisons. Do not presume it is 100% correct.

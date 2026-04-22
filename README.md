@@ -1,6 +1,10 @@
-# GGUF Memory Estimator
+<p align="center"><img src="logo.svg" width="128" height="128" alt="GGUF Memory Estimator logo"></p>
 
-Estimate VRAM and RAM requirements for any GGUF model from HuggingFace — no download required.
+<h1 align="center">GGUF Memory Estimator</h1>
+
+<p align="center">Estimate VRAM and RAM requirements for any GGUF model from HuggingFace — no download required.</p>
+
+<p align="center"><a href="http://gabriel.devenyi.ca/huggingface-estimate"><strong>Try it live &rarr;</strong></a></p>
 
 ## Quick start
 
@@ -71,7 +75,7 @@ Default beats `--cpu-moe` because pass 2 promotes 12 layers to full GPU, while `
 
 ## Supported architectures
 
-llama, mistral3/4, qwen2/3/3.5/3next, qwen2vl, qwen3vl, qwen3moe, qwen35moe, qwen3vlmoe, phi3, gemma2/3/3n, gemma-embedding, olmo2, granite, granitehybrid, glm4, glm4moe, glm-dsa, falcon-h1, cohere2, smollm3, ernie4_5, ernie4_5_moe, grok, nemotron_h, nemotron_h_moe, lfm2, lfm2_moe, minimax-m2, seed_oss, apertus, dots1, afmoe, deci, flux, ltxv, lumina2, qwen_image, wan, mimo2, hunyuan-dense, hunyuan_moe, bailingmoe2, deepseek2 (MLA), gemma4 (ISWA), gpt-oss (ISWA), llama4 (ISWA)
+llama, mistral3/4, qwen2/3/3.5/3next, qwen2vl, qwen3vl, qwen3moe, qwen35moe, qwen3vlmoe, phi3, gemma2/3/3n/4, gemma-embedding, olmo2, granite, granitehybrid, glm4, glm4moe, glm-dsa, falcon-h1, cohere2, smollm3, ernie4_5, ernie4_5_moe, grok, nemotron_h, nemotron_h_moe, lfm2, lfm2_moe, minimax-m2, seed_oss, apertus, dots1, afmoe, deci, flux, ltxv, lumina2, qwen_image, wan, mimo2, hunyuan-dense, hunyuan_moe, bailingmoe2, deepseek2 (MLA), gpt-oss (ISWA), llama4 (ISWA)
 
 ## Quantization types
 
