@@ -1126,6 +1126,19 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
 //   cpuMoe: boolean   (llama.cpp --cpu-moe: all experts to CPU)
 //   nCpuMoe: number   (llama.cpp --n-cpu-moe N: first N layers' experts to CPU)
 // }
+function layerTiming(params, wBytes, kvB, ctx, flopsRate, bwRate) {
+  const flopsDec = 2 * params;
+  const bytesDec = wBytes + kvB;
+  const flopsPre = 2 * params * ctx;
+  const bytesPre = wBytes + kvB;
+  return {
+    tDecode: Math.max(flopsDec / flopsRate, bytesDec / bwRate),
+    tPrefill: Math.max(flopsPre / flopsRate, bytesPre / bwRate),
+    flopsTime: flopsDec / flopsRate,
+    bwTime: bytesDec / bwRate,
+  };
+}
+
 export function estimatePerformance({
   metadata, tensorInfos, ctx, batchSize = 1,
   kv, moe, activations, mmproj, device,
@@ -1159,7 +1172,6 @@ export function estimatePerformance({
     kvBytesPerLayer, outputBytes, outputElems,
   } = footprint;
 
-  // Per-token latency — sum of per-layer max(compute, bandwidth)
   let tDecodeGpu = 0, tDecodeCpu = 0, tDecodeHybridGpu = 0, tDecodeHybridCpu = 0;
   let tPrefillGpu = 0, tPrefillCpu = 0, tPrefillHybridGpu = 0, tPrefillHybridCpu = 0;
   let gpuFlopsTime = 0, gpuBwTime = 0, cpuFlopsTime = 0, cpuBwTime = 0;
@@ -1170,73 +1182,39 @@ export function estimatePerformance({
   for (let i = 0; i < nLayers; i++) {
     const mode = modes[i];
     if (mode === 'gpu') {
-      // Full layer on GPU: all experts resident in VRAM, only active experts
-      // are actually read per token (sparse MoE routing) — matches llama.cpp.
-      const params = layerActiveElems[i];
-      const wBytes = layerActiveBytes[i];
-      const flopsDec = 2 * params;
-      const bytesDec = wBytes + kvB;
-      const flopsPre = 2 * params * ctx;
-      const bytesPre = wBytes + kvB;
-      tDecodeGpu += Math.max(flopsDec / gpuFlops, bytesDec / gpuBw);
-      tPrefillGpu += Math.max(flopsPre / gpuFlops, bytesPre / gpuBw);
-      gpuFlopsTime += flopsDec / gpuFlops;
-      gpuBwTime += bytesDec / gpuBw;
+      const t = layerTiming(layerActiveElems[i], layerActiveBytes[i], kvB, ctx, gpuFlops, gpuBw);
+      tDecodeGpu += t.tDecode;
+      tPrefillGpu += t.tPrefill;
+      gpuFlopsTime += t.flopsTime;
+      gpuBwTime += t.bwTime;
     } else if (mode === 'hybrid' && cpuAvailable) {
-      // Non-expert part (attn, router, shared, norms) runs on GPU
-      const neParams = layerNonExpertElems[i];
-      const neBytes = layerNonExpertBytes[i];
-      const gFlopsDec = 2 * neParams;
-      const gBytesDec = neBytes + kvB;
-      const gFlopsPre = 2 * neParams * ctx;
-      const gBytesPre = neBytes + kvB;
-      tDecodeHybridGpu += Math.max(gFlopsDec / gpuFlops, gBytesDec / gpuBw);
-      tPrefillHybridGpu += Math.max(gFlopsPre / gpuFlops, gBytesPre / gpuBw);
-      gpuFlopsTime += gFlopsDec / gpuFlops;
-      gpuBwTime += gBytesDec / gpuBw;
-      // Active experts run on CPU — read from RAM, computed on CPU cores
-      const xParams = layerExpertElemsActive[i];
-      const xBytes = layerExpertBytesActive[i];
-      const cFlopsDec = 2 * xParams;
-      const cBytesDec = xBytes;
-      const cFlopsPre = 2 * xParams * ctx;
-      const cBytesPre = xBytes;
-      tDecodeHybridCpu += Math.max(cFlopsDec / cpuFlops, cBytesDec / cpuBw);
-      tPrefillHybridCpu += Math.max(cFlopsPre / cpuFlops, cBytesPre / cpuBw);
-      cpuFlopsTime += cFlopsDec / cpuFlops;
-      cpuBwTime += cBytesDec / cpuBw;
+      const g = layerTiming(layerNonExpertElems[i], layerNonExpertBytes[i], kvB, ctx, gpuFlops, gpuBw);
+      tDecodeHybridGpu += g.tDecode;
+      tPrefillHybridGpu += g.tPrefill;
+      gpuFlopsTime += g.flopsTime;
+      gpuBwTime += g.bwTime;
+      const c = layerTiming(layerExpertElemsActive[i], layerExpertBytesActive[i], 0, ctx, cpuFlops, cpuBw);
+      tDecodeHybridCpu += c.tDecode;
+      tPrefillHybridCpu += c.tPrefill;
+      cpuFlopsTime += c.flopsTime;
+      cpuBwTime += c.bwTime;
     } else if (mode === 'cpu' && cpuAvailable) {
-      // Full layer on CPU: whole active weight set streams from RAM
-      const params = layerActiveElems[i];
-      const wBytes = layerActiveBytes[i];
-      const flopsDec = 2 * params;
-      const bytesDec = wBytes + kvB;
-      const flopsPre = 2 * params * ctx;
-      const bytesPre = wBytes + kvB;
-      tDecodeCpu += Math.max(flopsDec / cpuFlops, bytesDec / cpuBw);
-      tPrefillCpu += Math.max(flopsPre / cpuFlops, bytesPre / cpuBw);
-      cpuFlopsTime += flopsDec / cpuFlops;
-      cpuBwTime += bytesDec / cpuBw;
+      const t = layerTiming(layerActiveElems[i], layerActiveBytes[i], kvB, ctx, cpuFlops, cpuBw);
+      tDecodeCpu += t.tDecode;
+      tPrefillCpu += t.tPrefill;
+      cpuFlopsTime += t.flopsTime;
+      cpuBwTime += t.bwTime;
     }
-    // If mode === 'hybrid' or 'cpu' but no CPU preset provided, layer is
-    // unmodeled — caller surfaces this via the bottleneck label below.
   }
 
-  // Output layer (lm_head + embeddings): GPU when any offload requested,
-  // CPU when fully CPU (llama.cpp runs output on CPU in that case).
   const hasGpuOffload = nGpuLayers + nHybridLayers > 0;
   const outFlops = hasGpuOffload ? gpuFlops : (cpuAvailable ? cpuFlops : gpuFlops);
   const outBw = hasGpuOffload ? gpuBw : (cpuAvailable ? cpuBw : gpuBw);
   const tOutDec = Math.max((2 * outputElems) / outFlops, outputBytes / outBw);
   const tOutPre = Math.max((2 * outputElems * ctx) / outFlops, outputBytes / outBw);
 
-  // Boundary transfer: whenever the activation vector crosses the GPU↔CPU bus
-  // it pays a PCIe-limited hop. Full CPU spill: 1 hop at the boundary. Hybrid
-  // layer: 2 hops per layer (send activation for expert compute, receive
-  // result). Assume PCIe 4.0 x16 ≈ 32 GB/s unless the CPU's advertised BW is
-  // lower (which becomes the limiting factor).
   const n_embd = getMeta(metadata, `${getModelArch(metadata)}.embedding_length`) || 0;
-  const boundaryBytes = n_embd * 2; // bf16/fp16 activation
+  const boundaryBytes = n_embd * 2;
   const boundaryBw = Math.min(32e9, cpuBw || 32e9);
   const spillBoundaryHops = (nGpuLayers + nHybridLayers > 0 && nCpuLayers > 0) ? 1 : 0;
   const hybridHops = 2 * nHybridLayers;
@@ -1247,18 +1225,16 @@ export function estimatePerformance({
   const tDecode = tDecodeGpu + tDecodeCpu + tDecodeHybridGpu + tDecodeHybridCpu + tOutDec + tBoundaryDec;
   const tPrefill = tPrefillGpu + tPrefillCpu + tPrefillHybridGpu + tPrefillHybridCpu + tOutPre + tBoundaryPre;
 
-  // Bottleneck classification
   const gpuBottleneck = (nGpuLayers + nHybridLayers) > 0
     ? (gpuFlopsTime > gpuBwTime ? 'compute' : 'bandwidth')
     : null;
   const cpuBottleneck = (nCpuLayers > 0 || nHybridLayers > 0) && cpuAvailable
     ? (cpuFlopsTime > cpuBwTime ? 'compute' : 'bandwidth')
     : null;
-  const tHybridCpu = tDecodeHybridCpu;
   let overall;
   if ((nCpuLayers > 0 || nHybridLayers > 0) && !cpuAvailable) overall = 'cpu-layers-unrun';
   else if (nCpuLayers > 0 && cpuAvailable && tDecodeCpu > 0.5 * tDecode) overall = 'cpu-dram-spill';
-  else if (nHybridLayers > 0 && cpuAvailable && tHybridCpu > 0.5 * tDecode) overall = 'cpu-experts';
+  else if (nHybridLayers > 0 && cpuAvailable && tDecodeHybridCpu > 0.5 * tDecode) overall = 'cpu-experts';
   else overall = gpuBottleneck || 'n/a';
 
   const tHybridTotal = tDecodeHybridGpu + tDecodeHybridCpu;
@@ -1274,7 +1250,6 @@ export function estimatePerformance({
       cpu: nCpuLayers > 0 ? (tDecodeCpu / nCpuLayers) * 1000 : 0,
     },
     bottleneck: { gpu: gpuBottleneck, cpu: cpuBottleneck, overall },
-    // Raw timing breakdown (seconds)
     timing: {
       decodeGpu: tDecodeGpu, decodeCpu: tDecodeCpu,
       decodeHybridGpu: tDecodeHybridGpu, decodeHybridCpu: tDecodeHybridCpu,

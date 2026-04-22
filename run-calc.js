@@ -293,49 +293,12 @@ async function calcModel(repo, args) {
     }
   }
 
-  // Total parameters
   const totalParams = tensorInfos.reduce((s, t) => s + t.shape.map(Number).reduce((a, b) => a * b, 1), 0);
 
-  // Performance estimate (optional — omitted when no GPU flags supplied)
   const device = resolveDevice(args);
-  let performance = null;
-  if (device) {
-    const perf = estimatePerformance({
-      metadata, tensorInfos, ctx: args.ctx, batchSize: args.batchSize,
-      kv: kvCache, moe: moeInfo, activations, mmproj: mmProjInfo,
-      device,
-    });
-    performance = {
-      decodeTPS: +perf.decodeTPS.toFixed(2),
-      prefillTPS: +perf.prefillTPS.toFixed(2),
-      ttftSec: +perf.ttftSec.toFixed(4),
-      nGpuLayers: perf.nGpuLayers,
-      nHybridLayers: perf.nHybridLayers || 0,
-      nCpuLayers: perf.nCpuLayers,
-      autoSplit: perf.autoSplit,
-      cpuMoe: perf.cpuMoe,
-      nCpuMoe: perf.nCpuMoe,
-      perLayerMs: {
-        gpu: +perf.perLayerMs.gpu.toFixed(3),
-        hybrid: +(perf.perLayerMs.hybrid || 0).toFixed(3),
-        cpu: +perf.perLayerMs.cpu.toFixed(3),
-      },
-      bottleneck: perf.bottleneck,
-      gpu: {
-        name: device.gpu.preset ? device.gpu.preset.name : 'Custom',
-        id: device.gpu.preset ? device.gpu.preset.id : null,
-        fp16Tflops: device.gpu.flopsFp16Tflops,
-        memBwGBps: device.gpu.bwGBps,
-        vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / (1024 ** 3)).toFixed(2) : 0,
-      },
-      cpu: device.cpu ? {
-        name: device.cpu.preset ? (device.cpu.fallback ? `${device.cpu.preset.name} (fallback)` : device.cpu.preset.name) : 'Custom',
-        id: device.cpu.preset ? device.cpu.preset.id : null,
-        fp16Tflops: device.cpu.flopsFp16Tflops,
-        ramBwGBps: device.cpu.bwGBps,
-      } : null,
-    };
-  }
+  const performance = device ? formatPerformance(device, metadata, tensorInfos, args, kvCache, moeInfo, activations, mmProjInfo) : null;
+
+  const vramRamFit = calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes);
 
   return {
     repo,
@@ -344,6 +307,22 @@ async function calcModel(repo, args) {
     quant: primaryQuant,
     totalParams: Number(totalParams),
     totalParamsFormatted: formatElements(totalParams),
+    ...formatWeights(weightInfo),
+    ...formatKvCache(kvCache, args),
+    ...formatActivations(activations),
+    ...formatMoe(moeInfo),
+    ...formatMmProj(mmProjInfo, args, mmProjUrl, mmProjBytes),
+    vramBytes,
+    vramBytesFormatted: formatBytes(vramBytes),
+    ramBytes,
+    ramBytesFormatted: formatBytes(ramBytes),
+    ...vramRamFit,
+    performance,
+  };
+}
+
+function formatWeights(weightInfo) {
+  return {
     weightBytes: weightInfo.total,
     weightBytesFormatted: formatBytes(weightInfo.total),
     weightByQuant: Object.fromEntries(
@@ -358,6 +337,11 @@ async function calcModel(repo, args) {
         },
       ])
     ),
+  };
+}
+
+function formatKvCache(kvCache, args) {
+  return {
     kvCache: {
       bytesK: kvCache.bytesK,
       bytesKFormatted: formatBytes(kvCache.bytesK),
@@ -373,6 +357,11 @@ async function calcModel(repo, args) {
       kvTypeK: QUANT_NAMES[args.kvTypeK] || String(args.kvTypeK),
       kvTypeV: QUANT_NAMES[args.kvTypeV] || String(args.kvTypeV),
     },
+  };
+}
+
+function formatActivations(activations) {
+  return {
     activations: {
       totalBytes: activations.totalBytes,
       totalBytesFormatted: formatBytes(activations.totalBytes),
@@ -382,7 +371,13 @@ async function calcModel(repo, args) {
       expertCount: activations.expertCount,
       expertUsedCount: activations.expertUsedCount,
     },
-    moe: isMoe ? {
+  };
+}
+
+function formatMoe(moeInfo) {
+  if (!moeInfo) return { moe: null };
+  return {
+    moe: {
       expertCount: moeInfo.expertCount,
       expertUsedCount: moeInfo.expertUsedCount,
       expertWeightBytes: moeInfo.expertWeightBytes,
@@ -399,8 +394,14 @@ async function calcModel(repo, args) {
       expertParamsFormatted: formatElements(moeInfo.expertParams),
       activeExpertWeightBytes: moeInfo.activeExpertWeightBytes,
       activeExpertWeightBytesFormatted: formatBytes(moeInfo.activeExpertWeightBytes),
-    } : null,
-    mmproj: mmProjInfo ? {
+    },
+  };
+}
+
+function formatMmProj(mmProjInfo, args, mmProjUrl, mmProjBytes) {
+  if (!mmProjInfo) return { mmproj: null };
+  return {
+    mmproj: {
       filename: args.mmproj,
       url: mmProjUrl,
       placement: args.mmprojDevice,
@@ -422,54 +423,88 @@ async function calcModel(repo, args) {
       perImageActBytesFormatted: formatBytes(mmProjInfo.perImageActBytes),
       totalBytes: mmProjBytes,
       totalBytesFormatted: formatBytes(mmProjBytes),
-    } : null,
-    vramBytes,
-    vramBytesFormatted: formatBytes(vramBytes),
-    ramBytes,
-    ramBytesFormatted: formatBytes(ramBytes),
-    ...(() => {
-      if (args.vram <= 0 && args.ram <= 0) return { vramFit: null, ramFit: null };
-      const mmprojActBytes = mmProjInfo ? (mmProjInfo.weightBytes + (mmProjInfo.perImageActBytes || 0)) : 0;
-      const reservedBytes = activations.totalBytes + (args.mmprojDevice !== 'ram' ? mmprojActBytes : 0);
-      let actualRamTotal = ramBytes;
-      let vramFit = null;
-      if (args.vram > 0) {
-        const vramAvailBytes = args.vram * (1024 ** 3);
-        const actual = calcActualMemory({
-          vramBytes: vramAvailBytes,
-          footprint: layerFootprint,
-          activationBytes: reservedBytes,
-          cpuMoe: args.cpuMoe,
-          nCpuMoe: args.nCpuMoe,
-        });
-        const usagePct = actual.actualVram / vramAvailBytes * 100;
-        actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);
-        vramFit = {
-          availableGiB: args.vram,
-          actualVramGiB: +(actual.actualVram / (1024 ** 3)).toFixed(2),
-          actualRamGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
-          fits: actual.actualVram <= vramAvailBytes,
-          usagePct: +usagePct.toFixed(1),
-          nGpuLayers: actual.nGpuLayers,
-          nHybridLayers: actual.nHybridLayers,
-          nCpuLayers: actual.nCpuLayers,
-        };
-      }
-      let ramFit = null;
-      if (args.ram > 0) {
-        const ramAvailBytes = args.ram * (1024 ** 3);
-        const usagePct = actualRamTotal / ramAvailBytes * 100;
-        ramFit = {
-          availableGiB: args.ram,
-          requiredGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
-          fits: actualRamTotal <= ramAvailBytes,
-          usagePct: +usagePct.toFixed(1),
-        };
-      }
-      return { vramFit, ramFit };
-    })(),
-    performance,
+    },
   };
+}
+
+function formatPerformance(device, metadata, tensorInfos, args, kvCache, moeInfo, activations, mmProjInfo) {
+  const perf = estimatePerformance({
+    metadata, tensorInfos, ctx: args.ctx, batchSize: args.batchSize,
+    kv: kvCache, moe: moeInfo, activations, mmproj: mmProjInfo,
+    device,
+  });
+  return {
+    decodeTPS: +perf.decodeTPS.toFixed(2),
+    prefillTPS: +perf.prefillTPS.toFixed(2),
+    ttftSec: +perf.ttftSec.toFixed(4),
+    nGpuLayers: perf.nGpuLayers,
+    nHybridLayers: perf.nHybridLayers || 0,
+    nCpuLayers: perf.nCpuLayers,
+    autoSplit: perf.autoSplit,
+    cpuMoe: perf.cpuMoe,
+    nCpuMoe: perf.nCpuMoe,
+    perLayerMs: {
+      gpu: +perf.perLayerMs.gpu.toFixed(3),
+      hybrid: +(perf.perLayerMs.hybrid || 0).toFixed(3),
+      cpu: +perf.perLayerMs.cpu.toFixed(3),
+    },
+    bottleneck: perf.bottleneck,
+    gpu: {
+      name: device.gpu.preset ? device.gpu.preset.name : 'Custom',
+      id: device.gpu.preset ? device.gpu.preset.id : null,
+      fp16Tflops: device.gpu.flopsFp16Tflops,
+      memBwGBps: device.gpu.bwGBps,
+      vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / (1024 ** 3)).toFixed(2) : 0,
+    },
+    cpu: device.cpu ? {
+      name: device.cpu.preset ? (device.cpu.fallback ? `${device.cpu.preset.name} (fallback)` : device.cpu.preset.name) : 'Custom',
+      id: device.cpu.preset ? device.cpu.preset.id : null,
+      fp16Tflops: device.cpu.flopsFp16Tflops,
+      ramBwGBps: device.cpu.bwGBps,
+    } : null,
+  };
+}
+
+function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes) {
+  if (args.vram <= 0 && args.ram <= 0) return { vramFit: null, ramFit: null };
+  const mmprojActBytes = mmProjInfo ? (mmProjInfo.weightBytes + (mmProjInfo.perImageActBytes || 0)) : 0;
+  const reservedBytes = activations.totalBytes + (args.mmprojDevice !== 'ram' ? mmprojActBytes : 0);
+  let actualRamTotal = ramBytes;
+  let vramFit = null;
+  if (args.vram > 0) {
+    const vramAvailBytes = args.vram * (1024 ** 3);
+    const actual = calcActualMemory({
+      vramBytes: vramAvailBytes,
+      footprint: layerFootprint,
+      activationBytes: reservedBytes,
+      cpuMoe: args.cpuMoe,
+      nCpuMoe: args.nCpuMoe,
+    });
+    const usagePct = actual.actualVram / vramAvailBytes * 100;
+    actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);
+    vramFit = {
+      availableGiB: args.vram,
+      actualVramGiB: +(actual.actualVram / (1024 ** 3)).toFixed(2),
+      actualRamGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+      fits: actual.actualVram <= vramAvailBytes,
+      usagePct: +usagePct.toFixed(1),
+      nGpuLayers: actual.nGpuLayers,
+      nHybridLayers: actual.nHybridLayers,
+      nCpuLayers: actual.nCpuLayers,
+    };
+  }
+  let ramFit = null;
+  if (args.ram > 0) {
+    const ramAvailBytes = args.ram * (1024 ** 3);
+    const usagePct = actualRamTotal / ramAvailBytes * 100;
+    ramFit = {
+      availableGiB: args.ram,
+      requiredGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+      fits: actualRamTotal <= ramAvailBytes,
+      usagePct: +usagePct.toFixed(1),
+    };
+  }
+  return { vramFit, ramFit };
 }
 
 // ── Batch mode ──
