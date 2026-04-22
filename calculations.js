@@ -106,13 +106,16 @@ export const BPE = {
   // Other
   230: 2 / 1,     // BF16_R16
   397: 258 / 256, // Q8_K_R16
-  // rotorquant KV cache quantization
+  // turboquant weight + KV cache quantization
+  TQ3_1S: 16 / 32,
+  TQ4_1S: 20 / 32,
+  TURBO2_0: 34 / 128,
   TURBO3_0: 50 / 128,
   TURBO4_0: 68 / 128,
-  TURBO2_0: 34 / 128,
+  // rotorquant KV cache quantization
   PLANAR3_0: 50 / 128,
-  ISO3_0: 50 / 128,
   PLANAR4_0: 68 / 128,
+  ISO3_0: 50 / 128,
   ISO4_0: 68 / 128,
 };
 
@@ -186,13 +189,18 @@ const IK_LLAMA_QUANT_NAMES = {
   397: 'Q8_K_R16 (ik_llama)',
 };
 Object.assign(QUANT_NAMES, IK_LLAMA_QUANT_NAMES);
+const TURBOQUANT_QUANT_NAMES = {
+  TQ3_1S: 'TQ3_1S (turboquant)',
+  TQ4_1S: 'TQ4_1S (turboquant)',
+  TURBO2_0: 'TURBO2_0 (turboquant)',
+  TURBO3_0: 'TURBO3_0 (turboquant)',
+  TURBO4_0: 'TURBO4_0 (turboquant)',
+};
+Object.assign(QUANT_NAMES, TURBOQUANT_QUANT_NAMES);
 const ROTORQUANT_QUANT_NAMES = {
-  TURBO3_0: 'TURBO3_0 (rotorquant)',
-  TURBO4_0: 'TURBO4_0 (rotorquant)',
-  TURBO2_0: 'TURBO2_0 (rotorquant)',
   PLANAR3_0: 'PLANAR3_0 (rotorquant)',
-  ISO3_0: 'ISO3_0 (rotorquant)',
   PLANAR4_0: 'PLANAR4_0 (rotorquant)',
+  ISO3_0: 'ISO3_0 (rotorquant)',
   ISO4_0: 'ISO4_0 (rotorquant)',
 };
 Object.assign(QUANT_NAMES, ROTORQUANT_QUANT_NAMES);

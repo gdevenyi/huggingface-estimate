@@ -1,4 +1,4 @@
-import { GGMLQuantizationType, KV_VALID_QUANTS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
+import { GGMLQuantizationType, KV_VALID_QUANTS, KV_FORK_GROUPS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
 import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset, getSlowestCpuPreset } from './hardware-presets.js';
 
@@ -67,12 +67,26 @@ const quantTableBody = $('#quantTableBody');
 let ssGpu = null, ssCpu = null;
 
 function populateQuantSelect(sel, defaultType) {
+  const forkQuantSet = new Set(KV_FORK_GROUPS.flatMap(g => g.quants));
   for (const q of KV_VALID_QUANTS) {
+    if (forkQuantSet.has(q)) continue;
     const opt = document.createElement('option');
     opt.value = q;
     opt.textContent = QUANT_NAMES[q] || q;
     if (q === defaultType) opt.selected = true;
     sel.appendChild(opt);
+  }
+  for (const group of KV_FORK_GROUPS) {
+    const og = document.createElement('optgroup');
+    og.label = group.label;
+    for (const q of group.quants) {
+      const opt = document.createElement('option');
+      opt.value = q;
+      opt.textContent = QUANT_NAMES[q] || q;
+      if (q === defaultType) opt.selected = true;
+      og.appendChild(opt);
+    }
+    sel.appendChild(og);
   }
 }
 

@@ -6,7 +6,7 @@ export { GGMLQuantizationType };
 //   llama.cpp       — F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1
 //   ik_llama.cpp    — adds Q6_0 (133), Q8_KV (151)
 //   llama-cpp-turboquant  — adds TURBO2_0, TURBO3_0, TURBO4_0
-//   llama-cpp-rotorquant  — adds TURBO2_0, TURBO3_0, TURBO4_0, PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
+//   llama-cpp-rotorquant  — adds PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
 // Source of truth: each fork's `kv_cache_types` / `kv_cache_type_from_str`.
 export const KV_VALID_QUANTS = [
   GGMLQuantizationType.F32,
@@ -21,9 +21,18 @@ export const KV_VALID_QUANTS = [
   // ik_llama.cpp KV cache quantizations
   133,  // Q6_0
   151,  // Q8_KV
-  // rotorquant / turboquant KV cache quantizations
+  // turboquant KV cache quantizations
   'TURBO2_0', 'TURBO3_0', 'TURBO4_0',
+  // rotorquant KV cache quantizations
   'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0',
+];
+
+// Fork-specific KV quant groups for UI optgroup rendering.
+// Standard (llama.cpp) types are ungrouped; fork-exclusive types appear in labeled optgroups.
+export const KV_FORK_GROUPS = [
+  { label: 'ik_llama.cpp', quants: [133, 151] },
+  { label: 'turboquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0'] },
+  { label: 'rotorquant', quants: ['PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
 ];
 
 /**
