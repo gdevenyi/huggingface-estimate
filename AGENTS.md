@@ -7,14 +7,14 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 **Single source of truth** — one copy of `calculations.js` and `parsing.js` runs in both browser and Node:
 - `index.html` — UI: HTML/CSS, result rendering. Declares an `<script type="importmap">` that remaps the bare specifier `@huggingface/gguf` to the jsDelivr CDN URL.
 - `calculations.js` — Architecture registry, KV cache, activations, MoE, weight calculations. Imports `@huggingface/gguf` as a bare specifier.
-- `parsing.js` — GGUF metadata parsing + HF URL resolution. Same import convention.
+- `parsing.js` — GGUF metadata parsing + HF URL resolution + fork detection. Same import convention.
 - `run-calc.js` — Node CLI entry point. Resolves the bare specifier via Node's normal package lookup (`node_modules/@huggingface/gguf`).
 - `ui.js` — Browser UI logic: preset loading, form handling, result rendering. Loaded as `<script type="module">`.
 - `style.css` — Dark-theme-only styles (GitHub-dark palette). Responsive two-column grid, sticky sidebar, SlimSelect overrides.
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
-**Gitignored reference dirs**: `resources/llama.cpp/`, `resources/ik_llama.cpp/`, `resources/llama.cpp-tq3/`, `resources/llama-cpp-turboquant/`, `resources/llama-cpp-rotorquant/`, `resources/gguf-parser-go/` — local clones for quantization type reference, not part of the app.
+**Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/`, `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
 
 ## Must serve via HTTP
 
@@ -75,21 +75,33 @@ Two views, both matching llama.cpp:
 
 `QUANT_NAMES` maps each quantization type ID (enum key or numeric string) to a human-readable display name. Auto-populated from `GGMLQuantizationType` plus manual entries for ik_llama.cpp, turboquant, rotorquant, and tq3 types.
 
+All tensor size calculations go through `tensorBpe(t)` which checks for a per-tensor `_bpeOverride` (set by fork detection) before falling back to `BPE[t.dtype]`. Display names similarly use `tensorQuantName(t)` which checks `_nameOverride`.
+
 ## Fork-aware BPE overrides
 
-GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
+GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` and `_nameOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
 
 **Detection heuristics** (first match wins):
 1. Any tensor with dtype 200, or `general.file_type == 200` or `45` → tq3 fork
 2. Any tensor with dtype 42 or 43 → turboquant fork (TURBO2_0/TURBO3_0 are turboquant-exclusive KV types)
 3. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
 
+**Colliding type IDs**:
+
+| ID | Default (turboquant) | tq3 fork |
+|----|----------------------|----------|
+| 44 | TURBO4_0 (KV cache, 0.5313 BPE) | TQ3_1S (weight, 0.5 BPE) |
+| 45 | TQ3_1S (weight, 0.5 BPE) | TQ3_1S (weight, 0.5 BPE — same) |
+| 46 | TQ4_1S (weight, 0.625 BPE) | TQ3_4S (weight, 0.5 BPE) |
+
+ID 200 (TQ3_0, KV-only, 0.4375 BPE) is unique to the tq3 fork and does not collide.
+
 **TQ3 fork types** (`resources/llama.cpp-tq3/`):
-| Type | ID | BPE | KV cache | Weight |
-|------|----|-----|----------|--------|
-| TQ3_1S | 44 | 0.5 (16/32) | No | Yes |
-| TQ3_4S | 46 | 0.5 (16/32) | No | Yes |
-| TQ3_0 | 200 | 0.4375 (14/32) | Yes | No |
+| Type | ID | BPE | bpw | KV cache | Weight |
+|------|----|-----|-----|----------|--------|
+| TQ3_1S | 44 | 0.5 (16/32) | 4.0 | No | Yes |
+| TQ3_4S | 46 | 0.5 (16/32) | 4.0 | No | Yes |
+| TQ3_0 | 200 | 0.4375 (14/32) | 3.5 | Yes (KV-only) | No |
 
 ## Utility exports from `calculations.js`
 
@@ -98,10 +110,16 @@ GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different 
 - `getMeta(metadata, key, fallback=0)` — safe metadata accessor with numeric coercion.
 - `getArchHandler(arch)` — returns architecture handler from registry (with alias resolution + fallback to `llama`).
 - `formatBytes(bytes)` / `formatElements(n)` — human-readable formatters (KiB/MiB/GiB/TiB, K/M/B/T).
+- `TQ3_FORK_BPE` — BPE override map for tq3 fork collision resolution.
+- `TQ3_QUANT_NAMES` — display name overrides for tq3 fork types.
 
 ## Utility exports from `parsing.js`
 
-- `KV_VALID_QUANTS` — union of valid KV cache quantization types: standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151, Q8_KV_R8 via 398), plus turboquant strings (TURBO2_0/3_0/4_0), rotorquant strings (PLANAR3_0/4_0, ISO3_0/4_0), and tq3 string (TQ3_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
+- `KV_VALID_QUANTS` — union of valid KV cache quantization types across all supported forks. Standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151), turboquant (TURBO2_0/3_0/4_0), rotorquant (PLANAR3_0/4_0, ISO3_0/4_0 — also includes turboquant types since rotorquant is a superset), tq3 (TQ3_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
+- `KV_FORK_GROUPS` — optgroup labels for the UI dropdown. Each fork lists all KV types it supports, excluding the 9 mainline types already shown ungrouped. Rotorquant inherits turboquant's 3 types plus its own 4.
+- `parseGGUF(url)` — parses GGUF metadata, detects fork, applies BPE/name overrides. Returns `{ metadata, tensorInfos, fork? }`.
+- `resolveHFModel(path)` — resolves HF repo/path to GGUF URLs.
+- `buildResolveUrl(path, filename)` — constructs HF resolve URLs.
 
 ## CDN version pin
 
@@ -109,7 +127,7 @@ The importmap in `index.html` pins `@huggingface/gguf` to `https://cdn.jsdelivr.
 
 ## Sharded GGUF
 
-Files matching `*-of-*.gguf` are auto-detected as shards in `parseGGUF()`. Calls `ggufAllShards()`, merges tensor infos from all shards, takes metadata from the first shard.
+Files matching `*-of-*.gguf` are auto-detected as shards in `parseGGUF()`. Calls `ggufAllShards()`, merges tensor infos from all shards, takes metadata from the first shard. Fork detection runs after the merge so all shard tensors get overrides.
 
 ## Multimodal projector (mmproj)
 
@@ -267,8 +285,21 @@ Detection by source:
 
 ### Example model and quantization reference code
 
-The directories `resources/ik_llama.cpp/` and `resources/llama.cpp/` contain variants of the llama.cpp inference engine
-with quantization and KV cache quantization implementations. Use these as reference code for proper model calculations.
+The `resources/` directory contains local clones of llama.cpp forks with quantization and KV cache implementations. Use these as reference code for proper model calculations:
 
-The directory `resources/gguf-parser-go/` contains an alternative memory calculator implementation which can be used for
-comparisons. Do not presume it is 100% correct.
+- `resources/llama.cpp/` — upstream llama.cpp (standard quant types)
+- `resources/ik_llama.cpp/` — ik_llama.cpp extensions (60+ extra types)
+- `resources/llama-cpp-turboquant/` — turboquant fork (TURBO2_0/3_0/4_0 KV, TQ3_1S/TQ4_1S weights)
+- `resources/llama.cpp-tq3/` — tq3 fork (TQ3_0 KV, TQ3_1S/TQ3_4S weights; ID collision with turboquant)
+- `resources/llama-cpp-rotorquant/` — rotorquant fork (superset of turboquant + PLANAR/ISO KV types)
+- `resources/gguf-parser-go/` — alternative memory calculator implementation which can be used for comparisons. Do not presume it is 100% correct.
+
+### Adding a new fork's quantization types
+
+1. Identify new type IDs and BPE values from the fork's `ggml.h` and `ggml-common.h`.
+2. Add BPE entries to the `BPE` object in `calculations.js`. If IDs collide with an existing fork, only add non-colliding entries to the base `BPE`; put colliding entries in a new `<FORK>_FORK_BPE` export.
+3. Add display names to `QUANT_NAMES` via a new `<FORK>_QUANT_NAMES` object (non-colliding IDs only; colliding IDs get `_nameOverride` at parse time).
+4. Add KV cache types to `KV_VALID_QUANTS` and `KV_FORK_GROUPS` in `parsing.js`.
+5. Add fork detection logic to `detectFork()` in `parsing.js` — use `general.file_type` and unique tensor dtype IDs.
+6. Add override application in `applyForkOverrides()` — stamp `_bpeOverride` and `_nameOverride`.
+7. Document the new fork and its detection heuristics in AGENTS.md under "Fork-aware BPE overrides".

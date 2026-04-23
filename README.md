@@ -27,7 +27,7 @@ node run-calc.js unsloth/Qwen3-30B-A3B-GGUF --ctx 8192 --vram 24 --ram 64
 node run-calc.js --batch testModels.list
 ```
 
-Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`, `--mmproj FILE`, `--mmprojDevice vram|ram`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1, Q8_KV, Q8_KV_R8, plus rotorquant (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0).
+Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`, `--mmproj FILE`, `--mmprojDevice vram|ram`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1 (standard), Q6_0, Q8_KV (ik_llama.cpp), TURBO2_0/3_0/4_0 (turboquant), PLANAR3_0/4_0, ISO3_0/4_0 (rotorquant), and TQ3_0 (tq3).
 
 Performance flags: `--gpu <name>` (e.g. `"RTX 4090"`, matches `gpu-data.json`), `--cpu <name>` (e.g. `"Ryzen 9 7950X"`, matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` (manual overrides), `--ngl <n|auto>` (GPU layer count; auto uses `--vram`), `--cpu-moe` (llama.cpp `-cmoe`: all MoE expert weights → CPU), `--n-cpu-moe N` (llama.cpp `-ncmoe`: expert weights of first N layers → CPU). Supplying any GPU spec enables a `performance` block in the JSON output with decode/prefill/TTFT and layer split (`gpu` / `hybrid` / `cpu`).
 
@@ -75,17 +75,23 @@ Default beats `--cpu-moe` because pass 2 promotes 12 layers to full GPU, while `
 
 ## Supported architectures
 
-llama, mistral3/4, qwen2/3/3.5/3next, qwen2vl, qwen3vl, qwen3moe, qwen35moe, qwen3vlmoe, phi3, gemma2/3/3n/4, gemma-embedding, olmo2, granite, granitehybrid, glm4, glm4moe, glm-dsa, falcon-h1, cohere2, smollm3, ernie4_5, ernie4_5_moe, grok, nemotron_h, nemotron_h_moe, lfm2, lfm2_moe, minimax-m2, seed_oss, apertus, dots1, afmoe, deci, flux, ltxv, lumina2, qwen_image, wan, mimo2, hunyuan-dense, hunyuan_moe, bailingmoe2, deepseek2 (MLA), gpt-oss (ISWA), llama4 (ISWA)
+69 architectures:
+
+llama, deepseek2 (MLA), minicpm3, plm, kimi-linear, gemma4, gpt-oss (ISWA), llama4 (ISWA), qwen3moe, qwen35moe, qwen2, qwen3, qwen35, qwen3next, qwen2vl, qwen3vl, gemma3, gemma2, olmo2, phi3, granite, granitehybrid, mistral3, mistral4, glm4, falcon-h1, deci, cohere2, smollm3, ernie4_5, grok, gemma-embedding, nemotron_h, lfm2, minimax-m2, seed_oss, apertus, dots1, flux, ltxv, lumina2, qwen_image, wan, acestep-lm, t5encoder, mimo2, hunyuan-dense, exaone4, plamo3, smallthinker, qwen2moe, modern-bert, qwen3vlmoe, bailingmoe2, nemotron_h_moe, dbrx, grovemoe, ernie4_5_moe, hunyuan_moe, lfm2_moe, afmoe, deepseek, deepseek2-ocr, bailingmoe, exaone-moe, step35, glm4moe, glm-dsa, gemma3n
 
 ## Quantization types
 
-101 types supported (34 standard + 60 from [ik_llama.cpp](ik_llama.cpp) + 7 rotorquant KV cache):
+106 types supported across 5 forks (34 standard + 60 ik_llama.cpp + 5 turboquant + 4 rotorquant + 3 tq3). 19 KV cache quantization types.
 
-**Standard:** F32, F16, BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K, IQ1_S, IQ2_S, IQ2_XS, IQ2_XXS, IQ3_S, IQ3_XXS, IQ4_NL, IQ4_XS, IQ1_M, TQ1_0, TQ2_0, MXFP4, NVFP4, Q1_0, I8, I16, I32, I64, F64
+**Standard (34):** F32, F16, BF16, Q4_0, Q4_1, Q5_0, Q5_1, Q8_0, Q8_1, Q2_K, Q3_K, Q4_K, Q5_K, Q6_K, Q8_K, IQ1_S, IQ2_S, IQ2_XS, IQ2_XXS, IQ3_S, IQ3_XXS, IQ4_NL, IQ4_XS, IQ1_M, TQ1_0, TQ2_0, MXFP4, NVFP4, Q1_0, I8, I16, I32, I64, F64
 
-**ik_llama.cpp extensions:** I2_S (MS BitNet ternary), Q6_0, Q8_KV, Q8_KV_R8, Q8_K_R16 (KV cache), Q8_K64, Q8_K16, Q8_K32, Q8_KR8, Q8_K128, Q8_K_R8, Q8_0_X4, Q8_1_X4, Q8_2_X4, Q4_0_4_4, Q4_0_4_8, Q4_0_8_8, IQ1_BN, IQ2_BN, IQ2_K, IQ3_K, IQ4_K, IQ5_K, IQ6_K, IQ4_KS, IQ2_KS, IQ4_KSS, IQ5_KS, IQ2_KT, IQ3_KT, IQ4_KT, IQ3_KS, IQ2_KL, IQ1_KT, Q4_0_R8, Q5_0_R4, Q8_0_R8, Q2_K_R4, Q3_K_R4, Q4_K_R4, Q5_K_R4, Q6_K_R4, IQ2_XXS_R4, IQ2_XS_R4, IQ3_XXS_R4, IQ1_S_R4, IQ4_NL_R4, IQ3_S_R4, IQ2_S_R4, IQ4_XS_R8, IQ1_M_R4, Q6_0_R4, IQ2_BN_R4, IQ2_K_R4, IQ3_K_R4, IQ4_K_R4, IQ5_K_R4, IQ4_KS_R4, IQ5_KS_R4, BF16_R16
+**ik_llama.cpp extensions (60):** I2_S (MS BitNet ternary), Q6_0, Q8_KV, Q8_KV_R8, Q8_K_R16 (KV cache), Q8_K64, Q8_K16, Q8_K32, Q8_KR8, Q8_K128, Q8_K_R8, Q8_0_X4, Q8_1_X4, Q8_2_X4, Q4_0_4_4, Q4_0_4_8, Q4_0_8_8, IQ1_BN, IQ2_BN, IQ2_K, IQ3_K, IQ4_K, IQ5_K, IQ6_K, IQ4_KS, IQ2_KS, IQ4_KSS, IQ5_KS, IQ2_KT, IQ3_KT, IQ4_KT, IQ3_KS, IQ2_KL, IQ1_KT, Q4_0_R8, Q5_0_R4, Q8_0_R8, Q2_K_R4, Q3_K_R4, Q4_K_R4, Q5_K_R4, Q6_K_R4, IQ2_XXS_R4, IQ2_XS_R4, IQ3_XXS_R4, IQ1_S_R4, IQ4_NL_R4, IQ3_S_R4, IQ2_S_R4, IQ4_XS_R8, IQ1_M_R4, Q6_0_R4, IQ2_BN_R4, IQ2_K_R4, IQ3_K_R4, IQ4_K_R4, IQ5_K_R4, IQ4_KS_R4, IQ5_KS_R4, BF16_R16
 
-**rotorquant KV cache:** TURBO2_0, TURBO3_0, TURBO4_0, PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
+**turboquant (5):** TURBO2_0, TURBO3_0, TURBO4_0 (KV cache), TQ3_1S, TQ4_1S (weights)
+
+**rotorquant (4):** PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0 (KV cache; rotorquant is a superset of turboquant and also supports all turboquant types)
+
+**tq3 (3):** TQ3_0 (KV cache only, 3.5 bpw), TQ3_1S (weight, 4.0 bpw), TQ3_4S (weight, 4.0 bpw). IDs 44 and 46 collide with turboquant — fork-aware detection resolves the correct BPE at parse time.
 
 ## Resources
 
@@ -95,6 +101,7 @@ The following resources were used in building this tool:
 - https://github.com/ikawrakow/ik_llama.cpp
 - https://github.com/johndpope/llama-cpp-turboquant
 - https://github.com/TheTom/llama-cpp-turboquant
+- https://github.com/turbo-tan/llama.cpp-tq3
 - CSVs from all pages here https://www.amd.com/en/products/specifications.html
 - https://www.kaggle.com/datasets/ellimaaac/gpus-specs-from-1986-to-2026
 
