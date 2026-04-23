@@ -1,4 +1,5 @@
 import { gguf, ggufAllShards, GGMLQuantizationType } from '@huggingface/gguf';
+import { TQ3_FORK_BPE, TQ3_QUANT_NAMES } from './calculations.js';
 
 export { GGMLQuantizationType };
 
@@ -7,6 +8,7 @@ export { GGMLQuantizationType };
 //   ik_llama.cpp    — adds Q6_0 (133), Q8_KV (151)
 //   llama-cpp-turboquant  — adds TURBO2_0, TURBO3_0, TURBO4_0
 //   llama-cpp-rotorquant  — adds PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
+//   llama.cpp-tq3   — adds TQ3_0 (200, KV cache only)
 // Source of truth: each fork's `kv_cache_types` / `kv_cache_type_from_str`.
 export const KV_VALID_QUANTS = [
   GGMLQuantizationType.F32,
@@ -25,6 +27,8 @@ export const KV_VALID_QUANTS = [
   'TURBO2_0', 'TURBO3_0', 'TURBO4_0',
   // rotorquant KV cache quantizations
   'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0',
+  // tq3 KV cache quantizations
+  'TQ3_0',
 ];
 
 // Fork-specific KV quant groups for UI optgroup rendering.
@@ -32,8 +36,32 @@ export const KV_VALID_QUANTS = [
 export const KV_FORK_GROUPS = [
   { label: 'ik_llama.cpp', quants: [133, 151] },
   { label: 'turboquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0'] },
-  { label: 'rotorquant', quants: ['PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
+  { label: 'rotorquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0', 'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
+  { label: 'tq3', quants: ['TQ3_0'] },
 ];
+
+function detectFork(metadata, tensorInfos) {
+  const ftype = Number(metadata['general.file_type'] ?? -1);
+  const dtypeSet = new Set(tensorInfos.map((t) => t.dtype));
+  if (dtypeSet.has(200) || ftype === 200 || ftype === 45) return 'tq3';
+  if (dtypeSet.has(42) || dtypeSet.has(43)) return 'turboquant';
+  if (ftype === 43) {
+    if (dtypeSet.has(44)) return 'tq3';
+    if (dtypeSet.has(45)) return 'turboquant';
+  }
+  return null;
+}
+
+function applyForkOverrides(tensorInfos, fork) {
+  if (fork === 'tq3') {
+    for (const t of tensorInfos) {
+      if (TQ3_FORK_BPE[t.dtype] !== undefined) {
+        t._bpeOverride = TQ3_FORK_BPE[t.dtype];
+        t._nameOverride = TQ3_QUANT_NAMES[t.dtype];
+      }
+    }
+  }
+}
 
 /**
  * Parse a GGUF file and return metadata + tensor infos.
@@ -51,6 +79,11 @@ export async function parseGGUF(url) {
     };
   } else {
     result = await gguf(url);
+  }
+  const fork = detectFork(result.metadata, result.tensorInfos);
+  if (fork) {
+    applyForkOverrides(result.tensorInfos, fork);
+    result.fork = fork;
   }
   return result;
 }

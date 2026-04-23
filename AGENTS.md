@@ -14,7 +14,7 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
-**Gitignored reference dirs**: `resources/llama.cpp/`, `resources/ik_llama.cpp/`, `resources/gguf-parser-go/` — local clones for quantization type reference, not part of the app.
+**Gitignored reference dirs**: `resources/llama.cpp/`, `resources/ik_llama.cpp/`, `resources/llama.cpp-tq3/`, `resources/llama-cpp-turboquant/`, `resources/llama-cpp-rotorquant/`, `resources/gguf-parser-go/` — local clones for quantization type reference, not part of the app.
 
 ## Must serve via HTTP
 
@@ -73,7 +73,23 @@ Two views, both matching llama.cpp:
 
 `GGML_QUANT_SIZES` is NOT exported from the browser build. BPE values are hardcoded as the `BPE` object in `calculations.js`. Standard types use `GGMLQuantizationType` enum keys as indices; ik_llama.cpp extensions use numeric IDs (e.g., `151` for Q8_KV). The `BPE` object is the sole source of truth for bytes-per-element.
 
-`QUANT_NAMES` maps each quantization type ID (enum key or numeric string) to a human-readable display name. Auto-populated from `GGMLQuantizationType` plus manual entries for ik_llama.cpp and rotorquant types.
+`QUANT_NAMES` maps each quantization type ID (enum key or numeric string) to a human-readable display name. Auto-populated from `GGMLQuantizationType` plus manual entries for ik_llama.cpp, turboquant, rotorquant, and tq3 types.
+
+## Fork-aware BPE overrides
+
+GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
+
+**Detection heuristics** (first match wins):
+1. Any tensor with dtype 200, or `general.file_type == 200` or `45` → tq3 fork
+2. Any tensor with dtype 42 or 43 → turboquant fork (TURBO2_0/TURBO3_0 are turboquant-exclusive KV types)
+3. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
+
+**TQ3 fork types** (`resources/llama.cpp-tq3/`):
+| Type | ID | BPE | KV cache | Weight |
+|------|----|-----|----------|--------|
+| TQ3_1S | 44 | 0.5 (16/32) | No | Yes |
+| TQ3_4S | 46 | 0.5 (16/32) | No | Yes |
+| TQ3_0 | 200 | 0.4375 (14/32) | Yes | No |
 
 ## Utility exports from `calculations.js`
 
@@ -85,7 +101,7 @@ Two views, both matching llama.cpp:
 
 ## Utility exports from `parsing.js`
 
-- `KV_VALID_QUANTS` — union of valid KV cache quantization types: standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151, Q8_KV_R8 via 398), plus rotorquant strings (TURBO2_0/3_0/4_0, PLANAR3_0/4_0, ISO3_0/4_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
+- `KV_VALID_QUANTS` — union of valid KV cache quantization types: standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151, Q8_KV_R8 via 398), plus turboquant strings (TURBO2_0/3_0/4_0), rotorquant strings (PLANAR3_0/4_0, ISO3_0/4_0), and tq3 string (TQ3_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
 
 ## CDN version pin
 

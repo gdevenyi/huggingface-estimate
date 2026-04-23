@@ -120,6 +120,8 @@ export const BPE = {
   PLANAR4_0: 68 / 128,
   ISO3_0: 50 / 128,
   ISO4_0: 68 / 128,
+  // llama.cpp-tq3 KV cache quantization (string key for KV_VALID_QUANTS dropdown)
+  TQ3_0: 14 / 32,
 };
 
 // Quantization type names for display
@@ -212,14 +214,36 @@ const ROTORQUANT_QUANT_NAMES = {
   ISO4_0: 'ISO4_0',
 };
 Object.assign(QUANT_NAMES, ROTORQUANT_QUANT_NAMES);
+export const TQ3_QUANT_NAMES = {
+  44: 'TQ3_1S (tq3)',
+  45: 'TQ3_1S (tq3)',
+  46: 'TQ3_4S (tq3)',
+  200: 'TQ3_0 (tq3 KV)',
+};
+QUANT_NAMES[200] = 'TQ3_0 (tq3 KV)';
+
+// BPE overrides applied when fork detection identifies a llama.cpp-tq3 model.
+// IDs 44, 45, 46 collide with turboquant (TURBO4_0 / TQ3_1S / TQ4_1S).
+export const TQ3_FORK_BPE = {
+  44: 16 / 32,
+  45: 16 / 32,
+  46: 16 / 32,
+  200: 14 / 32,
+};
 
 // ── Tensor size helpers ──
 function tensorElems(t) {
   return t.shape.map(Number).reduce((a, b) => a * b, 1);
 }
+function tensorBpe(t) {
+  return t._bpeOverride ?? BPE[t.dtype] ?? 0;
+}
+function tensorQuantName(t) {
+  return t._nameOverride ?? QUANT_NAMES[t.dtype] ?? `type_${t.dtype}`;
+}
 function sumBytes(tensors) {
   let s = 0;
-  for (const t of tensors) s += tensorElems(t) * (BPE[t.dtype] || 0);
+  for (const t of tensors) s += tensorElems(t) * tensorBpe(t);
   return s;
 }
 function sumElems(tensors) {
@@ -766,11 +790,11 @@ export function calcWeightSize(tensorInfos) {
 
   for (const t of tensorInfos) {
     const nElem = tensorElems(t);
-    const bpe = BPE[t.dtype] || 0;
+    const bpe = tensorBpe(t);
     const size = nElem * bpe;
     total += size;
 
-    const name = QUANT_NAMES[t.dtype] || `type_${t.dtype}`;
+    const name = tensorQuantName(t);
     if (!byQuant[name]) {
       byQuant[name] = { count: 0, elements: 0, bytes: 0 };
     }
@@ -986,7 +1010,7 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
   for (const t of tensorInfos) {
     const idx = layerIndexFromTensorName(t.name);
     const elems = tensorElems(t);
-    const bytes = elems * (BPE[t.dtype] || 0);
+    const bytes = elems * tensorBpe(t);
     if (idx < 0 || idx >= nLayers) {
       outputBytes += bytes;
       outputElems += elems;
