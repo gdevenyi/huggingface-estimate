@@ -66,6 +66,13 @@ const quantTableBody = $('#quantTableBody');
 
 let ssGpu = null, ssCpu = null;
 
+const allWordsSearchFilter = (opt, q) => {
+  const words = q.toLowerCase().trim().split(/\s+/);
+  if (words.length === 1 && words[0] === '') return true;
+  const t = opt.text.toLowerCase();
+  return words.every(w => t.includes(w));
+};
+
 function populateQuantSelect(sel, defaultType) {
   const forkQuantSet = new Set(KV_FORK_GROUPS.flatMap(g => g.quants));
   for (const q of KV_VALID_QUANTS) {
@@ -128,7 +135,7 @@ function populateGpuSelect() {
     addOptgroup(gpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
     addOptgroup(gpuPresetEl, `${vendor} (server)`, server, fmt);
   }
-  ssGpu = new SlimSelect({ select: '#gpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search GPU...' } });
+  ssGpu = new SlimSelect({ select: '#gpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search GPU...' }, events: { searchFilter: allWordsSearchFilter } });
 }
 
 function populateCpuSelect() {
@@ -147,7 +154,7 @@ function populateCpuSelect() {
     addOptgroup(cpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
     addOptgroup(cpuPresetEl, `${vendor} (server)`, server, fmt);
   }
-  ssCpu = new SlimSelect({ select: '#cpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search CPU...' } });
+  ssCpu = new SlimSelect({ select: '#cpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search CPU...' }, events: { searchFilter: allWordsSearchFilter } });
 }
 
 gpuPresetEl.addEventListener('change', () => {
