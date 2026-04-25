@@ -272,7 +272,7 @@ Three sources feed the estimator:
 - **`hardware-presets.js`** — `RAM_PRESETS` (kept here), plus `mergeCpuPresets()`/`mergeGpuPresets()` functions to load the vendor JSON files, and `findCpuPreset()`/`findRamPreset()` lookup functions.
 - **`calcPerLayerFootprint` / `estimatePerformance`** in `calculations.js` — group tensors by `/^blk\.(\d+)\./`, fold active-expert fraction into per-layer byte totals for MoE layers, then iterate `max(FLOPs/FLOPS, bytes/BW)` per layer. Bottleneck label compares aggregate compute-time vs. BW-time per device side; `cpu-dram-spill` fires when CPU layers exceed 50% of total decode time.
 
-**FP16 rate caveat for data-center cards**: the CSV reports shader-rate FP16 (often 1:64 of tensor-core rate) for H100 / B200. Preprocessor uses `max(BF16, FP16 if ≥ 1.5× FP32, FP32 × 2)` to approximate the tensor-core path, but the result is conservative for Hopper/Blackwell — users can override with `--gpu-flops`.
+**FP16 rate heuristic**: the CSV's `Theoretical Performance__FP16 (half)` column reports the theoretical peak tensor-core rate (2× FP32) for all cards. Data-center cards (A100, H100, B200) use tensor cores for FP16 — captured by the `BF16` column when populated. Turing/Volta cards (RTX 20-series, GTX 16-series, TITAN RTX/V/Xp, Quadro RTX/T/GP) use FP16 cores for 2× FP32. But consumer GeForce RTX 30/40/50-series and professional Ampere/Ada cards do NOT use tensor cores for FP16, so FP16 = FP32. The preprocessor logic: `BF16 > 0 → BF16; else FP16 ≥ 1.5× FP32 && Turing/Volta match → FP16; else FP32`. Users can override with `--gpu-flops`.
 
 ### Mobile / server group split
 
