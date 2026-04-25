@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Reads gpu_1986-2026.csv and emits per-vendor GPU preset JSON files used by
+// Reads specs/gpu_1986-2026.csv and emits per-vendor GPU preset JSON files used by
 // the performance estimator. Also produces a merged gpu-data.json for
 // backward compat. Filters to NVIDIA 1000-series+.
 // AMD entries are built separately from first-party AMD CSVs via
 // build-amd-gpu-list.js. Intel entries are built from first-party Intel CSVs
 // via build-intel-gpu-presets.js. Apple M-series entries are built from
-// apple_silicon_specs.csv via build-apple-presets.js. All are merged below.
+// specs/apple_silicon.tsv via build-apple-presets.js. All are merged below.
 //
 // Run once after updating the CSV: `node scripts/build-gpu-list.js`
 
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CSV_PATH = join(ROOT, 'resources', 'gpu_1986-2026.csv');
+const CSV_PATH = join(ROOT, 'specs', 'gpu_1986-2026.csv');
 const OUT_PATH = join(ROOT, 'gpu-data.json');
 
 // ── CSV parser: handles quoted fields with embedded commas/newlines ──

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Reads apple_silicon_macs.csv and emits apple-cpu-presets.json and
-// apple-gpu-presets.json. One GPU preset per Mac model/variant row.
-// CPU preset is a single "Apple Unified Memory" entry (no CPU offloading on Apple).
+// Reads specs/apple_silicon.tsv and emits apple-cpu-presets.json and
+// apple-gpu-presets.json. One GPU preset per TSV row (per RAM SKU).
 //
 // Run: `node scripts/build-apple-presets.js`
 
@@ -10,45 +9,9 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const CSV_PATH = join(ROOT, 'resources', 'apple_silicon_macs.csv');
+const TSV_PATH = join(ROOT, 'specs', 'apple_silicon.tsv');
 const CPU_OUT = join(ROOT, 'apple-cpu-presets.json');
 const GPU_OUT = join(ROOT, 'apple-gpu-presets.json');
-
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (c === '"') { inQuotes = false; }
-      else { field += c; }
-    } else {
-      if (c === '"' && field.length === 0) { inQuotes = true; }
-      else if (c === '"') { field += c; }
-      else if (c === ',') { row.push(field); field = ''; }
-      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r') { /* skip */ }
-      else { field += c; }
-    }
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-function parseFloat_(s) {
-  if (!s) return null;
-  const m = s.match(/([\d.]+)/);
-  return m ? parseFloat(m[1]) : null;
-}
-
-function parseInt_(s) {
-  if (!s) return null;
-  const m = s.match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : null;
-}
 
 function round(n, d) {
   const m = Math.pow(10, d);
@@ -64,59 +27,70 @@ function slug(text) {
     .replace(/^-|-$/g, '');
 }
 
-const TIER_ORDER = { ultra: 0, max: 1, pro: 2 };
+const TIER_ORDER = { ultra: 0, max: 1, pro: 2, base: 3 };
 
-function tierRank(chip) {
-  const n = chip.toLowerCase();
-  for (const [k, v] of Object.entries(TIER_ORDER)) {
-    if (n.includes(k)) return v;
-  }
-  return 3;
+function tierRank(tier) {
+  return TIER_ORDER[tier.toLowerCase()] ?? 4;
 }
 
-// ── Parse CSV ──
-const text = readFileSync(CSV_PATH, 'utf8');
-const rows = parseCSV(text);
-const header = rows[0].map(h => h.replace(/^\uFEFF/, ''));
-const COL = Object.fromEntries(header.map((h, i) => [h, i]));
+function chipName(generation, tier) {
+  return tier === 'Base' ? generation : `${generation} ${tier}`;
+}
+
+function parseRam(s) {
+  const m = s.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function isMobile(macModel) {
+  return /^MacBook/.test(macModel);
+}
+
+function isDesktop(macModel) {
+  return /^(iMac|Mac mini|Mac Studio|Mac Pro)/.test(macModel);
+}
+
+// ── Parse TSV ──
+const text = readFileSync(TSV_PATH, 'utf8');
+const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+const header = lines[0].split('\t');
+const COL = Object.fromEntries(header.map((h, i) => [h.trim(), i]));
 
 const gpuPresets = [];
 
-for (let r = 1; r < rows.length; r++) {
-  const row = rows[r];
-  if (!row || row.length < 10) continue;
+for (let i = 1; i < lines.length; i++) {
+  const line = lines[i].trim();
+  if (!line) continue;
 
-  const machine = (row[COL.Machine] || '').trim();
-  const formFactor = (row[COL['Form Factor']] || '').trim();
-  const year = parseInt_(row[COL.Year]);
-  const chip = (row[COL.Chip] || '').trim();
-  const chipVariant = (row[COL['Chip Variant']] || '').trim();
-  const COL_MEM_BW = COL['Memory Bandwidth (GB/s)'];
-  const COL_MEM_MAX = COL['Unified Memory Max (GB)'];
-  const gpuCores = parseInt_(row[COL['GPU Cores']]);
-  const memBwGBps = parseFloat_(row[COL_MEM_BW]);
-  const maxMemGB = parseInt_(row[COL_MEM_MAX]);
-  const fp32Tflops = parseFloat_(row[COL['FP32 TFLOPS']]);
-  const fp16Tflops = parseFloat_(row[COL['FP16 TFLOPS']]);
+  const cols = line.split('\t');
+  const generation = (cols[COL['Generation']] || '').trim();
+  const tier = (cols[COL['Tier']] || '').trim();
+  const cpuCores = parseInt(cols[COL['CPU Cores']] || '0', 10) || null;
+  const gpuCores = parseInt(cols[COL['GPU Cores']] || '0', 10) || null;
+  const fp32Tflops = parseFloat(cols[COL['FP32 (TFLOPS)']] || '') || null;
+  const fp16Tflops = parseFloat(cols[COL['FP16 (TFLOPS)']] || '') || null;
+  const memBwGBps = parseFloat(cols[COL['Memory Bandwidth (GB/s)']] || '') || null;
+  const macModel = (cols[COL['Mac Model']] || '').trim();
+  const ramStr = (cols[COL['RAM']] || '').trim();
+  const ramGB = parseRam(ramStr);
+  const year = parseInt(cols[COL['Model Year']] || '0', 10) || null;
 
-  if (!machine || !memBwGBps) continue;
+  if (!macModel || !memBwGBps || !ramGB) continue;
 
-  const isMobile = formFactor === 'Laptop';
-  const isDesktop = formFactor === 'Desktop' || formFactor === 'AIO Desktop';
-
-  const fullName = chipVariant ? `${machine}, ${chipVariant}` : machine;
-  const id = slug(fullName);
+  const chip = chipName(generation, tier);
+  const name = `Apple ${macModel} (${chip} ${year}), ${cpuCores}c CPU / ${gpuCores}c GPU, ${ramStr}`;
+  const id = slug(name);
 
   const flags = {};
-  if (isMobile) flags.mobile = true;
-  if (isDesktop) flags.desktop = true;
+  if (isMobile(macModel)) flags.mobile = true;
+  if (isDesktop(macModel)) flags.desktop = true;
 
   gpuPresets.push({
     id,
-    name: fullName,
+    name,
     vendor: 'Apple',
-    year: year ?? null,
-    vramGB: maxMemGB,
+    year,
+    vramGB: ramGB,
     memBwGBps: round(memBwGBps, 1),
     fp16Tflops: fp16Tflops != null ? round(fp16Tflops, 2) : null,
     fp32Tflops: fp32Tflops != null ? round(fp32Tflops, 2) : null,
@@ -124,21 +98,21 @@ for (let r = 1; r < rows.length; r++) {
     unifiedMemory: true,
     ...flags,
     _year: year,
-    _chip: chip,
+    _tier: tier,
     _gpuCores: gpuCores,
   });
 }
 
 gpuPresets.sort((a, b) => {
   if ((b._year ?? 0) !== (a._year ?? 0)) return (b._year ?? 0) - (a._year ?? 0);
-  const ta = tierRank(a._chip), tb = tierRank(b._chip);
+  const ta = tierRank(a._tier), tb = tierRank(b._tier);
   if (ta !== tb) return ta - tb;
   if ((b._gpuCores ?? 0) !== (a._gpuCores ?? 0)) return (b._gpuCores ?? 0) - (a._gpuCores ?? 0);
   return a.name.localeCompare(b.name);
 });
 
 function stripMeta(arr) {
-  return arr.map(({ _year, _chip, _gpuCores, ...rest }) => rest);
+  return arr.map(({ _year, _tier, _gpuCores, ...rest }) => rest);
 }
 
 const cpuPresets = [
@@ -151,9 +125,8 @@ console.error(`Wrote ${cpuPresets.length} Apple CPU presets to ${CPU_OUT}`);
 writeFileSync(GPU_OUT, JSON.stringify(stripMeta(gpuPresets), null, 2) + '\n');
 console.error(`Wrote ${gpuPresets.length} Apple GPU presets to ${GPU_OUT}`);
 
-const byGen = {};
+const byYear = {};
 for (const p of gpuPresets) {
-  const gen = p._chip.split(' ')[0];
-  byGen[gen] = (byGen[gen] || 0) + 1;
+  byYear[p._year] = (byYear[p._year] || 0) + 1;
 }
-console.error('By generation:', byGen);
+console.error('By year:', byYear);
