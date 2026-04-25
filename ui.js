@@ -6,19 +6,28 @@ const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
 let _cpuLoaded = 0, _gpuLoaded = 0;
+let _configLoaded = false;
+
+function tryLoadConfig() {
+  if (_configLoaded) return;
+  if (_cpuLoaded >= CPU_JSON_FILES.length && _gpuLoaded >= GPU_JSON_FILES.length) {
+    _configLoaded = true;
+    loadConfig();
+  }
+}
 
 for (const f of CPU_JSON_FILES) {
   fetch('./' + f)
     .then(r => r.ok ? r.json() : [])
-    .then(d => { mergeCpuPresets(d); _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) populateCpuSelect(); })
-    .catch(() => { _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) populateCpuSelect(); });
+    .then(d => { mergeCpuPresets(d); _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) { populateCpuSelect(); tryLoadConfig(); } })
+    .catch(() => { _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) { populateCpuSelect(); tryLoadConfig(); } });
 }
 
 for (const f of GPU_JSON_FILES) {
   fetch('./' + f)
     .then(r => r.ok ? r.json() : [])
-    .then(d => { mergeGpuPresets(d); _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) populateGpuSelect(); })
-    .catch(() => { _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) populateGpuSelect(); });
+    .then(d => { mergeGpuPresets(d); _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) { populateGpuSelect(); tryLoadConfig(); } })
+    .catch(() => { _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) { populateGpuSelect(); tryLoadConfig(); } });
 }
 
 const $ = (s) => document.querySelector(s);
@@ -63,6 +72,7 @@ const modelInfoGrid = $('#modelInfoGrid');
 const archBadge = $('#archBadge');
 const moeSection = $('#moeSection');
 const quantTableBody = $('#quantTableBody');
+const fitCheckPanel = $('#fitCheckPanel');
 
 let ssGpu = null, ssCpu = null;
 
@@ -169,6 +179,114 @@ function populateCpuSelect() {
   allowSpaceInSearch(ssCpu);
 }
 
+const CONFIG_KEY = 'gguf-estimator-config';
+const CONFIG_DEFAULTS = {
+  contextLen: '4096',
+  batchSize: '2048',
+  kvTypeK: String(GGMLQuantizationType.F16),
+  kvTypeV: String(GGMLQuantizationType.F16),
+  gpuPreset: 'custom',
+  cpuPreset: 'custom',
+  mmProjDevice: 'vram',
+  vram: '',
+  gpuFlops: '',
+  gpuBw: '',
+  ram: '',
+  cpuFlops: '',
+  ramBw: '',
+  nglOverride: '',
+  cpuMoe: false,
+  nCpuMoe: '',
+  hfPath: '',
+};
+
+function saveConfig() {
+  try {
+    const cfg = {
+      contextLen: contextLenEl.value,
+      batchSize: batchSizeEl.value,
+      kvTypeK: kvTypeKEl.value,
+      kvTypeV: kvTypeVEl.value,
+      gpuPreset: gpuPresetEl.value,
+      cpuPreset: cpuPresetEl.value,
+      mmProjDevice: mmProjDeviceEl.value,
+      vram: vramEl.value,
+      gpuFlops: gpuFlopsEl.value,
+      gpuBw: gpuBwEl.value,
+      ram: ramEl.value,
+      cpuFlops: cpuFlopsEl.value,
+      ramBw: ramBwEl.value,
+      nglOverride: nglOverrideEl.value,
+      cpuMoe: cpuMoeEl.checked,
+      nCpuMoe: nCpuMoeEl.value,
+      hfPath: hfPathEl.value,
+    };
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+  } catch {}
+}
+
+function applyConfigValues(cfg) {
+  if (cfg.hfPath != null) hfPathEl.value = cfg.hfPath;
+  if (cfg.contextLen != null) contextLenEl.value = cfg.contextLen;
+  if (cfg.batchSize != null) batchSizeEl.value = cfg.batchSize;
+  if (cfg.vram != null) vramEl.value = cfg.vram;
+  if (cfg.gpuFlops != null) gpuFlopsEl.value = cfg.gpuFlops;
+  if (cfg.gpuBw != null) gpuBwEl.value = cfg.gpuBw;
+  if (cfg.ram != null) ramEl.value = cfg.ram;
+  if (cfg.cpuFlops != null) cpuFlopsEl.value = cfg.cpuFlops;
+  if (cfg.ramBw != null) ramBwEl.value = cfg.ramBw;
+  if (cfg.nglOverride != null) nglOverrideEl.value = cfg.nglOverride;
+  if (cfg.nCpuMoe != null) nCpuMoeEl.value = cfg.nCpuMoe;
+  if (cfg.cpuMoe != null) cpuMoeEl.checked = cfg.cpuMoe;
+  if (cfg.mmProjDevice != null) mmProjDeviceEl.value = cfg.mmProjDevice;
+  if (cfg.kvTypeK != null && kvTypeKEl.querySelector(`option[value="${cfg.kvTypeK}"]`)) {
+    kvTypeKEl.value = cfg.kvTypeK;
+  }
+  if (cfg.kvTypeV != null && kvTypeVEl.querySelector(`option[value="${cfg.kvTypeV}"]`)) {
+    kvTypeVEl.value = cfg.kvTypeV;
+  }
+  if (cfg.gpuPreset != null && gpuPresetEl.querySelector(`option[value="${cfg.gpuPreset}"]`)) {
+    if (ssGpu) ssGpu.setSelected(cfg.gpuPreset);
+    else gpuPresetEl.value = cfg.gpuPreset;
+  }
+  if (cfg.cpuPreset != null && cpuPresetEl.querySelector(`option[value="${cfg.cpuPreset}"]`)) {
+    if (ssCpu) ssCpu.setSelected(cfg.cpuPreset);
+    else cpuPresetEl.value = cfg.cpuPreset;
+  }
+}
+
+function loadConfig() {
+  try {
+    const raw = localStorage.getItem(CONFIG_KEY);
+    if (!raw) return;
+    const cfg = JSON.parse(raw);
+    applyConfigValues(cfg);
+    saveConfig();
+  } catch {}
+}
+
+function resetConfig() {
+  try { localStorage.removeItem(CONFIG_KEY); } catch {}
+  applyConfigValues(CONFIG_DEFAULTS);
+  if (ssGpu) ssGpu.setSelected('custom');
+  if (ssCpu) ssCpu.setSelected('custom');
+  modelSelectWrap.classList.remove('visible');
+  mmProjSelectWrap.classList.remove('visible');
+  mmProjDeviceWrap.style.display = 'none';
+  moeOffloadGroup.classList.add('hidden');
+  errorMsg.classList.remove('visible');
+  errorMsg.textContent = '';
+  resultsEl.classList.remove('visible');
+  emptyState.classList.remove('hidden');
+  readyState.classList.add('hidden');
+  perfPanel.classList.add('hidden');
+  fitCheckPanel.classList.add('hidden');
+  currentGGUFUrl = null;
+  currentMetadata = null;
+  currentTensorInfos = null;
+  resetMmProjState();
+}
+
 gpuPresetEl.addEventListener('change', () => {
   const g = getGpuPresets().find(x => x.id === gpuPresetEl.value);
   if (g) {
@@ -177,6 +295,7 @@ gpuPresetEl.addEventListener('change', () => {
     if (g.vramGB) vramEl.value = g.vramGB;
     if (g.vendor === 'Apple' && ssCpu) ssCpu.setSelected('apple-unified-memory');
   }
+  saveConfig();
   if (currentMetadata) renderResults();
 });
 cpuPresetEl.addEventListener('change', () => {
@@ -188,13 +307,14 @@ cpuPresetEl.addEventListener('change', () => {
     cpuFlopsEl.value = '';
     ramBwEl.value = '';
   }
+  saveConfig();
   if (currentMetadata) renderResults();
 });
 for (const el of [gpuFlopsEl, gpuBwEl, vramEl]) {
-  el.addEventListener('input', () => { if (ssGpu) ssGpu.setSelected('custom'); });
+  el.addEventListener('input', () => { if (ssGpu) ssGpu.setSelected('custom'); saveConfig(); });
 }
 for (const el of [cpuFlopsEl, ramBwEl]) {
-  el.addEventListener('input', () => { if (ssCpu) ssCpu.setSelected('custom'); });
+  el.addEventListener('input', () => { if (ssCpu) ssCpu.setSelected('custom'); saveConfig(); });
 }
 
 let currentGGUFUrl = null;
@@ -784,12 +904,21 @@ calcBtn.addEventListener('click', async () => {
 ['contextLen', 'batchSize', 'vram', 'ram', 'kvTypeK', 'kvTypeV',
  'gpuFlops', 'gpuBw', 'cpuFlops', 'ramBw', 'nglOverride', 'nCpuMoe'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
+    saveConfig();
     if (currentMetadata && currentTensorInfos) renderResults();
   });
 });
 cpuMoeEl.addEventListener('change', () => {
+  saveConfig();
   if (currentMetadata && currentTensorInfos) renderResults();
 });
+mmProjDeviceEl.addEventListener('change', () => {
+  saveConfig();
+  if (currentMetadata && currentMmProjInfo) renderResults();
+});
+hfPathEl.addEventListener('input', () => { saveConfig(); });
+
+$('#resetBtn').addEventListener('click', resetConfig);
 
 modelSelect.addEventListener('change', () => {
   const path = hfPathEl.value.trim();
@@ -825,10 +954,6 @@ mmProjSelect.addEventListener('change', async () => {
   await doParseMmProj(currentMmProjUrl);
   loadingEl.classList.remove('visible');
   if (currentMetadata) renderResults();
-});
-
-mmProjDeviceEl.addEventListener('change', () => {
-  if (currentMetadata && currentMmProjInfo) renderResults();
 });
 
 hfPathEl.addEventListener('keydown', (e) => {

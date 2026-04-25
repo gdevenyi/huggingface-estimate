@@ -145,6 +145,19 @@ button.resolve-btn {
   padding: 8px 12px;
 }
 
+button.reset-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+}
+
+button.reset-btn:hover {
+  color: var(--text);
+  border-color: var(--text2);
+}
+
 /* Model info */
 .model-info { display: none; }
 .model-info.visible { display: block; }
