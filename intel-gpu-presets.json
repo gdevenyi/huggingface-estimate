@@ -390,11 +390,12 @@
     "vendor": "Intel",
     "name": "358H iGPU (12 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 153.6,
     "fp16Tflops": 3.84,
     "fp32Tflops": 1.92,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -402,11 +403,12 @@
     "vendor": "Intel",
     "name": "368H iGPU (12 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 153.6,
     "fp16Tflops": 3.84,
     "fp32Tflops": 1.92,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -414,11 +416,12 @@
     "vendor": "Intel",
     "name": "378H iGPU (12 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 153.6,
     "fp16Tflops": 3.84,
     "fp32Tflops": 1.92,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -426,11 +429,12 @@
     "vendor": "Intel",
     "name": "388H iGPU (12 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 153.6,
     "fp16Tflops": 3.84,
     "fp32Tflops": 1.92,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -438,11 +442,12 @@
     "vendor": "Intel",
     "name": "338H iGPU (10 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 3.07,
     "fp32Tflops": 1.54,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -450,11 +455,12 @@
     "vendor": "Intel",
     "name": "185H iGPU (8 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 2.41,
     "fp32Tflops": 1.2,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -462,11 +468,12 @@
     "vendor": "Intel",
     "name": "285H iGPU (8 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 2.41,
     "fp32Tflops": 1.2,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -474,11 +481,12 @@
     "vendor": "Intel",
     "name": "165H iGPU (8 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 2.36,
     "fp32Tflops": 1.18,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -486,11 +494,12 @@
     "vendor": "Intel",
     "name": "165HL iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 2.36,
     "fp32Tflops": 1.18,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -498,11 +507,12 @@
     "vendor": "Intel",
     "name": "265H iGPU (8 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 2.36,
     "fp32Tflops": 1.18,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -510,11 +520,12 @@
     "vendor": "Intel",
     "name": "155H iGPU (8 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 2.3,
     "fp32Tflops": 1.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -522,11 +533,12 @@
     "vendor": "Intel",
     "name": "155HL iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 2.3,
     "fp32Tflops": 1.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -534,11 +546,12 @@
     "vendor": "Intel",
     "name": "235H iGPU (8 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 2.3,
     "fp32Tflops": 1.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -546,11 +559,12 @@
     "vendor": "Intel",
     "name": "255H iGPU (8 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 2.3,
     "fp32Tflops": 1.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -558,11 +572,12 @@
     "vendor": "Intel",
     "name": "135H iGPU (8 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 2.25,
     "fp32Tflops": 1.13,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -570,11 +585,12 @@
     "vendor": "Intel",
     "name": "135HL iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 2.25,
     "fp32Tflops": 1.13,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -582,11 +598,12 @@
     "vendor": "Intel",
     "name": "288V iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 2.1,
     "fp32Tflops": 1.05,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -594,11 +611,12 @@
     "vendor": "Intel",
     "name": "266V iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 2.05,
     "fp32Tflops": 1.02,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -606,11 +624,12 @@
     "vendor": "Intel",
     "name": "268V iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 2.05,
     "fp32Tflops": 1.02,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -618,11 +637,12 @@
     "vendor": "Intel",
     "name": "256V iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 2,
     "fp32Tflops": 1,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -630,11 +650,12 @@
     "vendor": "Intel",
     "name": "258V iGPU (8 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 2,
     "fp32Tflops": 1,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -642,11 +663,12 @@
     "vendor": "Intel",
     "name": "125H iGPU (7 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.97,
     "fp32Tflops": 0.99,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -654,11 +676,12 @@
     "vendor": "Intel",
     "name": "125HL iGPU (7 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 1.97,
     "fp32Tflops": 0.99,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -666,11 +689,12 @@
     "vendor": "Intel",
     "name": "225H iGPU (7 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.97,
     "fp32Tflops": 0.99,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -678,11 +702,12 @@
     "vendor": "Intel",
     "name": "226V iGPU (7 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.66,
     "fp32Tflops": 0.83,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -690,11 +715,12 @@
     "vendor": "Intel",
     "name": "228V iGPU (7 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.66,
     "fp32Tflops": 0.83,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -702,11 +728,12 @@
     "vendor": "Intel",
     "name": "236V iGPU (7 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.66,
     "fp32Tflops": 0.83,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -714,11 +741,12 @@
     "vendor": "Intel",
     "name": "238V iGPU (7 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.66,
     "fp32Tflops": 0.83,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -726,11 +754,12 @@
     "vendor": "Intel",
     "name": "355 iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.28,
     "fp32Tflops": 0.64,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -738,11 +767,12 @@
     "vendor": "Intel",
     "name": "365 iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.28,
     "fp32Tflops": 0.64,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -750,11 +780,12 @@
     "vendor": "Intel",
     "name": "366H iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.28,
     "fp32Tflops": 0.64,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -762,11 +793,12 @@
     "vendor": "Intel",
     "name": "386H iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 153.6,
     "fp16Tflops": 1.28,
     "fp32Tflops": 0.64,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -774,11 +806,12 @@
     "vendor": "Intel",
     "name": "325 iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.25,
     "fp32Tflops": 0.63,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -786,11 +819,12 @@
     "vendor": "Intel",
     "name": "335 iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.25,
     "fp32Tflops": 0.63,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -798,11 +832,12 @@
     "vendor": "Intel",
     "name": "356H iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.25,
     "fp32Tflops": 0.63,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -810,11 +845,12 @@
     "vendor": "Intel",
     "name": "336H iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 136.5,
     "fp16Tflops": 1.18,
     "fp32Tflops": 0.59,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -822,11 +858,12 @@
     "vendor": "Intel",
     "name": "255U iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.08,
     "fp32Tflops": 0.54,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -834,11 +871,12 @@
     "vendor": "Intel",
     "name": "265U iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.08,
     "fp32Tflops": 0.54,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -846,11 +884,12 @@
     "vendor": "Intel",
     "name": "235U iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.05,
     "fp32Tflops": 0.52,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -858,11 +897,12 @@
     "vendor": "Intel",
     "name": "235UA iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.05,
     "fp32Tflops": 0.52,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -870,11 +910,12 @@
     "vendor": "Intel",
     "name": "165U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -882,11 +923,12 @@
     "vendor": "Intel",
     "name": "165UL iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -894,11 +936,12 @@
     "vendor": "Intel",
     "name": "225U iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 134.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -906,11 +949,12 @@
     "vendor": "Intel",
     "name": "265K iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -918,11 +962,12 @@
     "vendor": "Intel",
     "name": "270K PLUS iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 115.2,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -930,11 +975,12 @@
     "vendor": "Intel",
     "name": "285 iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -942,11 +988,12 @@
     "vendor": "Intel",
     "name": "285HX iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -954,11 +1001,12 @@
     "vendor": "Intel",
     "name": "285K iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -966,11 +1014,12 @@
     "vendor": "Intel",
     "name": "285T iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -978,11 +1027,12 @@
     "vendor": "Intel",
     "name": "290HX Plus iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1.02,
     "fp32Tflops": 0.51,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -990,11 +1040,12 @@
     "vendor": "Intel",
     "name": "155U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 1,
     "fp32Tflops": 0.5,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1002,11 +1053,12 @@
     "vendor": "Intel",
     "name": "155UL iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 1,
     "fp32Tflops": 0.5,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1014,11 +1066,12 @@
     "vendor": "Intel",
     "name": "265 iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1,
     "fp32Tflops": 0.5,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1026,11 +1079,12 @@
     "vendor": "Intel",
     "name": "265T iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 1,
     "fp32Tflops": 0.5,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1038,11 +1092,12 @@
     "vendor": "Intel",
     "name": "135U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1050,11 +1105,12 @@
     "vendor": "Intel",
     "name": "135UL iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1062,11 +1118,12 @@
     "vendor": "Intel",
     "name": "245 iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1074,11 +1131,12 @@
     "vendor": "Intel",
     "name": "245K iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1086,11 +1144,12 @@
     "vendor": "Intel",
     "name": "245T iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1098,11 +1157,12 @@
     "vendor": "Intel",
     "name": "250K PLUS iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 115.2,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1110,11 +1170,12 @@
     "vendor": "Intel",
     "name": "265HX iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1122,11 +1183,12 @@
     "vendor": "Intel",
     "name": "270HX Plus iGPU (4 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1134,11 +1196,12 @@
     "vendor": "Intel",
     "name": "275HX iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.97,
     "fp32Tflops": 0.49,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1146,11 +1209,12 @@
     "vendor": "Intel",
     "name": "125U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 0.95,
     "fp32Tflops": 0.47,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1158,11 +1222,12 @@
     "vendor": "Intel",
     "name": "125UL iGPU (4 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 0.95,
     "fp32Tflops": 0.47,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1170,11 +1235,12 @@
     "vendor": "Intel",
     "name": "255HX iGPU (4 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.95,
     "fp32Tflops": 0.47,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1182,11 +1248,12 @@
     "vendor": "Intel",
     "name": "164U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.92,
     "fp32Tflops": 0.46,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1194,11 +1261,12 @@
     "vendor": "Intel",
     "name": "134U iGPU (4 Xe)",
     "year": 2023,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.9,
     "fp32Tflops": 0.45,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1206,11 +1274,12 @@
     "vendor": "Intel",
     "name": "235 iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.77,
     "fp32Tflops": 0.38,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1218,11 +1287,12 @@
     "vendor": "Intel",
     "name": "235A iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.77,
     "fp32Tflops": 0.38,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1230,11 +1300,12 @@
     "vendor": "Intel",
     "name": "235T iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.77,
     "fp32Tflops": 0.38,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1242,11 +1313,12 @@
     "vendor": "Intel",
     "name": "235TA iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.77,
     "fp32Tflops": 0.38,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1254,11 +1326,12 @@
     "vendor": "Intel",
     "name": "245HX iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.73,
     "fp32Tflops": 0.36,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1266,11 +1339,12 @@
     "vendor": "Intel",
     "name": "105UL iGPU (3 Xe)",
     "year": 2024,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 89.6,
     "fp16Tflops": 0.69,
     "fp32Tflops": 0.35,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1278,11 +1352,12 @@
     "vendor": "Intel",
     "name": "235HX iGPU (3 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.69,
     "fp32Tflops": 0.35,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1290,11 +1365,12 @@
     "vendor": "Intel",
     "name": "251HX iGPU (3 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.69,
     "fp32Tflops": 0.35,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1302,11 +1378,12 @@
     "vendor": "Intel",
     "name": "350 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.67,
     "fp32Tflops": 0.33,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1314,11 +1391,12 @@
     "vendor": "Intel",
     "name": "360 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.67,
     "fp32Tflops": 0.33,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1326,11 +1404,12 @@
     "vendor": "Intel",
     "name": "320 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.64,
     "fp32Tflops": 0.32,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1338,11 +1417,12 @@
     "vendor": "Intel",
     "name": "330 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.64,
     "fp32Tflops": 0.32,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1350,11 +1430,12 @@
     "vendor": "Intel",
     "name": "315 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.59,
     "fp32Tflops": 0.29,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1362,11 +1443,12 @@
     "vendor": "Intel",
     "name": "322 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 0.59,
     "fp32Tflops": 0.29,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1374,11 +1456,12 @@
     "vendor": "Intel",
     "name": "332 iGPU (2 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 119.5,
     "fp16Tflops": 0.59,
     "fp32Tflops": 0.29,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1386,11 +1469,12 @@
     "vendor": "Intel",
     "name": "225 iGPU (2 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.46,
     "fp32Tflops": 0.23,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1398,11 +1482,12 @@
     "vendor": "Intel",
     "name": "225T iGPU (2 Xe)",
     "year": 2025,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 102.4,
     "fp16Tflops": 0.46,
     "fp32Tflops": 0.23,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "desktop": true
   },
   {
@@ -1410,11 +1495,12 @@
     "vendor": "Intel",
     "name": "304 iGPU (1 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.29,
     "fp32Tflops": 0.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   },
   {
@@ -1422,11 +1508,12 @@
     "vendor": "Intel",
     "name": "305 iGPU (1 Xe)",
     "year": 2026,
-    "vramGB": null,
+    "vramGB": 32,
     "memBwGBps": 59.7,
     "fp16Tflops": 0.29,
     "fp32Tflops": 0.15,
-    "memType": "Shared",
+    "memType": "Unified",
+    "unifiedMemory": true,
     "mobile": true
   }
 ]

@@ -259,11 +259,12 @@ const ARC_A_FALLBACKS = {
       vendor: 'Intel',
       name,
       year: iGpuYear,
-      vramGB: null,
+      vramGB: 32,
       memBwGBps: ramBW ? round(ramBW, 1) : null,
       fp16Tflops: round(fp16, 2),
       fp32Tflops: round(fp16 / 2, 2),
-      memType: 'Shared',
+      memType: 'Unified',
+      unifiedMemory: true,
       ...flags,
     });
   }

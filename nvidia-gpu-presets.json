@@ -2801,7 +2801,8 @@
     "memType": "LPDDR5X",
     "tdpW": 40,
     "tensorCore": true,
-    "mobile": true
+    "mobile": true,
+    "unifiedMemory": true
   },
   {
     "id": "nvidia-jetson-t5000",
@@ -2815,7 +2816,8 @@
     "memType": "LPDDR5X",
     "tdpW": 40,
     "tensorCore": true,
-    "mobile": true
+    "mobile": true,
+    "unifiedMemory": true
   },
   {
     "id": "nvidia-rtx-pro-2000-blackwell",

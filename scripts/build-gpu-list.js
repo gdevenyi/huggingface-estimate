@@ -177,6 +177,7 @@ for (let r = 1; r < rows.length; r++) {
     if (/^Tesla\b/i.test(name)) flags.server = true;
     if (/\bServer\b/i.test(name)) flags.server = true;
     if (memType === 'LPDDR5X' || /\bMobile\b/i.test(name) || (/\bMax-Q\b/i.test(name) && !/\bRTX PRO\b/i.test(name))) flags.mobile = true;
+    if (memType === 'LPDDR5X') flags.unifiedMemory = true;
   }
 
   out.push({

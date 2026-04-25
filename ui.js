@@ -299,6 +299,8 @@ gpuPresetEl.addEventListener('change', () => {
     gpuBwEl.value = g.memBwGBps;
     if (g.vramGB) vramEl.value = g.vramGB;
     if (g.vendor === 'Apple' && ssCpu) ssCpu.setSelected('apple-unified-memory');
+    if (g.vendor === 'AMD' && g.unifiedMemory && ssCpu) ssCpu.setSelected('amd-unified-memory');
+    if (g.vendor === 'Intel' && g.unifiedMemory && ssCpu) ssCpu.setSelected('intel-unified-memory');
     if (g.unifiedMemory) {
       cpuFlopsEl.value = '';
       ramBwEl.value = '';

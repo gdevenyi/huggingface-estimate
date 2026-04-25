@@ -299,8 +299,11 @@ function cmp(a, b) {
 }
 out.sort(cmp);
 
-writeFileSync(OUT_PATH, JSON.stringify(out, null, 2) + '\n');
-console.error(`Wrote ${out.length} Intel CPU presets to ${OUT_PATH}`);
+writeFileSync(OUT_PATH, JSON.stringify([
+  { id: 'intel-unified-memory', name: 'Intel Unified Memory', vendor: 'Intel' },
+  ...out,
+], null, 2) + '\n');
+console.error(`Wrote ${out.length + 1} Intel CPU presets to ${OUT_PATH}`);
 const byGroup = {};
 for (const p of out) {
   let g = 'other';

@@ -1,5 +1,10 @@
 [
   {
+    "id": "amd-unified-memory",
+    "name": "AMD Unified Memory",
+    "vendor": "AMD"
+  },
+  {
     "id": "ryzen-5-7520c",
     "name": "Ryzen 5 7520C (Zen 3, 4C)",
     "vendor": "AMD",

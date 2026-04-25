@@ -9,6 +9,8 @@ const OUT_PATH = join(ROOT, 'amd-gpu-presets.json');
 const GRAPHICS_CSV = join(ROOT, 'resources', 'amd', 'Graphics Specifications.csv');
 const ACCEL_CSV = join(ROOT, 'resources', 'amd', 'Accelerator Specifications.csv');
 const PRO_CSV = join(ROOT, 'resources', 'amd', 'Compare AMD Radeon\u2122 PRO GPUs  Specifications  Features.csv');
+const APU_CSV = join(ROOT, 'resources', 'amd', 'Processor Specifications.csv');
+const EMBEDDED_CSV = join(ROOT, 'resources', 'amd', 'Embedded Processor Specifications.csv');
 
 function parseCSV(text) {
   const rows = [];
@@ -116,13 +118,89 @@ function cleanName(raw) {
     .replace(/^AMD\s+/, '')
     .replace(/\u2122/g, '')
     .replace(/\u00AE/g, '')
+    .replace(/\u200B/g, '')
     .replace(/\u2019/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+function parseMHz(s) {
+  if (!s) return null;
+  const m = s.match(/([\d.]+)\s*MHz/i);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parseMTs(s) {
+  if (!s) return null;
+  const m = s.match(/([\d.]+)\s*MT\/s/i);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parseMemChannels(s) {
+  if (!s) return null;
+  const m = s.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function computeApuBw(rec) {
+  const memSpec = rec['System Memory Specification'] || '';
+  const memType = (rec['System Memory Type'] || '').toLowerCase();
+  const memChannels = parseMemChannels(rec['Memory Channels']) || 2;
+  const mts = parseMTs(memSpec);
+
+  const busMatch = memType.match(/(\d+)-bit/i);
+  if (busMatch) {
+    const busBytes = parseInt(busMatch[1], 10) / 8;
+    if (mts) return round(mts * busBytes / 1000, 1);
+    if (memType.includes('lpddr5x')) return round(7500 * busBytes / 1000, 1);
+    if (memType.includes('lpddr5')) return round(6400 * busBytes / 1000, 1);
+    if (memType.includes('ddr5')) return round(4800 * busBytes / 1000, 1);
+    if (memType.includes('ddr4')) return round(3200 * busBytes / 1000, 1);
+    return null;
+  }
+
+  if (mts) return round(mts * memChannels * 8 / 1000, 1);
+
+  if (memType.includes('lpddr5x')) return round(7500 * memChannels * 8 / 1000, 1);
+  if (memType.includes('lpddr5')) return round(6400 * memChannels * 8 / 1000, 1);
+  if (memType.includes('ddr5')) return round(5200 * memChannels * 8 / 1000, 1);
+  if (memType.includes('ddr4')) return round(3200 * memChannels * 8 / 1000, 1);
+
+  return null;
+}
+
+function computeEmbeddedBw(rec) {
+  const memTypeStr = rec['Memory Type'] || '';
+  const memController = rec['Memory Controller'] || '';
+
+  let channels = 2;
+  const chMatch = memController.match(/(\d+)\s*channel/i);
+  if (chMatch) channels = parseInt(chMatch[1], 10);
+  else if (/dual/i.test(memController)) channels = 2;
+  else if (/quad/i.test(memController)) channels = 4;
+
+  const parts = memTypeStr.split(',').map(s => s.trim());
+  let bestSpeed = 0;
+
+  for (const part of parts) {
+    const speedMatch = part.match(/(\d{3,5})\s*$/);
+    const speed = speedMatch ? parseFloat(speedMatch[1]) : 0;
+    if (speed > bestSpeed) bestSpeed = speed;
+  }
+
+  if (!bestSpeed) return null;
+  return round(bestSpeed * channels * 8 / 1000, 1);
+}
+
+function apuDefaultVram(procName) {
+  const n = procName.toLowerCase();
+  if (/ai max/i.test(n)) return 64;
+  return 32;
+}
+
 const out = [];
 const seen = new Set();
+const seenProcBase = new Set();
 
 // ── 1. Consumer Radeon RX GPUs (Graphics Specifications.csv) ──
 {
@@ -281,6 +359,111 @@ const seen = new Set();
   }
 }
 
+// ── 4. Consumer APU iGPUs (Processor Specifications.csv) ──
+{
+  const rows = parseRows(APU_CSV);
+  for (const r of rows) {
+    const gpuModel = (r['Graphics Model'] || '')
+      .replace(/\u2122/g, '').replace(/\u00AE/g, '').trim();
+    const cuCount = parseInt(r['Graphics Core Count']);
+    if (isNaN(cuCount) || cuCount < 4) continue;
+    if (!gpuModel || /discrete|required/i.test(gpuModel)) continue;
+
+    const rawName = r['Name'];
+    if (!rawName) continue;
+    const procName = cleanName(rawName).replace(/\s*\(OEM Only\)\s*/gi, '').trim();
+
+    const boostMHz = parseMHz(r['Graphics Boost Frequency']) || parseMHz(r['Graphics Frequency']);
+    if (!boostMHz) continue;
+    const boostGHz = boostMHz / 1000;
+
+    const fp16 = cuCount * boostGHz * 128 / 1000;
+    const fp32 = cuCount * boostGHz * 64 / 1000;
+    const memBw = computeApuBw(r);
+    if (!memBw) continue;
+
+    const vramGB = apuDefaultVram(procName);
+    const year = parseYear(r['Launch Date']);
+    let gpuNameClean = gpuModel
+      .replace(/^AMD\s+/, '')
+      .replace(/\s+Graphics$/i, '')
+      .trim();
+    if (!gpuNameClean || gpuNameClean === 'Radeon' || /^R\d$/.test(gpuNameClean)) {
+      gpuNameClean = `Radeon ${cuCount} CU`;
+    }
+    const name = `${procName} (${gpuNameClean}, Unified, ${vramGB} GB)`;
+
+    const id = 'amd-' + slug(name);
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    seenProcBase.add(slug(procName));
+
+    const formFactor = (r['Form Factor'] || '').toLowerCase();
+    const flags = {};
+    if (/laptop|handheld/i.test(formFactor)) flags.mobile = true;
+    if (/desktop|boxed/i.test(formFactor)) flags.desktop = true;
+
+    out.push({
+      id, vendor: 'AMD', name,
+      year,
+      vramGB,
+      memBwGBps: memBw,
+      fp16Tflops: round(fp16, 2),
+      fp32Tflops: round(fp32, 2),
+      memType: 'Unified',
+      unifiedMemory: true,
+      ...flags,
+    });
+  }
+}
+
+// ── 5. Embedded APU iGPUs (Embedded Processor Specifications.csv) ──
+{
+  const rows = parseRows(EMBEDDED_CSV);
+  for (const r of rows) {
+    const gpuBrand = (r['GPU Brand'] || '')
+      .replace(/\u2122/g, '').replace(/\u00AE/g, '').trim();
+    const cuCount = parseInt(r['GPU CU']);
+    if (isNaN(cuCount) || cuCount < 4) continue;
+    if (!gpuBrand) continue;
+
+    const rawName = r['Name'];
+    if (!rawName) continue;
+    const procName = cleanName(rawName).replace(/\s*\(OEM Only\)\s*/gi, '').trim();
+
+    // Skip if already added from Processor CSV (e.g., old Ryzen APUs in both CSVs)
+    if (seenProcBase.has(slug(procName))) continue;
+
+    const boostMHz = parseMHz(r['GPU Max']);
+    if (!boostMHz) continue;
+    const boostGHz = boostMHz / 1000;
+
+    const fp16 = cuCount * boostGHz * 128 / 1000;
+    const fp32 = cuCount * boostGHz * 64 / 1000;
+    const memBw = computeEmbeddedBw(r);
+    if (!memBw) continue;
+
+    const vramGB = 32;
+    const name = `${procName} (Radeon ${cuCount} CU, Unified, ${vramGB} GB)`;
+
+    const id = 'amd-' + slug(name);
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    out.push({
+      id, vendor: 'AMD', name,
+      year: null,
+      vramGB,
+      memBwGBps: memBw,
+      fp16Tflops: round(fp16, 2),
+      fp32Tflops: round(fp32, 2),
+      memType: 'Unified',
+      unifiedMemory: true,
+    });
+  }
+}
+
 // ── Sort AMD entries ──
 function variantRank(name) {
   const n = name.toUpperCase();
@@ -350,6 +533,13 @@ function amdSortKey(g) {
   if (/Radeon VII/i.test(g.name)) return [6, 0, g.name];
   if (/Vega/i.test(g.name)) return [6, 1, g.name];
 
+  // APU iGPUs (Unified entries)
+  if (g.unifiedMemory) {
+    const cuMatch = g.name.match(/(\d+)\s*CU/i);
+    const cu = cuMatch ? -parseInt(cuMatch[1], 10) : 0;
+    return [7, cu, -(g.year ?? 0), g.name];
+  }
+
   return [9, -(g.year ?? 0), g.name];
 }
 
@@ -384,6 +574,7 @@ for (const g of out) {
   else if (/FirePro/i.test(g.name)) fam = 'FirePro';
   else if (/Radeon VII/i.test(g.name)) fam = 'Radeon VII';
   else if (/Vega/i.test(g.name)) fam = 'Vega';
+  else if (g.unifiedMemory) fam = 'APU iGPU';
   byFamily[fam] = (byFamily[fam] || 0) + 1;
 }
 console.error('By family:', byFamily);
