@@ -415,6 +415,20 @@ function showError(msg) {
   errorMsg.classList.add('visible');
 }
 
+function deriveGgufId(repoPath, ggufUrl, basename) {
+  if (!repoPath || !ggufUrl) return null;
+  let repo = repoPath.trim();
+  const urlMatch = repo.match(/^https?:\/\/huggingface\.co\/([^/?#]+\/[^/?#]+)/i);
+  if (urlMatch) repo = urlMatch[1];
+  const filename = decodeURIComponent(ggufUrl.split('/').pop().replace(/#.*$/, ''));
+  const stem = filename.replace(/\.gguf$/i, '');
+  if (!stem) return null;
+  if (basename && stem.startsWith(basename + '-')) {
+    return `${repo}:${stem.slice(basename.length + 1)}`;
+  }
+  return `${repo}:${stem}`;
+}
+
 function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
   const n_embd = getMeta(currentMetadata, `${arch}.embedding_length`);
   const n_head = getMeta(currentMetadata, `${arch}.attention.head_count`);
@@ -451,9 +465,10 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
     return value;
   };
 
-  const addInfo = (label, value, smallValue = false) => {
+  const addInfo = (label, value, smallValue = false, fullWidth = false) => {
     const item = document.createElement('div');
     item.className = 'info-item';
+    if (fullWidth) item.classList.add('full-width');
     const labelEl = document.createElement('div');
     labelEl.className = 'label';
     labelEl.textContent = label;
@@ -488,6 +503,9 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
   if (isMoe) {
     addInfo('Experts', `${moe.expertCount} (\u00D7${moe.expertUsedCount})`);
   }
+
+  const ggufId = deriveGgufId(hfPathEl.value, currentGGUFUrl, currentMetadata['general.basename']);
+  if (ggufId) addInfo('GGUF', ggufId, true, true);
 }
 
 function renderMoeSection(moe, cpuMoe, nCpuMoe) {
