@@ -54,10 +54,13 @@ export const BPE = {
   97: 34 / 32,    // Q8_0_X4
   98: 36 / 32,    // Q8_1_X4
   99: 36 / 32,    // Q8_2_X4
-  // Interleaved GEMM variants
-  31: 18 / 32,    // Q4_0_4_4
-  32: 18 / 32,    // Q4_0_4_8
-  33: 18 / 32,    // Q4_0_8_8
+  // Legacy interleaved-GEMM Q4_0 variants — REMOVED in mainline ggml
+  // (ggml/src/ggml.c:873–891 marks type_size=0 and replaces them with runtime
+  // repacking from Q4_0). BPE values retained because old GGUFs still encode
+  // them at 18 bytes per 32-element block.
+  31: 18 / 32,    // Q4_0_4_4 (legacy)
+  32: 18 / 32,    // Q4_0_4_8 (legacy)
+  33: 18 / 32,    // Q4_0_8_8 (legacy)
   // Bitnet ternary quantizations
   134: 13 / 64,   // IQ1_BN
   135: 16 / 64,   // IQ2_BN
@@ -143,9 +146,9 @@ const IK_LLAMA_QUANT_NAMES = {
   97: 'Q8_0_X4 (ik_llama)',
   98: 'Q8_1_X4 (ik_llama)',
   99: 'Q8_2_X4 (ik_llama)',
-  31: 'Q4_0_4_4 (ik_llama)',
-  32: 'Q4_0_4_8 (ik_llama)',
-  33: 'Q4_0_8_8 (ik_llama)',
+  31: 'Q4_0_4_4 (legacy)',
+  32: 'Q4_0_4_8 (legacy)',
+  33: 'Q4_0_8_8 (legacy)',
   134: 'IQ1_BN (ik_llama)',
   135: 'IQ2_BN (ik_llama)',
   137: 'IQ2_K (ik_llama)',
@@ -282,6 +285,15 @@ function buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, opts = {}) {
   const swa_arr = Array.isArray(swa_pattern_raw) ? swa_pattern_raw.map(v => Number(v) !== 0) : null;
   const swa_period = swa_arr ? 0 : (swa_pattern_raw != null ? Number(swa_pattern_raw) : (opts.swaPeriodDefault || 0));
 
+  // SWA cache cells = GGML_PAD(min(ctx, n_swa + n_ubatch), 256). See
+  // llama-kv-cache-iswa.cpp:46–50. Default n_ubatch in llama.cpp is 512.
+  // n_seq_max=1 + unified=false (the typical inference case) is assumed.
+  const N_UBATCH_DEFAULT = 512;
+  const KV_CELL_PAD = 256;
+  const swa_cells = n_swa > 0
+    ? Math.min(ctxSize, Math.ceil((n_swa + N_UBATCH_DEFAULT) / KV_CELL_PAD) * KV_CELL_PAD)
+    : ctxSize;
+
   let totalElemsK = 0, totalElemsV = 0, activeLayers = 0, activeHeadsKV = 0;
   for (let i = 0; i < n_layer; i++) {
     if (opts.layerFilter && !opts.layerFilter(i)) continue;
@@ -292,7 +304,7 @@ function buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, opts = {}) {
           opts.denseFirst ? (i % swa_period !== 0) : (i % swa_period < (swa_period - 1))
         )))
       : false;
-    const layerCtx = (isSwa && n_swa > 0) ? Math.min(n_swa, ctxSize) : ctxSize;
+    const layerCtx = isSwa ? swa_cells : ctxSize;
     const hK = isSwa ? headDimK_swa : headDimK;
     const hV = isSwa ? headDimV_swa : headDimV;
     totalElemsK += hK * heads * layerCtx;
@@ -330,22 +342,37 @@ function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   };
 }
 
+// Sum of feed_forward_length across layers. Some arches (gemma3n, nemotron_h)
+// emit `feed_forward_length` as a per-layer array; treat scalar as uniform.
+function ffSumOverLayers(meta, arch, n_layer, fromLayer = 0, toLayer = n_layer) {
+  const v = meta[`${arch}.feed_forward_length`];
+  if (Array.isArray(v)) {
+    let s = 0;
+    const lo = Math.max(0, fromLayer);
+    const hi = Math.min(v.length, toLayer);
+    for (let i = lo; i < hi; i++) s += Number(v[i] || 0);
+    return s;
+  }
+  const n = Number(v);
+  return Number.isFinite(n) ? n * Math.max(0, toLayer - fromLayer) : 0;
+}
+
 // ── Standard transformer activations ──
 function buildActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
-  const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const isMoe = expertCount > 0;
-  const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0)
-    ? batchSize * (n_embd + expertUsedCount * expertFF)
-    : batchSize * (n_embd + n_ff);
+  const ffTotal = (isMoe && expertUsedCount > 0 && expertFF > 0)
+    ? expertUsedCount * expertFF * n_layer
+    : ffSumOverLayers(meta, arch, n_layer);
+  const totalBytes = batchSize * (n_embd * n_layer + ffTotal) * 4;
   return {
-    totalBytes: perLayerBytes * n_layer * 4,
-    perLayerBytes: perLayerBytes * 4,
+    totalBytes,
+    perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0,
     isMoe, expertCount, expertUsedCount, expertFF,
   };
 }
@@ -355,19 +382,19 @@ function buildActivations(meta, batchSize) {
 function sharedExpertActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
-  const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const expertSharedFF = getMeta(meta, `${arch}.expert_shared_feed_forward_length`) || n_embd;
   const isMoe = expertCount > 0;
-  const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0)
-    ? batchSize * (n_embd + expertSharedFF + expertUsedCount * expertFF)
-    : batchSize * (n_embd + n_ff);
+  const ffTotal = (isMoe && expertUsedCount > 0 && expertFF > 0)
+    ? (expertSharedFF + expertUsedCount * expertFF) * n_layer
+    : ffSumOverLayers(meta, arch, n_layer);
+  const totalBytes = batchSize * (n_embd * n_layer + ffTotal) * 4;
   return {
-    totalBytes: perLayerBytes * n_layer * 4,
-    perLayerBytes: perLayerBytes * 4,
+    totalBytes,
+    perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0,
     isMoe, expertCount, expertUsedCount, expertFF,
   };
 }
@@ -376,15 +403,18 @@ function sharedExpertActivations(meta, batchSize) {
 function leadingDenseActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
-  const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
-  const denseBytes = leadingDense * batchSize * (n_embd + n_ff) * 4;
-  const moeFF = (expertUsedCount > 0 && expertFF > 0) ? expertUsedCount * expertFF : n_ff;
-  const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + moeFF) * 4;
+  const denseFF = ffSumOverLayers(meta, arch, n_layer, 0, leadingDense);
+  const denseBytes = batchSize * (leadingDense * n_embd + denseFF) * 4;
+  const moeLayers = n_layer - leadingDense;
+  const moeFF = (expertUsedCount > 0 && expertFF > 0)
+    ? expertUsedCount * expertFF * moeLayers
+    : ffSumOverLayers(meta, arch, n_layer, leadingDense, n_layer);
+  const moeBytes = batchSize * (moeLayers * n_embd + moeFF) * 4;
   return {
     totalBytes: denseBytes + moeBytes,
     perLayerBytes: 0,
@@ -393,15 +423,39 @@ function leadingDenseActivations(meta, batchSize) {
   };
 }
 
+// MLA + leading-dense MoE activations (deepseek2, mistral4). Mirrors the
+// inline math previously in the deepseek2 activations method.
+function deepseek2MlaMoeActivations(meta, batchSize) {
+  const arch = meta['general.architecture'];
+  const n_embd = getMeta(meta, `${arch}.embedding_length`);
+  const n_layer = getMeta(meta, `${arch}.block_count`);
+  const expertCount = getMeta(meta, `${arch}.expert_count`);
+  const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
+  const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
+  const q_lora_rank = getMeta(meta, `${arch}.attention.q_lora_rank`);
+  const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
+  const isMoe = expertCount > 0;
+  const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
+  const denseFF = ffSumOverLayers(meta, arch, n_layer, 0, leadingDense);
+  const moeLayers = n_layer - leadingDense;
+  const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0)
+    ? expertUsedCount * expertFF * moeLayers
+    : ffSumOverLayers(meta, arch, n_layer, leadingDense, n_layer);
+  const perLayerAttn = n_embd + q_lora_rank + kv_lora_rank;
+  const denseBytes = batchSize * (leadingDense * perLayerAttn + denseFF) * 4;
+  const moeBytes = batchSize * (moeLayers * perLayerAttn + moeFF) * 4;
+  return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
+}
+
 function mlaActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
-  const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
   const q_lora_rank = getMeta(meta, `${arch}.attention.q_lora_rank`);
   const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
-  const perLayerBytes = batchSize * (n_embd + q_lora_rank + kv_lora_rank + n_ff) * 4;
-  return { totalBytes: perLayerBytes * n_layer, perLayerBytes, isMoe: false, expertCount: 0, expertUsedCount: 0, expertFF: 0 };
+  const ffTotal = ffSumOverLayers(meta, arch, n_layer);
+  const totalBytes = batchSize * (n_layer * (n_embd + q_lora_rank + kv_lora_rank) + ffTotal) * 4;
+  return { totalBytes, perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0, isMoe: false, expertCount: 0, expertUsedCount: 0, expertFF: 0 };
 }
 
 // ── MoE weight accounting (parameterized) ──
@@ -455,6 +509,22 @@ const shexpOnly = (t) => t.name.includes('_shexp.');
 const moeNoShared = (m, ti) => buildMoe(m, ti, { isShared: noShared });
 const moeShexpOnly = (m, ti) => buildMoe(m, ti, { isShared: shexpOnly });
 
+// nemotron_h family: a layer is recurrent only when both head_count_kv == 0
+// AND feed_forward_length == 0 (llama-model.cpp:2257). Bare head_count_kv == 0
+// is not enough — pure-FFN layers also have head_count_kv == 0.
+function nemotronHRecurrentLayers(meta) {
+  const arch = meta['general.architecture'];
+  const n_layer = getMeta(meta, `${arch}.block_count`);
+  const head_count_kv = meta[`${arch}.attention.head_count_kv`];
+  const ff = meta[`${arch}.feed_forward_length`];
+  if (!Array.isArray(head_count_kv) || !Array.isArray(ff)) return 0;
+  let count = 0;
+  for (let i = 0; i < n_layer; i++) {
+    if (Number(head_count_kv[i] || 0) === 0 && Number(ff[i] || 0) === 0) count++;
+  }
+  return count;
+}
+
 // ── Architecture Registry ──
 // Each architecture declares its categories and provides specialized handlers
 // for KV cache, activations, and MoE weight calculations.
@@ -476,23 +546,7 @@ export const ARCHITECTURES = {
     name: 'deepseek2',
     categories: ['transformer', 'moe', 'mla'],
     kvCache: mlaKvCache,
-    activations(meta, batchSize) {
-      const arch = meta['general.architecture'];
-      const n_embd = getMeta(meta, `${arch}.embedding_length`);
-      const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
-      const n_layer = getMeta(meta, `${arch}.block_count`);
-      const expertCount = getMeta(meta, `${arch}.expert_count`);
-      const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
-      const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
-      const q_lora_rank = getMeta(meta, `${arch}.attention.q_lora_rank`);
-      const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
-      const isMoe = expertCount > 0;
-      const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
-      const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0) ? expertUsedCount * expertFF : n_ff;
-      const denseBytes = leadingDense * batchSize * (n_embd + q_lora_rank + kv_lora_rank + n_ff) * 4;
-      const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + q_lora_rank + kv_lora_rank + moeFF) * 4;
-      return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense };
-    },
+    activations: deepseek2MlaMoeActivations,
     moe: moeShexpOnly,
     tensorGroups: LLAMA_TENSOR_GROUPS,
   },
@@ -622,13 +676,13 @@ export const ARCHITECTURES = {
   qwen2vl:        { name: 'qwen2vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3vl:        { name: 'qwen3vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   gemma3:         { name: 'gemma3',         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 6 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  gemma2:         { name: 'gemma2',         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  olmo2:          { name: 'olmo2',          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gemma2:         { name: 'gemma2',         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2, swaDefault: 4096 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  olmo2:          { name: 'olmo2',          categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   phi3:           { name: 'phi3',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   granite:        { name: 'granite',        categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   granitehybrid:  { name: 'granitehybrid',  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   mistral3:       { name: 'mistral3',       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  mistral4:       { name: 'mistral4',       categories: ['transformer', 'moe', 'mla'], kvCache: mlaKvCache, activations(meta, batchSize) { const arch = meta['general.architecture']; const n_embd = getMeta(meta, `${arch}.embedding_length`); const n_ff = getMeta(meta, `${arch}.feed_forward_length`); const n_layer = getMeta(meta, `${arch}.block_count`); const expertCount = getMeta(meta, `${arch}.expert_count`); const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`); const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`); const q_lora_rank = getMeta(meta, `${arch}.attention.q_lora_rank`); const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`); const isMoe = expertCount > 0; const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`); const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0) ? expertUsedCount * expertFF : n_ff; const denseBytes = leadingDense * batchSize * (n_embd + q_lora_rank + kv_lora_rank + n_ff) * 4; const moeBytes = (n_layer - leadingDense) * batchSize * (n_embd + q_lora_rank + kv_lora_rank + moeFF) * 4; return { totalBytes: denseBytes + moeBytes, perLayerBytes: 0, isMoe, expertCount, expertUsedCount, expertFF, leadingDense }; }, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  mistral4:       { name: 'mistral4',       categories: ['transformer', 'moe', 'mla'], kvCache: mlaKvCache, activations: deepseek2MlaMoeActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   glm4:           { name: 'glm4',           categories: ['transformer'],      kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'falcon-h1':    { name: 'falcon-h1',      categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   deci:           { name: 'deci',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -637,7 +691,7 @@ export const ARCHITECTURES = {
   ernie4_5:       { name: 'ernie4_5',       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   grok:           { name: 'grok',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'gemma-embedding':{ name: 'gemma-embedding', categories: ['embedding'],     kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  nemotron_h:     { name: 'nemotron_h',     categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  nemotron_h:     { name: 'nemotron_h',     categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, recurrentLayers: nemotronHRecurrentLayers, tensorGroups: LLAMA_TENSOR_GROUPS },
   lfm2:           { name: 'lfm2',           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'minimax-m2':   { name: 'minimax-m2',     categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   seed_oss:       { name: 'seed_oss',       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -652,16 +706,57 @@ export const ARCHITECTURES = {
   t5encoder:      { name: 't5encoder',      categories: ['transformer'],      kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   mimo2:          { name: 'mimo2',          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'hunyuan-dense':{ name: 'hunyuan-dense',  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  exaone4:        { name: 'exaone4',        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // exaone4: only the 64-layer (32B) variant has SWA; smaller variants are dense.
+  // llama-model.cpp:2287–2299 — the SWA branch is gated on n_layer==64.
+  exaone4:        { name: 'exaone4',        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => {
+    const arch = m['general.architecture'];
+    const n_layer = getMeta(m, `${arch}.block_count`);
+    if (n_layer === 64) return buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096 });
+    return buildKvCache(m, c, kK, kV);
+  }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   plamo3:         { name: 'plamo3',         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 8 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  smallthinker:   { name: 'smallthinker',   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, denseFirst: true }), activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+  // smallthinker: llama-model.cpp:2697–2704 forces n_swa = 4096 when the SWA key is present.
+  smallthinker:   { name: 'smallthinker',   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, denseFirst: true }), activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
   qwen2moe:       { name: 'qwen2moe',       categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeShexpOnly, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_inp_shexp*', '*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   'modern-bert':  { name: 'modern-bert',    categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // ── BERT-family encoders: llama-model.cpp:8430–8443 returns res = nullptr (no KV cache) ──
+  bert:           { name: 'bert',           categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'nomic-bert':   { name: 'nomic-bert',     categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'nomic-bert-moe':{ name: 'nomic-bert-moe',categories: ['embedding', 'moe'], kvCache: noKvCache,    activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+  'neo-bert':     { name: 'neo-bert',       categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'jina-bert-v2': { name: 'jina-bert-v2',   categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'jina-bert-v3': { name: 'jina-bert-v3',   categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  eurobert:       { name: 'eurobert',       categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'wavtokenizer-dec':{ name: 'wavtokenizer-dec', categories: ['audio'],       kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // ── Diffusion-LM family: also res = nullptr (parallel decoding, no autoregressive KV cache) ──
+  dream:          { name: 'dream',          categories: ['transformer'],      kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  llada:          { name: 'llada',          categories: ['transformer'],      kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'llada-moe':    { name: 'llada-moe',      categories: ['transformer', 'moe'], kvCache: noKvCache,  activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+  rnd1:           { name: 'rnd1',           categories: ['transformer', 'moe'], kvCache: noKvCache,  activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+
+  // ── Pure-recurrent architectures (no attention KV; recurrent state per layer) ──
+  // llama-model.cpp:8451–8459 wires these to llama_memory_recurrent.
+  mamba:          { name: 'mamba',          categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  mamba2:         { name: 'mamba2',         categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  rwkv6:          { name: 'rwkv6',          categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  rwkv6qwen2:     { name: 'rwkv6qwen2',     categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  rwkv7:          { name: 'rwkv7',          categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  arwkv7:         { name: 'arwkv7',         categories: ['recurrent'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // ── Hybrid (per-layer attention + Mamba SSM, head_count_kv array) ──
+  // llamaKvCache already skips layers with heads<=0; calcRecurrentState picks up
+  // the SSM state for the complementary set.
+  jamba:          { name: 'jamba',          categories: ['transformer', 'moe'],      kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  plamo2:         { name: 'plamo2',         categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── MoE architectures that reuse the standard llama KV cache + std activations ──
   qwen3vlmoe:  { name: 'qwen3vlmoe',  categories: ['transformer', 'moe', 'vl'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared,   tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
   bailingmoe2: { name: 'bailingmoe2', categories: ['transformer', 'moe'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }), activations: leadingDenseActivations, moe: (m, ti) => buildMoe(m, ti, { isShared: (t) => t.name.includes('_shexp.') }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
-  nemotron_h_moe: { name: 'nemotron_h_moe', categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeShexpOnly, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_up_shexp*', '*ffn_down_shexp*'] } },
+  // nemotron_h_moe: recurrent layers are those with both head_count_kv == 0 AND
+  // feed_forward_length == 0 (llama-model.cpp:2257). Different predicate from
+  // other hybrids — pure-FFN layers also have head_count_kv == 0 but are not
+  // recurrent.
+  nemotron_h_moe: { name: 'nemotron_h_moe', categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeShexpOnly, recurrentLayers: nemotronHRecurrentLayers, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   dbrx: { name: 'dbrx', categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
   grovemoe:      { name: 'grovemoe',       categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: (m, ti) => buildMoe(m, ti, { isExpert: (t) => t.name.includes('_exps.') || t.name.includes('_chexps.') || t.name.includes('exp_probs_b'), isShared: noShared }),   tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*', '*ffn_gate_chexps*', '*ffn_up_chexps*', '*ffn_down_chexps*'], router: ['*ffn_gate_inp*'], shared: [] } },
 
@@ -669,13 +764,14 @@ export const ARCHITECTURES = {
   ernie4_5_moe: { name: 'ernie4_5-moe', categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: (m, ti) => buildMoe(m, ti, { isShared: (t) => t.name.includes('_shexp.') }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   hunyuan_moe:  { name: 'hunyuan-moe',  categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   lfm2_moe:     { name: 'lfm2moe',      categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeNoShared,   tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
-  afmoe:        { name: 'afmoe',        categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  afmoe:        { name: 'afmoe',        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   deepseek:     { name: 'deepseek',     categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   'deepseek2-ocr': { name: 'deepseek2-ocr', categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   bailingmoe:   { name: 'bailingmoe',   categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── ISWA + MoE architectures ──
-  'exaone-moe': { name: 'exaone-moe',   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // exaone-moe: llama-model.cpp:2310–2314 hardcodes n_swa = 128.
+  'exaone-moe': { name: 'exaone-moe',   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 128, effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`) }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   step35:       { name: 'step35',        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── GLM4 MoE: gate_up_exps fused pattern ──
@@ -699,7 +795,6 @@ export const ARCHITECTURES = {
     activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
-      const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
       const expertCount = getMeta(meta, `${arch}.expert_count`);
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
@@ -713,9 +808,14 @@ export const ARCHITECTURES = {
       const n_layer_kv = Math.max(0, n_layer - nextn);
       const indexerBytes = indexerTopK * 256;
       const n_dense = Math.min(leadingDense, n_layer_kv);
-      const denseBytes = n_dense * batchSize * (n_embd + q_lora_rank + kv_lora_rank + indexerBytes + n_ff) * 4;
-      const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0) ? expertUsedCount * expertFF : n_ff;
-      const moeBytes = Math.max(0, n_layer_kv - leadingDense) * batchSize * (n_embd + q_lora_rank + kv_lora_rank + indexerBytes + moeFF) * 4;
+      const moeLayers = Math.max(0, n_layer_kv - leadingDense);
+      const perLayerAttn = n_embd + q_lora_rank + kv_lora_rank + indexerBytes;
+      const denseFF = ffSumOverLayers(meta, arch, n_layer_kv, 0, n_dense);
+      const moeFF = (isMoe && expertUsedCount > 0 && expertFF > 0)
+        ? expertUsedCount * expertFF * moeLayers
+        : ffSumOverLayers(meta, arch, n_layer_kv, leadingDense, leadingDense + moeLayers);
+      const denseBytes = batchSize * (n_dense * perLayerAttn + denseFF) * 4;
+      const moeBytes = batchSize * (moeLayers * perLayerAttn + moeFF) * 4;
       return {
         totalBytes: denseBytes + moeBytes,
         perLayerBytes: 0,
@@ -735,26 +835,29 @@ export const ARCHITECTURES = {
       iswa: true,
       swaPeriodDefault: 5,
       effectiveLayers: (meta, n_block) => {
+        // llama-model.cpp:1616 hardcodes n_layer_kv_from_start = 20 for gemma3n.
+        // The convert script does not emit this key, so fall back to 20 when absent.
         const arch = meta['general.architecture'];
-        const n_layer_kv = getMeta(meta, `${arch}.attention.layer_kv_from_start`);
-        return n_layer_kv > 0 ? Math.min(n_layer_kv, n_block) : n_block;
+        const n_layer_kv = getMeta(meta, `${arch}.attention.layer_kv_from_start`) || 20;
+        return Math.min(n_layer_kv, n_block);
       },
     }),
     activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
-      const n_ff = getMeta(meta, `${arch}.feed_forward_length`);
       const n_layer = getMeta(meta, `${arch}.block_count`);
       const expertCount = getMeta(meta, `${arch}.expert_count`);
       const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
       const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
       const n_altup = getMeta(meta, `${arch}.altup_num_inputs`) || 4;
       const isMoe = expertCount > 0;
-      // altup mechanism multiplies the residual stream
-      const perLayerBytes = (isMoe && expertUsedCount > 0 && expertFF > 0)
-        ? batchSize * (n_embd * n_altup + expertUsedCount * expertFF)
-        : batchSize * (n_embd * n_altup + n_ff);
-      return { totalBytes: perLayerBytes * n_layer * 4, perLayerBytes: perLayerBytes * 4, isMoe, expertCount, expertUsedCount, expertFF, n_altup };
+      // altup mechanism multiplies the residual stream. gemma3n's
+      // feed_forward_length is a per-layer array, so sum across layers.
+      const ffTotal = (isMoe && expertUsedCount > 0 && expertFF > 0)
+        ? expertUsedCount * expertFF * n_layer
+        : ffSumOverLayers(meta, arch, n_layer);
+      const totalBytes = batchSize * (n_embd * n_altup * n_layer + ffTotal) * 4;
+      return { totalBytes, perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0, isMoe, expertCount, expertUsedCount, expertFF, n_altup };
     },
     // altup_router plays the ffn_gate_inp role; per_layer_*/altup_* are shared scaffolding.
     moe: (m, ti) => buildMoe(m, ti, {
@@ -826,32 +929,117 @@ export function calcWeightSize(tensorInfos) {
   return { total, byQuant };
 }
 
-export function calcRecurrentState(metadata, nSeqMax = 1) {
+// Compute n_embd_r / n_embd_s following llama-hparams.cpp:155–194 — branches
+// by which family of recurrent state the model uses (KDA → Kimi-Linear,
+// shortconv → LFM2, wkv → RWKV, ssm → Mamba/Mamba2/granite-hybrid/falcon-h1
+// /nemotron_h*). Returns { n_embd_r, n_embd_s } or null when the model has no
+// recurrent state.
+function recurrentEmbedSizes(metadata) {
   const arch = getModelArch(metadata);
-  const n_layer = getMeta(metadata, `${arch}.block_count`);
+  const n_embd = getMeta(metadata, `${arch}.embedding_length`);
+
+  // KDA (Kimi-Linear): llama-hparams.cpp:166–171 + 185–190.
+  const head_dim_kda = getMeta(metadata, `${arch}.kda.head_dim`);
+  if (head_dim_kda > 0) {
+    const n_head = getMeta(metadata, `${arch}.attention.head_count`);
+    const ssm_d_conv = getMeta(metadata, `${arch}.ssm.conv_kernel`);
+    const d_inner = n_head * head_dim_kda;
+    const conv_minus_1 = ssm_d_conv > 0 ? ssm_d_conv - 1 : 3;
+    return {
+      n_embd_r: 3 * conv_minus_1 * d_inner,
+      n_embd_s: head_dim_kda * head_dim_kda * n_head,
+    };
+  }
+
+  // RWKV: llama-hparams.cpp:156–159 + 180–183.
+  const wkv_head_size = getMeta(metadata, `${arch}.wkv.head_size`);
+  if (wkv_head_size > 0) {
+    const token_shift_count = getMeta(metadata, `${arch}.token_shift_count`) || 2;
+    return {
+      n_embd_r: token_shift_count * n_embd,
+      n_embd_s: n_embd * wkv_head_size,
+    };
+  }
+
+  // LFM2 shortconv: llama-hparams.cpp:161–164 — n_embd_s = 0 (no SSM state).
+  const shortconv_l = getMeta(metadata, `${arch}.shortconv.l_cache`);
+  if (shortconv_l > 0) {
+    return { n_embd_r: n_embd * (shortconv_l - 1), n_embd_s: 0 };
+  }
+
+  // Mamba/Mamba2-style SSM (default): llama-hparams.cpp:175–177 + 192–193.
   const ssm_d_conv = getMeta(metadata, `${arch}.ssm.conv_kernel`);
   const ssm_d_inner = getMeta(metadata, `${arch}.ssm.inner_size`);
   const ssm_d_state = getMeta(metadata, `${arch}.ssm.state_size`);
   const ssm_n_group = getMeta(metadata, `${arch}.ssm.group_count`);
-  if (!ssm_d_conv || !ssm_d_inner || !ssm_d_state || !ssm_n_group) return null;
-  const interval = getMeta(metadata, `${arch}.full_attention_interval`) || 4;
-  const n_recurrent = n_layer - Math.floor(n_layer / interval);
-  const n_embd_r = (ssm_d_conv - 1) * (ssm_d_inner + 2 * ssm_n_group * ssm_d_state);
-  const n_embd_s = ssm_d_state * ssm_d_inner;
+  if (ssm_d_conv > 0 && ssm_d_inner > 0 && ssm_d_state > 0) {
+    return {
+      n_embd_r: (ssm_d_conv - 1) * (ssm_d_inner + 2 * ssm_n_group * ssm_d_state),
+      n_embd_s: ssm_d_state * ssm_d_inner,
+    };
+  }
+  return null;
+}
+
+// Default recurrent-layer count. Mirrors the per-arch recurrent_layer_arr
+// initialization in llama-model.cpp. An arch handler can override via a
+// `recurrentLayers(meta) -> int` function.
+function defaultRecurrentLayers(metadata) {
+  const arch = getModelArch(metadata);
+  const n_layer = getMeta(metadata, `${arch}.block_count`);
+  if (!n_layer) return 0;
+
+  // Pure recurrent (mamba/mamba2/rwkv*/arwkv*) — every layer is recurrent.
+  if (/^(mamba|rwkv|arwkv)/.test(arch)) return n_layer;
+
+  // falcon-h1: all layers carry both attention and recurrent state
+  // (llama-model.cpp:2573, std::fill(recurrent_layer_arr.begin(), end, true)).
+  if (arch === 'falcon-h1') return n_layer;
+
+  // Per-layer head_count_kv array — recurrent where heads == 0
+  // (jamba/plamo2/lfm2/lfm2moe/granitehybrid/kimi-linear/nemotron_h*).
+  const head_count_kv = metadata[`${arch}.attention.head_count_kv`];
+  if (Array.isArray(head_count_kv)) {
+    let count = 0;
+    for (let i = 0; i < Math.min(head_count_kv.length, n_layer); i++) {
+      if (Number(head_count_kv[i]) === 0) count++;
+    }
+    return count;
+  }
+
+  // qwen35-family: recurrent unless (i+1) % full_attention_interval == 0.
+  const interval = getMeta(metadata, `${arch}.full_attention_interval`);
+  if (interval > 0) return n_layer - Math.floor(n_layer / interval);
+  return 0;
+}
+
+export function calcRecurrentState(metadata, nSeqMax = 1) {
+  const sizes = recurrentEmbedSizes(metadata);
+  if (!sizes) return null;
+  const handler = getArchHandler(getModelArch(metadata));
+  const n_recurrent = (handler && typeof handler.recurrentLayers === 'function')
+    ? handler.recurrentLayers(metadata)
+    : defaultRecurrentLayers(metadata);
+  if (!n_recurrent || n_recurrent <= 0) return null;
+  const { n_embd_r, n_embd_s } = sizes;
+  // llama-model.cpp:8452–8459 / 8488–8495 — recurrent state always uses F32.
   const convStateBytes = n_recurrent * n_embd_r * nSeqMax * 4;
   const ssmStateBytes = n_recurrent * n_embd_s * nSeqMax * 4;
-  return { convStateBytes, ssmStateBytes, totalBytes: convStateBytes + ssmStateBytes, recurrentLayers: n_recurrent, n_embd_r, n_embd_s };
+  return {
+    convStateBytes, ssmStateBytes,
+    totalBytes: convStateBytes + ssmStateBytes,
+    recurrentLayers: n_recurrent,
+    n_embd_r, n_embd_s,
+  };
 }
 
 export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV) {
   const arch = getModelArch(metadata);
-  if (arch.startsWith('mamba') || arch.startsWith('rwkv')) {
-    throw new Error(`Memory estimation for architecture "${arch}" is not supported`);
-  }
   const handler = getArchHandler(arch);
   const result = handler.kvCache(metadata, ctxSize, kvTypeK, kvTypeV);
   const recurrent = calcRecurrentState(metadata);
   result.bytesRecurrent = recurrent ? recurrent.totalBytes : 0;
+  result.recurrentLayers = recurrent ? recurrent.recurrentLayers : 0;
   result.totalBytes = result.bytesK + result.bytesV + result.bytesRecurrent;
   return result;
 }
