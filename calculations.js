@@ -1119,7 +1119,7 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
 //           --n-cpu-moe.
 export function computeOffloadSplit({
   vramBytes, footprint, activationBytes = 0, nLayerOverride,
-  cpuMoe = false, nCpuMoe = 0,
+  cpuMoe = false, nCpuMoe = 0, unifiedMemory = false,
 }) {
   const {
     nLayers, kvBytesPerLayer, recurrentBytesPerLayer, outputBytes,
@@ -1127,6 +1127,19 @@ export function computeOffloadSplit({
   } = footprint;
 
   const modes = new Array(nLayers).fill('cpu');
+
+  if (unifiedMemory) {
+    const n = nLayerOverride != null && nLayerOverride !== 'auto'
+      ? Math.max(0, Math.min(nLayers, Number(nLayerOverride)))
+      : nLayers;
+    const gpuStart = nLayers - n;
+    for (let i = gpuStart; i < nLayers; i++) modes[i] = 'gpu';
+    return {
+      nGpuLayers: n, nHybridLayers: 0, nCpuLayers: nLayers - n,
+      auto: nLayerOverride == null || nLayerOverride === 'auto',
+      modes, cpuMoe: false, nCpuMoe: 0,
+    };
+  }
   const hasExpert = (i) => (layerExpertBytesFull[i] || 0) > 0;
 
   const shouldHybridize = (i) => {
@@ -1269,8 +1282,8 @@ export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, 
 // Given a VRAM budget, compute the actual offload split and derive real
 // VRAM/RAM usage. Unlike calcMemoryBreakdown (theoretical full-offload),
 // this answers "given X GiB VRAM, what actually goes where?"
-export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nLayerOverride, cpuMoe = false, nCpuMoe = 0 }) {
-  const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe });
+export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nLayerOverride, cpuMoe = false, nCpuMoe = 0, unifiedMemory = false }) {
+  const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe, unifiedMemory });
 
   let actualVram = footprint.outputBytes + activationBytes;
   let actualRam = 0;
@@ -1333,12 +1346,14 @@ export function estimatePerformance({
 
   const vramBytes = device.gpu.vramBytes || 0;
   const reservedGpuBytes = actBytes + (device.mmprojOnGpu !== false ? mmprojBytes : 0);
+  const unifiedMemory = !!device.unifiedMemory;
   const split = computeOffloadSplit({
     vramBytes, footprint,
     activationBytes: reservedGpuBytes,
     nLayerOverride: device.nGpuLayers,
     cpuMoe: device.cpuMoe || false,
     nCpuMoe: device.nCpuMoe || 0,
+    unifiedMemory,
   });
   const { nGpuLayers, nHybridLayers, nCpuLayers, auto, modes } = split;
 

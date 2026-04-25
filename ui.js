@@ -287,6 +287,11 @@ function resetConfig() {
   resetMmProjState();
 }
 
+function isUnifiedMemory() {
+  const g = getGpuPresets().find(x => x.id === gpuPresetEl.value);
+  return !!g?.unifiedMemory;
+}
+
 gpuPresetEl.addEventListener('change', () => {
   const g = getGpuPresets().find(x => x.id === gpuPresetEl.value);
   if (g) {
@@ -294,6 +299,10 @@ gpuPresetEl.addEventListener('change', () => {
     gpuBwEl.value = g.memBwGBps;
     if (g.vramGB) vramEl.value = g.vramGB;
     if (g.vendor === 'Apple' && ssCpu) ssCpu.setSelected('apple-unified-memory');
+    if (g.unifiedMemory) {
+      cpuFlopsEl.value = '';
+      ramBwEl.value = '';
+    }
   }
   saveConfig();
   if (currentMetadata) renderResults();
@@ -672,7 +681,7 @@ function renderMmProjPanel(mmProjDevice) {
   }
 }
 
-function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride }) {
+function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory }) {
   const fitPanel = $('#fitCheckPanel');
   const showVramBar = vramGB > 0;
 
@@ -692,6 +701,7 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
     nLayerOverride: nglOverride,
     cpuMoe,
     nCpuMoe,
+    unifiedMemory: !!unifiedMemory,
   });
 
   $('#vramFitSection').style.display = '';
@@ -762,7 +772,7 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
   }
 }
 
-function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDevice, cpuMoe, nCpuMoe, nglOverride }) {
+function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory }) {
   const gpuFlopsV = parseFloat(gpuFlopsEl.value);
   const gpuBwV = parseFloat(gpuBwEl.value);
   let cpuFlopsV = parseFloat(cpuFlopsEl.value);
@@ -770,7 +780,7 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
   const hasGpuPerf = Number.isFinite(gpuFlopsV) && Number.isFinite(gpuBwV) && gpuFlopsV > 0 && gpuBwV > 0;
   let hasCpuPerf = Number.isFinite(cpuFlopsV) && Number.isFinite(ramBwV) && cpuFlopsV > 0 && ramBwV > 0;
   let cpuFallback = null;
-  if (!hasCpuPerf && hasGpuPerf) {
+  if (!unifiedMemory && !hasCpuPerf && hasGpuPerf) {
     const slow = getSlowestCpuPreset();
     if (slow) {
       cpuFlopsV = slow.fp16Tflops;
@@ -779,6 +789,7 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
       hasCpuPerf = true;
     }
   }
+  if (unifiedMemory) hasCpuPerf = false;
 
   if (!hasGpuPerf) {
     perfPanel.classList.add('hidden');
@@ -801,6 +812,7 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
       mmprojOnGpu: mmProjDevice !== 'ram',
       cpuMoe,
       nCpuMoe,
+      unifiedMemory: !!unifiedMemory,
     },
   });
   $('#perfDecode').textContent = `${perf.decodeTPS.toFixed(1)} tok/s`;
@@ -897,8 +909,9 @@ function renderResults() {
   $('#actSize').textContent = formatBytes(acts.totalBytes);
   renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes });
   renderMmProjPanel(mmProjDevice);
-  renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride });
-  renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDevice, cpuMoe, nCpuMoe, nglOverride });
+  const um = isUnifiedMemory();
+  renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory: um });
+  renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory: um });
 }
 
 resolveBtn.addEventListener('click', () => {

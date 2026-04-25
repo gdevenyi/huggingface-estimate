@@ -188,6 +188,8 @@ function resolveDevice(args) {
   const gpuBw = args.gpuBw != null ? args.gpuBw : (gpuPreset ? gpuPreset.memBwGBps : null);
   if (gpuFlops == null || gpuBw == null) return null;
 
+  const unifiedMemory = !!gpuPreset?.unifiedMemory;
+
   const cpuPreset = args.cpu ? findCpuPreset(args.cpu) : null;
   if (args.cpu && !cpuPreset && (args.cpuFlops == null || args.ramBw == null)) {
     console.error(`Warning: CPU preset "${args.cpu}" not found in CPU preset files.`);
@@ -197,13 +199,18 @@ function resolveDevice(args) {
   let cpu = (cpuFlops != null && ramBw != null) ? { flopsFp16Tflops: cpuFlops, bwGBps: ramBw } : null;
   let cpuFallback = null;
 
-  if (!cpu) {
+  if (!unifiedMemory && !cpu) {
     const slow = getSlowestCpuPreset();
     if (slow) {
       cpu = { flopsFp16Tflops: slow.fp16Tflops, bwGBps: slow.defaultRamBwGBps };
       cpuFallback = slow;
       console.error(`No CPU specified, falling back to slowest preset: ${slow.name} (${slow.fp16Tflops} TF, ${slow.defaultRamBwGBps} GB/s)`);
     }
+  }
+  if (unifiedMemory) {
+    if (args.cpuMoe || args.nCpuMoe > 0) console.error('Warning: --cpu-moe / --n-cpu-moe ignored for unified memory GPUs');
+    if (args.cpu) console.error('Warning: --cpu ignored for unified memory GPUs');
+    cpu = null;
   }
 
   return {
@@ -218,6 +225,7 @@ function resolveDevice(args) {
     mmprojOnGpu: args.mmprojDevice !== 'ram',
     cpuMoe: args.cpuMoe,
     nCpuMoe: args.nCpuMoe,
+    unifiedMemory,
   };
 }
 
@@ -299,7 +307,7 @@ async function calcModel(repo, args) {
   const device = resolveDevice(args);
   const performance = device ? formatPerformance(device, metadata, tensorInfos, args, kvCache, moeInfo, activations, mmProjInfo) : null;
 
-  const vramRamFit = calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes);
+  const vramRamFit = calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes, !!device?.unifiedMemory);
 
   return {
     repo,
@@ -469,7 +477,7 @@ function formatPerformance(device, metadata, tensorInfos, args, kvCache, moeInfo
   };
 }
 
-function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes) {
+function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes, unifiedMemory = false) {
   if (args.vram <= 0 && args.ram <= 0) return { vramFit: null, ramFit: null };
   const mmprojActBytes = mmProjInfo ? (mmProjInfo.weightBytes + (mmProjInfo.perImageActBytes || 0)) : 0;
   const reservedBytes = activations.totalBytes + (args.mmprojDevice !== 'ram' ? mmprojActBytes : 0);
@@ -483,6 +491,7 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes)
       activationBytes: reservedBytes,
       cpuMoe: args.cpuMoe,
       nCpuMoe: args.nCpuMoe,
+      unifiedMemory,
     });
     const usagePct = actual.actualVram / vramAvailBytes * 100;
     actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);

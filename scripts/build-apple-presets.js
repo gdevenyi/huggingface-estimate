@@ -121,6 +121,7 @@ for (let r = 1; r < rows.length; r++) {
     fp16Tflops: fp16Tflops != null ? round(fp16Tflops, 2) : null,
     fp32Tflops: fp32Tflops != null ? round(fp32Tflops, 2) : null,
     memType: 'Unified',
+    unifiedMemory: true,
     ...flags,
     _year: year,
     _chip: chip,
