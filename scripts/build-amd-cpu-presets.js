@@ -100,12 +100,12 @@ function round(n, d) {
 }
 
 // ── Zen detection ──
-// FP16 FLOPs per cycle per core:
-//   Zen 5: AVX-512 = 32
-//   Zen 4: AVX-512 = 32
-//   Zen 3: AVX2    = 16
-//   Zen 2: AVX2    = 16
-//   Zen 1/+: AVX2 half-rate (128-bit FPU, 256-bit cracked) = 8
+// FP32 FLOPs per cycle per core (2x FMA datapath):
+//   Zen 5: 2x 512-bit FMA (AVX-512 true 512-bit)  = 64
+//   Zen 4: 2x 256-bit FMA (AVX-512 double-pumped)  = 32
+//   Zen 3: 2x 256-bit FMA                           = 32
+//   Zen 2: 2x 256-bit FMA                           = 32
+//   Zen 1/+: 2x 128-bit FMA                         = 16
 function detectZen(rec, isServer) {
   const name = rec['Name'] || '';
   const series = rec['Series'] || '';
@@ -113,50 +113,48 @@ function detectZen(rec, isServer) {
   const cpuType = (rec['CPU Type'] || '').toLowerCase();
 
   // Explicit CPU type field (Embedded CSV)
-  if (cpuType === 'zen 5' || cpuType === 'zen 5c') return { zen: 5, flopsPerCycle: 32 };
+  if (cpuType === 'zen 5' || cpuType === 'zen 5c') return { zen: 5, flopsPerCycle: 64 };
   if (cpuType === 'zen 4' || cpuType === 'zen 4c') return { zen: 4, flopsPerCycle: 32 };
-  if (cpuType === 'zen 3') return { zen: 3, flopsPerCycle: 16 };
-  if (cpuType === 'zen 2') return { zen: 2, flopsPerCycle: 16 };
-  if (cpuType === 'zen+' || cpuType === 'zen 1+') return { zen: 1, flopsPerCycle: 8 };
-  if (cpuType === 'zen' || cpuType === 'zen 1') return { zen: 1, flopsPerCycle: 8 };
+  if (cpuType === 'zen 3') return { zen: 3, flopsPerCycle: 32 };
+  if (cpuType === 'zen 2') return { zen: 2, flopsPerCycle: 32 };
+  if (cpuType === 'zen+' || cpuType === 'zen 1+') return { zen: 1, flopsPerCycle: 16 };
+  if (cpuType === 'zen' || cpuType === 'zen 1') return { zen: 1, flopsPerCycle: 16 };
 
   // Server EPYC: series-based detection
   if (isServer) {
     if (/9005/i.test(series)) {
-      return { zen: 5, flopsPerCycle: 32 };
+      return { zen: 5, flopsPerCycle: 64 };
     }
     if (/9004/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
     if (/8004/i.test(series)) return { zen: 4, flopsPerCycle: 32 };  // Zen 4c but same ISA
-    if (/7003/i.test(series)) return { zen: 3, flopsPerCycle: 16 };
-    if (/7002/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
-    if (/7001/i.test(series)) return { zen: 1, flopsPerCycle: 8 };
-    if (/4005/i.test(series)) return { zen: 5, flopsPerCycle: 32 };
+    if (/7003/i.test(series)) return { zen: 3, flopsPerCycle: 32 };
+    if (/7002/i.test(series)) return { zen: 2, flopsPerCycle: 32 };
+    if (/7001/i.test(series)) return { zen: 1, flopsPerCycle: 16 };
+    if (/4005/i.test(series)) return { zen: 5, flopsPerCycle: 64 };
     if (/4004/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
   }
 
   // Desktop/mobile Ryzen: name-pattern detection
   const n = name.toLowerCase();
   // Ryzen 9000 series = Zen 5
-  if (/ryzen[\s"]*9 \d{4}x?3?d?2?\b/i.test(name) && /99\d\d|98\d\d|97\d\d|96\d\d|95\d\d/.test(name)) return { zen: 5, flopsPerCycle: 32 };
+  if (/ryzen[\s"]*9 \d{4}x?3?d?2?\b/i.test(name) && /99\d\d|98\d\d|97\d\d|96\d\d|95\d\d/.test(name)) return { zen: 5, flopsPerCycle: 64 };
   if (/ryzen.*9 \d{4}x/i.test(name) && name.match(/\d{4}/)) {
     const num = parseInt(name.match(/\d{4}/)[0]);
-    if (num >= 9000) return { zen: 5, flopsPerCycle: 32 };
+    if (num >= 9000) return { zen: 5, flopsPerCycle: 64 };
     if (num >= 7000) return { zen: 4, flopsPerCycle: 32 };
-    if (num >= 5000) return { zen: 3, flopsPerCycle: 16 };
-    if (num >= 3000) return { zen: 2, flopsPerCycle: 16 };
+    if (num >= 5000) return { zen: 3, flopsPerCycle: 32 };
+    if (num >= 3000) return { zen: 2, flopsPerCycle: 32 };
   }
 
   // Series-based
-  if (/ryzen 9000/i.test(series) || /ryzen 9000/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
-  if (/ryzen.*9000/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
+  if (/ryzen 9000/i.test(series) || /ryzen 9000/i.test(name)) return { zen: 5, flopsPerCycle: 64 };
+  if (/ryzen.*9000/i.test(name)) return { zen: 5, flopsPerCycle: 64 };
   if (/ryzen embedded 9000/i.test(name) || /ryzen embedded r7000/i.test(name)) return { zen: 4, flopsPerCycle: 32 };
 
   // Ryzen AI 400 = Zen 5
-  if (/ryzen ai.*400/i.test(series) || /ryzen ai.*4\d{2}/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
-  // Ryzen AI 300 = Zen 5 (actually Zen 5 for AI 300 series)
-  if (/ryzen ai.*300/i.test(series) || /ryzen ai.*3\d{2}/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
-  // Ryzen AI Max = Zen 5
-  if (/ryzen ai max/i.test(series) || /ryzen ai max/i.test(name)) return { zen: 5, flopsPerCycle: 32 };
+  if (/ryzen ai.*400/i.test(series) || /ryzen ai.*4\d{2}/i.test(name)) return { zen: 5, flopsPerCycle: 64 };
+  if (/ryzen ai.*300/i.test(series) || /ryzen ai.*3\d{2}/i.test(name)) return { zen: 5, flopsPerCycle: 64 };
+  if (/ryzen ai max/i.test(series) || /ryzen ai max/i.test(name)) return { zen: 5, flopsPerCycle: 64 };
 
   // Ryzen 200 (mobile) = Zen 4 (actually Zen 4 for FP7/FP7r2)
   if (/ryzen.*200 series/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
@@ -167,22 +165,22 @@ function detectZen(rec, isServer) {
   // Ryzen Z1/Z2 (check Series too since name may be "Ryzen AI Z2 Extreme")
   if (/ryzen (ai )?z/i.test(name) || /ryzen z[12]/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
   // Ryzen Embedded V3000 = Zen 3
-  if (/ryzen embedded v3/i.test(name)) return { zen: 3, flopsPerCycle: 16 };
+  if (/ryzen embedded v3/i.test(name)) return { zen: 3, flopsPerCycle: 32 };
   // Ryzen PRO 9000 desktop = Zen 5
-  if (/ryzen pro.*9000/i.test(series)) return { zen: 5, flopsPerCycle: 32 };
+  if (/ryzen pro.*9000/i.test(series)) return { zen: 5, flopsPerCycle: 64 };
   // Ryzen PRO 200 mobile = Zen 4
   if (/ryzen pro.*200/i.test(series)) return { zen: 4, flopsPerCycle: 32 };
   // Ryzen 6000 Series (Rembrandt) = Zen 3+
-  if (/ryzen.*6000/i.test(series)) return { zen: 3, flopsPerCycle: 16 };
+  if (/ryzen.*6000/i.test(series)) return { zen: 3, flopsPerCycle: 32 };
   // Ryzen 7035 Series (Rembrandt-R) = Zen 3+
-  if (/ryzen.*7035/i.test(series)) return { zen: 3, flopsPerCycle: 16 };
+  if (/ryzen.*7035/i.test(series)) return { zen: 3, flopsPerCycle: 32 };
   // Ryzen 7020 Series (Mendocino) = Zen 2
-  if (/ryzen.*7020/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
+  if (/ryzen.*7020/i.test(series)) return { zen: 2, flopsPerCycle: 32 };
   // Ryzen 100 Series / Athlon 10/100 (Mendocino/Rembrandt derivative) = Zen 2
-  if (/ryzen.*100 series/i.test(series) || /athlon.*(10|100)/i.test(series)) return { zen: 2, flopsPerCycle: 16 };
+  if (/ryzen.*100 series/i.test(series) || /athlon.*(10|100)/i.test(series)) return { zen: 2, flopsPerCycle: 32 };
 
   // Technology-based fallback
-  if (/(?:^|\s)4nm/i.test(tech)) return { zen: 5, flopsPerCycle: 32 };
+  if (/(?:^|\s)4nm/i.test(tech)) return { zen: 5, flopsPerCycle: 64 };
   if (/(?:^|\s)5nm/i.test(tech)) return { zen: 4, flopsPerCycle: 32 };
   if (tech.includes('6nm') && !isServer) {
     // 6nm desktop/laptop parts are Zen 3+ (Barcelo-R) or Zen 4 (Phoenix/Hawk Point).
@@ -191,26 +189,26 @@ function detectZen(rec, isServer) {
       const num = parseInt(name.match(/\d{4}/)[0]);
       if (num >= 8500 || (num >= 7400 && num < 7500)) return { zen: 4, flopsPerCycle: 32 };
     }
-    return { zen: 3, flopsPerCycle: 16 };
+    return { zen: 3, flopsPerCycle: 32 };
   }
   if (tech.includes('7nm')) {
     // Zen 3 / Zen 3+: 5xxx (Vermeer/Cezanne), 7xxx Barcelo-R (7030 series)
-    if (/ryzen.*[579].*5\d{3}/i.test(name) || /ryzen.*5\d{3}/i.test(name)) return { zen: 3, flopsPerCycle: 16 };
-    if (/ryzen.*(7[357]3\d|743\d)/i.test(name)) return { zen: 3, flopsPerCycle: 16 };
-    return { zen: 2, flopsPerCycle: 16 };
+    if (/ryzen.*[579].*5\d{3}/i.test(name) || /ryzen.*5\d{3}/i.test(name)) return { zen: 3, flopsPerCycle: 32 };
+    if (/ryzen.*(7[357]3\d|743\d)/i.test(name)) return { zen: 3, flopsPerCycle: 32 };
+    return { zen: 2, flopsPerCycle: 32 };
   }
-  if (tech.includes('14nm') || tech.includes('12nm') || tech.includes('28nm')) return { zen: 1, flopsPerCycle: 8 };
+  if (tech.includes('14nm') || tech.includes('12nm') || tech.includes('28nm')) return { zen: 1, flopsPerCycle: 16 };
 
   // Final fallback by name pattern
   if (/\d{4}/.test(name)) {
     const num = parseInt(name.match(/\d{4}/)[0]);
-    if (num >= 9000) return { zen: 5, flopsPerCycle: 32 };
+    if (num >= 9000) return { zen: 5, flopsPerCycle: 64 };
     if (num >= 7000) return { zen: 4, flopsPerCycle: 32 };
-    if (num >= 5000) return { zen: 3, flopsPerCycle: 16 };
-    if (num >= 3000) return { zen: 2, flopsPerCycle: 16 };
+    if (num >= 5000) return { zen: 3, flopsPerCycle: 32 };
+    if (num >= 3000) return { zen: 2, flopsPerCycle: 32 };
   }
 
-  return { zen: 1, flopsPerCycle: 8 };
+  return { zen: 1, flopsPerCycle: 16 };
 }
 
 function computeRamBW(rec, isServer) {
