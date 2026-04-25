@@ -75,9 +75,9 @@ Default beats `--cpu-moe` because pass 2 promotes 12 layers to full GPU, while `
 
 ## Supported architectures
 
-69 architectures:
+89 architectures:
 
-llama, deepseek2 (MLA), minicpm3, plm, kimi-linear, gemma4, gpt-oss (ISWA), llama4 (ISWA), qwen3moe, qwen35moe, qwen2, qwen3, qwen35, qwen3next, qwen2vl, qwen3vl, gemma3, gemma2, olmo2, phi3, granite, granitehybrid, mistral3, mistral4, glm4, falcon-h1, deci, cohere2, smollm3, ernie4_5, grok, gemma-embedding, nemotron_h, lfm2, minimax-m2, seed_oss, apertus, dots1, flux, ltxv, lumina2, qwen_image, wan, acestep-lm, t5encoder, mimo2, hunyuan-dense, exaone4, plamo3, smallthinker, qwen2moe, modern-bert, qwen3vlmoe, bailingmoe2, nemotron_h_moe, dbrx, grovemoe, ernie4_5_moe, hunyuan_moe, lfm2_moe, afmoe, deepseek, deepseek2-ocr, bailingmoe, exaone-moe, step35, glm4moe, glm-dsa, gemma3n
+llama, deepseek2 (MLA), minicpm3, plm, kimi-linear, gemma4, gpt-oss (ISWA), llama4 (ISWA), qwen3moe, qwen35moe, qwen2, qwen3, qwen35, qwen3next, qwen2vl, qwen3vl, gemma3, gemma2, olmo2, phi3, granite, granitehybrid, mistral3, mistral4, glm4, falcon-h1, deci, cohere2, smollm3, ernie4_5, grok, gemma-embedding, nemotron_h, lfm2, minimax-m2, seed_oss, apertus, dots1, flux, ltxv, lumina2, qwen_image, wan, acestep-lm, t5encoder, mimo2, hunyuan-dense, exaone4, plamo3, smallthinker, qwen2moe, modern-bert, bert, nomic-bert, nomic-bert-moe, neo-bert, jina-bert-v2, jina-bert-v3, eurobert, wavtokenizer-dec, dream, llada, llada-moe, rnd1, mamba, mamba2, rwkv6, rwkv6qwen2, rwkv7, arwkv7, jamba, plamo2, qwen3vlmoe, bailingmoe2, nemotron_h_moe, dbrx, grovemoe, ernie4_5_moe, hunyuan_moe, lfm2_moe, afmoe, deepseek, deepseek2-ocr, bailingmoe, exaone-moe, step35, glm4moe, glm-dsa, gemma3n
 
 ## Quantization types
 

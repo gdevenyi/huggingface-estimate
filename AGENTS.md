@@ -6,15 +6,18 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 
 **Single source of truth** — one copy of `calculations.js` and `parsing.js` runs in both browser and Node:
 - `index.html` — UI: HTML/CSS, result rendering. Declares an `<script type="importmap">` that remaps the bare specifier `@huggingface/gguf` to the jsDelivr CDN URL.
-- `calculations.js` — Architecture registry, KV cache, activations, MoE, weight calculations. Imports `@huggingface/gguf` as a bare specifier.
+- `calculations.js` — Architecture registry, KV cache, activations, MoE, weight calculations, performance estimator. Imports `@huggingface/gguf` as a bare specifier.
 - `parsing.js` — GGUF metadata parsing + HF URL resolution + fork detection. Same import convention.
 - `run-calc.js` — Node CLI entry point. Resolves the bare specifier via Node's normal package lookup (`node_modules/@huggingface/gguf`).
+- `scan-metadata.js` — Node CLI tool that scans GGUF metadata across repos and reports unknown architectures, unhandled metadata keys, and missing BPE entries. Used for regression testing and coverage audits. Supports `--batch`, `--json`, `--summary`, `--unknown-only`, `--concurrency N`.
 - `ui.js` — Browser UI logic: preset loading, form handling, result rendering. Loaded as `<script type="module">`.
 - `style.css` — Dark-theme-only styles (GitHub-dark palette). Responsive two-column grid, sticky sidebar, SlimSelect overrides.
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
 **Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/`, `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
+
+**Tracked data**: `specs/` — GPU CSV source data used by build scripts.
 
 ## Must serve via HTTP
 
@@ -112,7 +115,7 @@ ID 200 (TQ3_0, KV-only, 0.4375 BPE) is unique to the tq3 fork and does not colli
 - `formatBytes(bytes)` / `formatElements(n)` — human-readable formatters (KiB/MiB/GiB/TiB, K/M/B/T).
 - `TQ3_FORK_BPE` — BPE override map for tq3 fork collision resolution.
 - `TQ3_QUANT_NAMES` — display name overrides for tq3 fork types.
-- `calcRecurrentState(metadata, nSeqMax=1)` — computes SSM/recurrent state memory for hybrid architectures (qwen35, qwen35moe). Returns `{ convStateBytes, ssmStateBytes, totalBytes, recurrentLayers, n_embd_r, n_embd_s }` or `null` if the architecture has no SSM hparams. State is F32, indexed by sequence count (not context length). Matches llama.cpp's `n_embd_r()` and `n_embd_s()` in `llama-hparams.cpp`.
+- `calcRecurrentState(metadata, nSeqMax=1)` — computes SSM/recurrent state memory for architectures with recurrent layers. Returns `{ convStateBytes, ssmStateBytes, totalBytes, recurrentLayers, n_embd_r, n_embd_s }` or `null` if the architecture has no SSM hparams. State is F32, indexed by sequence count (not context length). Matches llama.cpp's `n_embd_r()` and `n_embd_s()` in `llama-hparams.cpp`. Supports KDA (Kimi-Linear), RWKV, LFM2 shortconv, and Mamba/Mamba2-style SSM state. Used by pure-recurrent archs (mamba, rwkv*), hybrid attention/SSM archs (jamba, falcon-h1, qwen35/moe, nemotron_h*), and KDA hybrids (kimi-linear).
 
 ## Utility exports from `parsing.js`
 
@@ -164,6 +167,8 @@ console.log(Object.keys(r.metadata).filter(k => k.startsWith(r.metadata['general
 | `mla` | Has `attention.kv_lora_rank` + `attention.key_length_mla` | KV cache uses compressed latent dimensions; activations use `q_lora_rank` + `kv_lora_rank` |
 | `iswa` | Has `attention.sliding_window` or per-layer `head_count_kv` array | Per-layer GQA; SWA layers use `min(sliding_window, ctxSize)` |
 | `moe` | Has `expert_count > 0` | Expert tensor grouping, VRAM/RAM split for inactive experts |
+| `recurrent` | Pure SSM/RWKV architectures (mamba, rwkv, etc.) | No KV cache; recurrent state computed via `calcRecurrentState` |
+| `audio` | Audio generation architectures (acestep-lm, wavtokenizer-dec) | Calculation-only marker, standard handlers |
 | `vl` / `embedding` / `diffusion` | Model type markers | Calculation-only markers, no handler changes |
 
 ### Step 3: Check for aliases
@@ -196,15 +201,16 @@ The available builders:
 
 | Builder | Use for |
 |---------|---------|
-| `noKvCache` | Encoder-only architectures with no KV cache (gemma-embedding, t5encoder, modern-bert) |
+| `noKvCache` | Encoder-only architectures with no KV cache (gemma-embedding, t5encoder, modern-bert, bert, nomic-bert, neo-bert, jina-bert-v2/v3, eurobert) |
 | `llamaKvCache` | Standard (and GQA) KV cache |
 | `buildKvCache(meta, ctx, kK, kV, opts)` | ISWA, per-layer filter, effective-layer override, etc. |
 | `mlaKvCache` | DeepSeek2 / GLM-DSA latent attention |
 | `buildActivations` | Standard transformer activations (incl. MoE-gated) |
+| `sharedExpertActivations` | MoE with shared experts that have a separate FFN dim (`expert_shared_feed_forward_length`); residual + shared FFN + routed experts (qwen35moe, qwen3next) |
 | `leadingDenseActivations` | MoE with `leading_dense_block_count` |
-| `mlaActivations` | MLA attention (non-MoE): uses `q_lora_rank + kv_lora_rank` instead of full `n_embd` |
+| `mlaActivations` | MLA attention (non-MoE): uses `q_lora_rank` + `kv_lora_rank` instead of full `n_embd` |
 | `buildMoe(meta, ti, predicates)` | MoE tensor accounting with custom `isExpert`/`isRouter`/`isShared` |
-| `llamaMoe` | Default MoE with `_exps.` / `ffn_gate_inp` / `_shexp.|_chexp.` |
+| `llamaMoe` | Default MoE with `_exps.` / `ffn_gate_inp` / `_shexp.\|_chexp.` |
 | `moeNoShared` | MoE with no shared experts |
 | `moeShexpOnly` | MoE with `_shexp.` shared experts only (no `_chexp.`) |
 
@@ -241,6 +247,8 @@ Architectures with attention shapes that don't match `buildActivations` or `lead
 - **qwen35moe**: residual + shared + routed experts — `2 * n_embd + expertUsedCount * expertFF`.
 - **glm-dsa**: adds `indexerTopK * 256` for the sparse indexer state.
 - **gemma3n**: multiplies `n_embd` by `altup_num_inputs` (typically 4).
+
+Note: `sharedExpertActivations` is a reusable builder (not bespoke inline) used by qwen35moe and qwen3next. It handles the residual + shared FFN + routed expert pattern where shared experts may have a different FFN dim.
 
 When adding one of these, write the body inline in the registry entry rather than extending `buildActivations` with more options.
 
