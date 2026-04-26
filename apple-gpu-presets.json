@@ -1,7 +1,7 @@
 [
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 128,
@@ -13,8 +13,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -26,8 +26,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -39,8 +39,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 128,
@@ -52,8 +52,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -65,8 +65,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -78,8 +78,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-128gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 128GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-128gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 128GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 128,
@@ -91,8 +91,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-36gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 36GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-36gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 36GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 36,
@@ -104,8 +104,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 48GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -117,8 +117,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 64GB",
+    "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M5 Max 2026), 18c CPU / 32c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -130,8 +130,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-128gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 128GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-128gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 128GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 128,
@@ -143,8 +143,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-36gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 36GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-36gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 36GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 36,
@@ -156,8 +156,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 48GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -169,8 +169,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 64GB",
+    "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M5 Max 2026), 18c CPU / 32c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -182,8 +182,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 24GB",
+    "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -195,8 +195,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 48GB",
+    "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -208,8 +208,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 64GB",
+    "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 18c CPU / 20c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -221,8 +221,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-24gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 24GB",
+    "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-24gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -234,8 +234,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 48GB",
+    "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -247,8 +247,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 64GB",
+    "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 18c CPU / 20c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -260,8 +260,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 24GB",
+    "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -273,8 +273,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 48GB",
+    "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -286,8 +286,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 64GB",
+    "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M5 Pro 2026), 15c CPU / 16c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -299,8 +299,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-24gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 24GB",
+    "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-24gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -312,8 +312,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 48GB",
+    "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 48GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 48,
@@ -325,8 +325,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 64GB",
+    "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M5 Pro 2026), 15c CPU / 16c GPU, 64GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 64,
@@ -338,8 +338,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 16,
@@ -351,8 +351,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -364,8 +364,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 32,
@@ -377,8 +377,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 16,
@@ -390,8 +390,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -403,8 +403,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 32,
@@ -416,8 +416,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 16,
@@ -429,8 +429,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -442,8 +442,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m5-2026-10c-cpu-8c-gpu-32gb",
-    "name": "Apple MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 32GB",
+    "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-32gb",
+    "name": "MacBook Air 13\" (M5 2026), 10c CPU / 8c GPU, 32GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 32,
@@ -455,8 +455,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 16,
@@ -468,8 +468,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 24,
@@ -481,8 +481,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m5-2026-10c-cpu-8c-gpu-32gb",
-    "name": "Apple MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 32GB",
+    "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-32gb",
+    "name": "MacBook Air 15\" (M5 2026), 10c CPU / 8c GPU, 32GB",
     "vendor": "Apple",
     "year": 2026,
     "vramGB": 32,
@@ -494,8 +494,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-128gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 128GB",
+    "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-128gb",
+    "name": "Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 128GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 128,
@@ -507,8 +507,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-192gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 192GB",
+    "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-192gb",
+    "name": "Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 192GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 192,
@@ -520,8 +520,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-256gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 256GB",
+    "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-256gb",
+    "name": "Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 256GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 256,
@@ -533,8 +533,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-512gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 512GB",
+    "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-512gb",
+    "name": "Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 512GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 512,
@@ -546,8 +546,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-64gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 64GB",
+    "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-64gb",
+    "name": "Mac Studio (M3 Ultra 2025), 32c CPU / 80c GPU, 64GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 64,
@@ -559,8 +559,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-128gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 128GB",
+    "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-128gb",
+    "name": "Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 128GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 128,
@@ -572,8 +572,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-192gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 192GB",
+    "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-192gb",
+    "name": "Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 192GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 192,
@@ -585,8 +585,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-256gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 256GB",
+    "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-256gb",
+    "name": "Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 256GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 256,
@@ -598,8 +598,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-64gb",
-    "name": "Apple Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 64GB",
+    "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-64gb",
+    "name": "Mac Studio (M3 Ultra 2025), 28c CPU / 60c GPU, 64GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 64,
@@ -611,8 +611,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m4-max-2025-16c-cpu-40c-gpu-128gb",
-    "name": "Apple Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 128GB",
+    "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-128gb",
+    "name": "Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 128,
@@ -624,8 +624,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m4-max-2025-16c-cpu-40c-gpu-48gb",
-    "name": "Apple Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 48GB",
+    "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-48gb",
+    "name": "Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 48,
@@ -637,8 +637,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m4-max-2025-16c-cpu-40c-gpu-64gb",
-    "name": "Apple Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 64GB",
+    "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-64gb",
+    "name": "Mac Studio (M4 Max 2025), 16c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 64,
@@ -650,8 +650,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m4-max-2025-14c-cpu-32c-gpu-36gb",
-    "name": "Apple Mac Studio (M4 Max 2025), 14c CPU / 32c GPU, 36GB",
+    "id": "mac-studio-m4-max-2025-14c-cpu-32c-gpu-36gb",
+    "name": "Mac Studio (M4 Max 2025), 14c CPU / 32c GPU, 36GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 36,
@@ -663,8 +663,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-13-m4-2025-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 16,
@@ -676,8 +676,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m4-2025-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 24,
@@ -689,8 +689,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m4-2025-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Air 13\" (M4 2025), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 32,
@@ -702,8 +702,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m4-2025-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 16,
@@ -715,8 +715,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m4-2025-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 24,
@@ -728,8 +728,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m4-2025-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Air 15\" (M4 2025), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 32,
@@ -741,8 +741,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-2025-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 16,
@@ -754,8 +754,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-2025-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 24,
@@ -767,8 +767,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m5-2025-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M5 2025), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2025,
     "vramGB": 32,
@@ -780,8 +780,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 128,
@@ -793,8 +793,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -806,8 +806,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M4 Max 2024), 16c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -819,8 +819,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 128,
@@ -832,8 +832,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -845,8 +845,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M4 Max 2024), 16c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -858,8 +858,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-max-2024-14c-cpu-32c-gpu-36gb",
-    "name": "Apple MacBook Pro 14\" (M4 Max 2024), 14c CPU / 32c GPU, 36GB",
+    "id": "macbook-pro-14-m4-max-2024-14c-cpu-32c-gpu-36gb",
+    "name": "MacBook Pro 14\" (M4 Max 2024), 14c CPU / 32c GPU, 36GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 36,
@@ -871,8 +871,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-max-2024-14c-cpu-32c-gpu-36gb",
-    "name": "Apple MacBook Pro 16\" (M4 Max 2024), 14c CPU / 32c GPU, 36GB",
+    "id": "macbook-pro-16-m4-max-2024-14c-cpu-32c-gpu-36gb",
+    "name": "MacBook Pro 16\" (M4 Max 2024), 14c CPU / 32c GPU, 36GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 36,
@@ -884,8 +884,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-14c-cpu-20c-gpu-24gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
+    "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-24gb",
+    "name": "Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -897,8 +897,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-14c-cpu-20c-gpu-48gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
+    "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-48gb",
+    "name": "Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -910,8 +910,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-14c-cpu-20c-gpu-64gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
+    "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-64gb",
+    "name": "Mac mini (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -923,8 +923,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
+    "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -936,8 +936,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
+    "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -949,8 +949,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
+    "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -962,8 +962,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-24gb",
-    "name": "Apple MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
+    "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-24gb",
+    "name": "MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -975,8 +975,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
+    "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -988,8 +988,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
+    "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M4 Pro 2024), 14c CPU / 20c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -1001,8 +1001,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-12c-cpu-16c-gpu-24gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 24GB",
+    "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-24gb",
+    "name": "Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1014,8 +1014,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-12c-cpu-16c-gpu-48gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 48GB",
+    "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-48gb",
+    "name": "Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -1027,8 +1027,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-pro-2024-12c-cpu-16c-gpu-64gb",
-    "name": "Apple Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 64GB",
+    "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-64gb",
+    "name": "Mac mini (M4 Pro 2024), 12c CPU / 16c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -1040,8 +1040,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 24GB",
+    "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1053,8 +1053,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 48GB",
+    "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 48GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 48,
@@ -1066,8 +1066,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 64GB",
+    "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M4 Pro 2024), 12c CPU / 16c GPU, 64GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 64,
@@ -1079,8 +1079,8 @@
     "mobile": true
   },
   {
-    "id": "apple-imac-24-m4-2024-10c-cpu-10c-gpu-16gb",
-    "name": "Apple iMac 24\" (M4 2024), 10c CPU / 10c GPU, 16GB",
+    "id": "imac-24-m4-2024-10c-cpu-10c-gpu-16gb",
+    "name": "iMac 24\" (M4 2024), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1092,8 +1092,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m4-2024-10c-cpu-10c-gpu-24gb",
-    "name": "Apple iMac 24\" (M4 2024), 10c CPU / 10c GPU, 24GB",
+    "id": "imac-24-m4-2024-10c-cpu-10c-gpu-24gb",
+    "name": "iMac 24\" (M4 2024), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1105,8 +1105,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m4-2024-10c-cpu-10c-gpu-32gb",
-    "name": "Apple iMac 24\" (M4 2024), 10c CPU / 10c GPU, 32GB",
+    "id": "imac-24-m4-2024-10c-cpu-10c-gpu-32gb",
+    "name": "iMac 24\" (M4 2024), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 32,
@@ -1118,8 +1118,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-2024-10c-cpu-10c-gpu-16gb",
-    "name": "Apple Mac mini (M4 2024), 10c CPU / 10c GPU, 16GB",
+    "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-16gb",
+    "name": "Mac mini (M4 2024), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1131,8 +1131,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-2024-10c-cpu-10c-gpu-24gb",
-    "name": "Apple Mac mini (M4 2024), 10c CPU / 10c GPU, 24GB",
+    "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-24gb",
+    "name": "Mac mini (M4 2024), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1144,8 +1144,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m4-2024-10c-cpu-10c-gpu-32gb",
-    "name": "Apple Mac mini (M4 2024), 10c CPU / 10c GPU, 32GB",
+    "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-32gb",
+    "name": "Mac mini (M4 2024), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 32,
@@ -1157,8 +1157,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1170,8 +1170,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1183,8 +1183,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 8,
@@ -1196,8 +1196,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1209,8 +1209,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1222,8 +1222,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 8,
@@ -1235,8 +1235,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-2024-10c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 16GB",
+    "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1248,8 +1248,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-2024-10c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 24GB",
+    "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1261,8 +1261,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m4-2024-10c-cpu-10c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 32GB",
+    "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M4 2024), 10c CPU / 10c GPU, 32GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 32,
@@ -1274,8 +1274,8 @@
     "mobile": true
   },
   {
-    "id": "apple-imac-24-m4-2024-8c-cpu-8c-gpu-16gb",
-    "name": "Apple iMac 24\" (M4 2024), 8c CPU / 8c GPU, 16GB",
+    "id": "imac-24-m4-2024-8c-cpu-8c-gpu-16gb",
+    "name": "iMac 24\" (M4 2024), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1287,8 +1287,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m4-2024-8c-cpu-8c-gpu-24gb",
-    "name": "Apple iMac 24\" (M4 2024), 8c CPU / 8c GPU, 24GB",
+    "id": "imac-24-m4-2024-8c-cpu-8c-gpu-24gb",
+    "name": "iMac 24\" (M4 2024), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1300,8 +1300,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1313,8 +1313,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1326,8 +1326,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m3-2024-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Air 13\" (M3 2024), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 8,
@@ -1339,8 +1339,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 16,
@@ -1352,8 +1352,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 24,
@@ -1365,8 +1365,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m3-2024-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Air 15\" (M3 2024), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2024,
     "vramGB": 8,
@@ -1378,8 +1378,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 128GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1391,8 +1391,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 192GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 192GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 192,
@@ -1404,8 +1404,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 64GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 76c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1417,8 +1417,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 128GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1430,8 +1430,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 192GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 192GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 192,
@@ -1443,8 +1443,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 64GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 76c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1456,8 +1456,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 128GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1469,8 +1469,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 192GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 192GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 192,
@@ -1482,8 +1482,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
-    "name": "Apple Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 64GB",
+    "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
+    "name": "Mac Pro (M2 Ultra 2023), 24c CPU / 60c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1495,8 +1495,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 128GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1508,8 +1508,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 192GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 192GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 192,
@@ -1521,8 +1521,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
-    "name": "Apple Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 64GB",
+    "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
+    "name": "Mac Studio (M2 Ultra 2023), 24c CPU / 60c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1534,8 +1534,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1547,8 +1547,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 48,
@@ -1560,8 +1560,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M3 Max 2023), 16c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1573,8 +1573,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-128gb",
-    "name": "Apple MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 128GB",
+    "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-128gb",
+    "name": "MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 128GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 128,
@@ -1586,8 +1586,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-48gb",
-    "name": "Apple MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 48GB",
+    "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-48gb",
+    "name": "MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 48GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 48,
@@ -1599,8 +1599,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 64GB",
+    "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M3 Max 2023), 16c CPU / 40c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1612,8 +1612,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-38c-gpu-32gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-32gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1625,8 +1625,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-38c-gpu-64gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-64gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1638,8 +1638,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-38c-gpu-96gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-96gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1651,8 +1651,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1664,8 +1664,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1677,8 +1677,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-96gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-96gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1690,8 +1690,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1703,8 +1703,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1716,8 +1716,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-96gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-96gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 38c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1729,8 +1729,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-30c-gpu-32gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-32gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1742,8 +1742,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-30c-gpu-64gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-64gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1755,8 +1755,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m2-max-2023-12c-cpu-30c-gpu-96gb",
-    "name": "Apple Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
+    "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-96gb",
+    "name": "Mac Studio (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1768,8 +1768,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1781,8 +1781,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1794,8 +1794,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-96gb",
-    "name": "Apple MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
+    "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-96gb",
+    "name": "MacBook Pro 14\" (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1807,8 +1807,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-36gb",
-    "name": "Apple MacBook Pro 14\" (M3 Max 2023), 14c CPU / 30c GPU, 36GB",
+    "id": "macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-36gb",
+    "name": "MacBook Pro 14\" (M3 Max 2023), 14c CPU / 30c GPU, 36GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 36,
@@ -1820,8 +1820,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-96gb",
-    "name": "Apple MacBook Pro 14\" (M3 Max 2023), 14c CPU / 30c GPU, 96GB",
+    "id": "macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-96gb",
+    "name": "MacBook Pro 14\" (M3 Max 2023), 14c CPU / 30c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1833,8 +1833,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1846,8 +1846,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 64GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 64,
@@ -1859,8 +1859,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-96gb",
-    "name": "Apple MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
+    "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-96gb",
+    "name": "MacBook Pro 16\" (M2 Max 2023), 12c CPU / 30c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1872,8 +1872,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-36gb",
-    "name": "Apple MacBook Pro 16\" (M3 Max 2023), 14c CPU / 30c GPU, 36GB",
+    "id": "macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-36gb",
+    "name": "MacBook Pro 16\" (M3 Max 2023), 14c CPU / 30c GPU, 36GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 36,
@@ -1885,8 +1885,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-96gb",
-    "name": "Apple MacBook Pro 16\" (M3 Max 2023), 14c CPU / 30c GPU, 96GB",
+    "id": "macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-96gb",
+    "name": "MacBook Pro 16\" (M3 Max 2023), 14c CPU / 30c GPU, 96GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 96,
@@ -1898,8 +1898,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-mini-m2-pro-2023-12c-cpu-19c-gpu-16gb",
-    "name": "Apple Mac mini (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
+    "id": "mac-mini-m2-pro-2023-12c-cpu-19c-gpu-16gb",
+    "name": "Mac mini (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -1911,8 +1911,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m2-pro-2023-12c-cpu-19c-gpu-32gb",
-    "name": "Apple Mac mini (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
+    "id": "mac-mini-m2-pro-2023-12c-cpu-19c-gpu-32gb",
+    "name": "Mac mini (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1924,8 +1924,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
+    "id": "macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -1937,8 +1937,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
+    "id": "macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1950,8 +1950,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-16gb",
-    "name": "Apple MacBook Pro 16\" (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
+    "id": "macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-16gb",
+    "name": "MacBook Pro 16\" (M2 Pro 2023), 12c CPU / 19c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -1963,8 +1963,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
+    "id": "macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M2 Pro 2023), 12c CPU / 19c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -1976,8 +1976,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-18gb",
-    "name": "Apple MacBook Pro 14\" (M3 Pro 2023), 12c CPU / 18c GPU, 18GB",
+    "id": "macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-18gb",
+    "name": "MacBook Pro 14\" (M3 Pro 2023), 12c CPU / 18c GPU, 18GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 18,
@@ -1989,8 +1989,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-36gb",
-    "name": "Apple MacBook Pro 14\" (M3 Pro 2023), 12c CPU / 18c GPU, 36GB",
+    "id": "macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-36gb",
+    "name": "MacBook Pro 14\" (M3 Pro 2023), 12c CPU / 18c GPU, 36GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 36,
@@ -2002,8 +2002,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-18gb",
-    "name": "Apple MacBook Pro 16\" (M3 Pro 2023), 12c CPU / 18c GPU, 18GB",
+    "id": "macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-18gb",
+    "name": "MacBook Pro 16\" (M3 Pro 2023), 12c CPU / 18c GPU, 18GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 18,
@@ -2015,8 +2015,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-36gb",
-    "name": "Apple MacBook Pro 16\" (M3 Pro 2023), 12c CPU / 18c GPU, 36GB",
+    "id": "macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-36gb",
+    "name": "MacBook Pro 16\" (M3 Pro 2023), 12c CPU / 18c GPU, 36GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 36,
@@ -2028,8 +2028,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-mini-m2-pro-2023-10c-cpu-16c-gpu-16gb",
-    "name": "Apple Mac mini (M2 Pro 2023), 10c CPU / 16c GPU, 16GB",
+    "id": "mac-mini-m2-pro-2023-10c-cpu-16c-gpu-16gb",
+    "name": "Mac mini (M2 Pro 2023), 10c CPU / 16c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2041,8 +2041,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m2-pro-2023-10c-cpu-16c-gpu-32gb",
-    "name": "Apple Mac mini (M2 Pro 2023), 10c CPU / 16c GPU, 32GB",
+    "id": "mac-mini-m2-pro-2023-10c-cpu-16c-gpu-32gb",
+    "name": "Mac mini (M2 Pro 2023), 10c CPU / 16c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -2054,8 +2054,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M2 Pro 2023), 10c CPU / 16c GPU, 16GB",
+    "id": "macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M2 Pro 2023), 10c CPU / 16c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2067,8 +2067,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M2 Pro 2023), 10c CPU / 16c GPU, 32GB",
+    "id": "macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M2 Pro 2023), 10c CPU / 16c GPU, 32GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 32,
@@ -2080,8 +2080,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-18gb",
-    "name": "Apple MacBook Pro 14\" (M3 Pro 2023), 11c CPU / 14c GPU, 18GB",
+    "id": "macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-18gb",
+    "name": "MacBook Pro 14\" (M3 Pro 2023), 11c CPU / 14c GPU, 18GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 18,
@@ -2093,8 +2093,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-36gb",
-    "name": "Apple MacBook Pro 14\" (M3 Pro 2023), 11c CPU / 14c GPU, 36GB",
+    "id": "macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-36gb",
+    "name": "MacBook Pro 14\" (M3 Pro 2023), 11c CPU / 14c GPU, 36GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 36,
@@ -2106,8 +2106,8 @@
     "mobile": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-10c-gpu-16gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 10c GPU, 16GB",
+    "id": "imac-24-m3-2023-8c-cpu-10c-gpu-16gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2119,8 +2119,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-10c-gpu-24gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 10c GPU, 24GB",
+    "id": "imac-24-m3-2023-8c-cpu-10c-gpu-24gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2132,8 +2132,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-10c-gpu-8gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 10c GPU, 8GB",
+    "id": "imac-24-m3-2023-8c-cpu-10c-gpu-8gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2145,8 +2145,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m2-2023-8c-cpu-10c-gpu-16gb",
-    "name": "Apple Mac mini (M2 2023), 8c CPU / 10c GPU, 16GB",
+    "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-16gb",
+    "name": "Mac mini (M2 2023), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2158,8 +2158,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m2-2023-8c-cpu-10c-gpu-24gb",
-    "name": "Apple Mac mini (M2 2023), 8c CPU / 10c GPU, 24GB",
+    "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-24gb",
+    "name": "Mac mini (M2 2023), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2171,8 +2171,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m2-2023-8c-cpu-10c-gpu-8gb",
-    "name": "Apple Mac mini (M2 2023), 8c CPU / 10c GPU, 8GB",
+    "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-8gb",
+    "name": "Mac mini (M2 2023), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2184,8 +2184,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2197,8 +2197,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2210,8 +2210,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2223,8 +2223,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-2023-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2236,8 +2236,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-2023-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2249,8 +2249,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m3-2023-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Pro 14\" (M3 2023), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2262,8 +2262,8 @@
     "mobile": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-8c-gpu-16gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 8c GPU, 16GB",
+    "id": "imac-24-m3-2023-8c-cpu-8c-gpu-16gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2275,8 +2275,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-8c-gpu-24gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 8c GPU, 24GB",
+    "id": "imac-24-m3-2023-8c-cpu-8c-gpu-24gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2288,8 +2288,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m3-2023-8c-cpu-8c-gpu-8gb",
-    "name": "Apple iMac 24\" (M3 2023), 8c CPU / 8c GPU, 8GB",
+    "id": "imac-24-m3-2023-8c-cpu-8c-gpu-8gb",
+    "name": "iMac 24\" (M3 2023), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2301,8 +2301,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 16,
@@ -2314,8 +2314,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 24,
@@ -2327,8 +2327,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-15-m2-2023-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Air 15\" (M2 2023), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2023,
     "vramGB": 8,
@@ -2340,8 +2340,8 @@
     "mobile": true
   },
   {
-    "id": "apple-mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-128gb",
-    "name": "Apple Mac Studio (M1 Ultra 2022), 20c CPU / 64c GPU, 128GB",
+    "id": "mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-128gb",
+    "name": "Mac Studio (M1 Ultra 2022), 20c CPU / 64c GPU, 128GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 128,
@@ -2353,8 +2353,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-64gb",
-    "name": "Apple Mac Studio (M1 Ultra 2022), 20c CPU / 64c GPU, 64GB",
+    "id": "mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-64gb",
+    "name": "Mac Studio (M1 Ultra 2022), 20c CPU / 64c GPU, 64GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 64,
@@ -2366,8 +2366,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-128gb",
-    "name": "Apple Mac Studio (M1 Ultra 2022), 20c CPU / 48c GPU, 128GB",
+    "id": "mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-128gb",
+    "name": "Mac Studio (M1 Ultra 2022), 20c CPU / 48c GPU, 128GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 128,
@@ -2379,8 +2379,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-64gb",
-    "name": "Apple Mac Studio (M1 Ultra 2022), 20c CPU / 48c GPU, 64GB",
+    "id": "mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-64gb",
+    "name": "Mac Studio (M1 Ultra 2022), 20c CPU / 48c GPU, 64GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 64,
@@ -2392,8 +2392,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-max-2022-10c-cpu-32c-gpu-32gb",
-    "name": "Apple Mac Studio (M1 Max 2022), 10c CPU / 32c GPU, 32GB",
+    "id": "mac-studio-m1-max-2022-10c-cpu-32c-gpu-32gb",
+    "name": "Mac Studio (M1 Max 2022), 10c CPU / 32c GPU, 32GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 32,
@@ -2405,8 +2405,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-max-2022-10c-cpu-32c-gpu-64gb",
-    "name": "Apple Mac Studio (M1 Max 2022), 10c CPU / 32c GPU, 64GB",
+    "id": "mac-studio-m1-max-2022-10c-cpu-32c-gpu-64gb",
+    "name": "Mac Studio (M1 Max 2022), 10c CPU / 32c GPU, 64GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 64,
@@ -2418,8 +2418,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-max-2022-10c-cpu-24c-gpu-32gb",
-    "name": "Apple Mac Studio (M1 Max 2022), 10c CPU / 24c GPU, 32GB",
+    "id": "mac-studio-m1-max-2022-10c-cpu-24c-gpu-32gb",
+    "name": "Mac Studio (M1 Max 2022), 10c CPU / 24c GPU, 32GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 32,
@@ -2431,8 +2431,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-studio-m1-max-2022-10c-cpu-24c-gpu-64gb",
-    "name": "Apple Mac Studio (M1 Max 2022), 10c CPU / 24c GPU, 64GB",
+    "id": "mac-studio-m1-max-2022-10c-cpu-24c-gpu-64gb",
+    "name": "Mac Studio (M1 Max 2022), 10c CPU / 24c GPU, 64GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 64,
@@ -2444,8 +2444,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 16,
@@ -2457,8 +2457,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 24,
@@ -2470,8 +2470,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 8,
@@ -2483,8 +2483,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-13-m2-2022-8c-cpu-10c-gpu-16gb",
-    "name": "Apple MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 16GB",
+    "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-16gb",
+    "name": "MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 16GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 16,
@@ -2496,8 +2496,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-13-m2-2022-8c-cpu-10c-gpu-24gb",
-    "name": "Apple MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 24GB",
+    "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-24gb",
+    "name": "MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 24GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 24,
@@ -2509,8 +2509,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-13-m2-2022-8c-cpu-10c-gpu-8gb",
-    "name": "Apple MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 8GB",
+    "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-8gb",
+    "name": "MacBook Pro 13\" (M2 2022), 8c CPU / 10c GPU, 8GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 8,
@@ -2522,8 +2522,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 16,
@@ -2535,8 +2535,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-8c-gpu-24gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 24GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-24gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 24GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 24,
@@ -2548,8 +2548,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m2-2022-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Air 13\" (M2 2022), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2022,
     "vramGB": 8,
@@ -2561,8 +2561,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M1 Max 2021), 10c CPU / 32c GPU, 32GB",
+    "id": "macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M1 Max 2021), 10c CPU / 32c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2574,8 +2574,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M1 Max 2021), 10c CPU / 32c GPU, 64GB",
+    "id": "macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M1 Max 2021), 10c CPU / 32c GPU, 64GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 64,
@@ -2587,8 +2587,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M1 Max 2021), 10c CPU / 32c GPU, 32GB",
+    "id": "macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M1 Max 2021), 10c CPU / 32c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2600,8 +2600,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M1 Max 2021), 10c CPU / 32c GPU, 64GB",
+    "id": "macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M1 Max 2021), 10c CPU / 32c GPU, 64GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 64,
@@ -2613,8 +2613,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M1 Max 2021), 10c CPU / 24c GPU, 32GB",
+    "id": "macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M1 Max 2021), 10c CPU / 24c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2626,8 +2626,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-64gb",
-    "name": "Apple MacBook Pro 14\" (M1 Max 2021), 10c CPU / 24c GPU, 64GB",
+    "id": "macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-64gb",
+    "name": "MacBook Pro 14\" (M1 Max 2021), 10c CPU / 24c GPU, 64GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 64,
@@ -2639,8 +2639,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M1 Max 2021), 10c CPU / 24c GPU, 32GB",
+    "id": "macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M1 Max 2021), 10c CPU / 24c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2652,8 +2652,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-64gb",
-    "name": "Apple MacBook Pro 16\" (M1 Max 2021), 10c CPU / 24c GPU, 64GB",
+    "id": "macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-64gb",
+    "name": "MacBook Pro 16\" (M1 Max 2021), 10c CPU / 24c GPU, 64GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 64,
@@ -2665,8 +2665,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 16c GPU, 16GB",
+    "id": "macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 16c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2678,8 +2678,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 16c GPU, 32GB",
+    "id": "macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 16c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2691,8 +2691,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-16gb",
-    "name": "Apple MacBook Pro 16\" (M1 Pro 2021), 10c CPU / 16c GPU, 16GB",
+    "id": "macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-16gb",
+    "name": "MacBook Pro 16\" (M1 Pro 2021), 10c CPU / 16c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2704,8 +2704,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-32gb",
-    "name": "Apple MacBook Pro 16\" (M1 Pro 2021), 10c CPU / 16c GPU, 32GB",
+    "id": "macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-32gb",
+    "name": "MacBook Pro 16\" (M1 Pro 2021), 10c CPU / 16c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2717,8 +2717,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 14c GPU, 16GB",
+    "id": "macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 14c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2730,8 +2730,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 14c GPU, 32GB",
+    "id": "macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 10c CPU / 14c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2743,8 +2743,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-16gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 8c CPU / 14c GPU, 16GB",
+    "id": "macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-16gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 8c CPU / 14c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2756,8 +2756,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-32gb",
-    "name": "Apple MacBook Pro 14\" (M1 Pro 2021), 8c CPU / 14c GPU, 32GB",
+    "id": "macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-32gb",
+    "name": "MacBook Pro 14\" (M1 Pro 2021), 8c CPU / 14c GPU, 32GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 32,
@@ -2769,8 +2769,8 @@
     "mobile": true
   },
   {
-    "id": "apple-imac-24-m1-2021-8c-cpu-8c-gpu-16gb",
-    "name": "Apple iMac 24\" (M1 2021), 8c CPU / 8c GPU, 16GB",
+    "id": "imac-24-m1-2021-8c-cpu-8c-gpu-16gb",
+    "name": "iMac 24\" (M1 2021), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2782,8 +2782,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m1-2021-8c-cpu-8c-gpu-8gb",
-    "name": "Apple iMac 24\" (M1 2021), 8c CPU / 8c GPU, 8GB",
+    "id": "imac-24-m1-2021-8c-cpu-8c-gpu-8gb",
+    "name": "iMac 24\" (M1 2021), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 8,
@@ -2795,8 +2795,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m1-2021-8c-cpu-7c-gpu-16gb",
-    "name": "Apple iMac 24\" (M1 2021), 8c CPU / 7c GPU, 16GB",
+    "id": "imac-24-m1-2021-8c-cpu-7c-gpu-16gb",
+    "name": "iMac 24\" (M1 2021), 8c CPU / 7c GPU, 16GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 16,
@@ -2808,8 +2808,8 @@
     "desktop": true
   },
   {
-    "id": "apple-imac-24-m1-2021-8c-cpu-7c-gpu-8gb",
-    "name": "Apple iMac 24\" (M1 2021), 8c CPU / 7c GPU, 8GB",
+    "id": "imac-24-m1-2021-8c-cpu-7c-gpu-8gb",
+    "name": "iMac 24\" (M1 2021), 8c CPU / 7c GPU, 8GB",
     "vendor": "Apple",
     "year": 2021,
     "vramGB": 8,
@@ -2821,8 +2821,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m1-2020-8c-cpu-8c-gpu-16gb",
-    "name": "Apple Mac mini (M1 2020), 8c CPU / 8c GPU, 16GB",
+    "id": "mac-mini-m1-2020-8c-cpu-8c-gpu-16gb",
+    "name": "Mac mini (M1 2020), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 16,
@@ -2834,8 +2834,8 @@
     "desktop": true
   },
   {
-    "id": "apple-mac-mini-m1-2020-8c-cpu-8c-gpu-8gb",
-    "name": "Apple Mac mini (M1 2020), 8c CPU / 8c GPU, 8GB",
+    "id": "mac-mini-m1-2020-8c-cpu-8c-gpu-8gb",
+    "name": "Mac mini (M1 2020), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 8,
@@ -2847,8 +2847,8 @@
     "desktop": true
   },
   {
-    "id": "apple-macbook-air-13-m1-2020-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M1 2020), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-air-13-m1-2020-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Air 13\" (M1 2020), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 16,
@@ -2860,8 +2860,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m1-2020-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M1 2020), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-air-13-m1-2020-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Air 13\" (M1 2020), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 8,
@@ -2873,8 +2873,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-13-m1-2020-8c-cpu-8c-gpu-16gb",
-    "name": "Apple MacBook Pro 13\" (M1 2020), 8c CPU / 8c GPU, 16GB",
+    "id": "macbook-pro-13-m1-2020-8c-cpu-8c-gpu-16gb",
+    "name": "MacBook Pro 13\" (M1 2020), 8c CPU / 8c GPU, 16GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 16,
@@ -2886,8 +2886,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-pro-13-m1-2020-8c-cpu-8c-gpu-8gb",
-    "name": "Apple MacBook Pro 13\" (M1 2020), 8c CPU / 8c GPU, 8GB",
+    "id": "macbook-pro-13-m1-2020-8c-cpu-8c-gpu-8gb",
+    "name": "MacBook Pro 13\" (M1 2020), 8c CPU / 8c GPU, 8GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 8,
@@ -2899,8 +2899,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m1-2020-8c-cpu-7c-gpu-16gb",
-    "name": "Apple MacBook Air 13\" (M1 2020), 8c CPU / 7c GPU, 16GB",
+    "id": "macbook-air-13-m1-2020-8c-cpu-7c-gpu-16gb",
+    "name": "MacBook Air 13\" (M1 2020), 8c CPU / 7c GPU, 16GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 16,
@@ -2912,8 +2912,8 @@
     "mobile": true
   },
   {
-    "id": "apple-macbook-air-13-m1-2020-8c-cpu-7c-gpu-8gb",
-    "name": "Apple MacBook Air 13\" (M1 2020), 8c CPU / 7c GPU, 8GB",
+    "id": "macbook-air-13-m1-2020-8c-cpu-7c-gpu-8gb",
+    "name": "MacBook Air 13\" (M1 2020), 8c CPU / 7c GPU, 8GB",
     "vendor": "Apple",
     "year": 2020,
     "vramGB": 8,

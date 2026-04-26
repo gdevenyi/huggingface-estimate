@@ -16,14 +16,14 @@ import {
   formatElements,
   QUANT_NAMES,
 } from './calculations.js';
-import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
+const CPU_JSON_FILES = ['intel-cpu-presets.json', 'amd-cpu-presets.json'];
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
 for (const f of [...CPU_JSON_FILES, ...GPU_JSON_FILES]) {
@@ -35,6 +35,7 @@ for (const f of [...CPU_JSON_FILES, ...GPU_JSON_FILES]) {
     if (e.code !== 'ENOENT') console.error(`Warning: failed to load ${f}: ${e.message}`);
   }
 }
+mergeCpuPresets([UNIFIED_MEMORY_CPU_PRESET]);
 
 function findGpuPreset(query) {
   if (!query) return null;

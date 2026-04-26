@@ -1,10 +1,5 @@
 [
   {
-    "id": "intel-unified-memory",
-    "name": "Intel Unified Memory",
-    "vendor": "Intel"
-  },
-  {
     "id": "6766e",
     "name": "Intel Xeon 6766E Processor (Sierra Forest, 144C)",
     "vendor": "Intel",

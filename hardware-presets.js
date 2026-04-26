@@ -1,8 +1,11 @@
 // Hand-curated RAM presets for the tokens/sec estimator.
 //
 // CPU and GPU presets live in per-vendor JSON files:
-//   apple-cpu-presets.json, intel-cpu-presets.json, amd-cpu-presets.json
+//   intel-cpu-presets.json, amd-cpu-presets.json
 //   nvidia-gpu-presets.json, intel-gpu-presets.json, amd-gpu-presets.json, apple-gpu-presets.json
+//
+// The "Unified Memory" CPU preset (used when a unified-memory GPU is selected)
+// is defined here as UNIFIED_MEMORY_CPU_PRESET, not in a vendor JSON file.
 //
 // CPU FP16 FLOPS approximation: cores x boostGHz x FLOPsPerCycle, where
 // FLOPsPerCycle is the effective FP16 throughput per core per cycle using
@@ -89,6 +92,8 @@ const CPU_ID_ALIASES = {
 
 let _cpuPresets = [];
 let _gpuPresets = [];
+
+export const UNIFIED_MEMORY_CPU_PRESET = { id: 'unified-memory', name: 'Unified Memory' };
 
 export function mergeCpuPresets(presets) {
   _cpuPresets.push(...(presets || []));

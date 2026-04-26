@@ -376,11 +376,8 @@ out.sort((a, b) => {
   return 0;
 });
 
-writeFileSync(OUT_PATH, JSON.stringify([
-  { id: 'amd-unified-memory', name: 'AMD Unified Memory', vendor: 'AMD' },
-  ...out,
-], null, 2) + '\n');
-console.error(`Wrote ${out.length + 1} AMD CPU presets to ${OUT_PATH}`);
+writeFileSync(OUT_PATH, JSON.stringify(out, null, 2) + '\n');
+console.error(`Wrote ${out.length} AMD CPU presets to ${OUT_PATH}`);
 const byGroup = {};
 for (const p of out) {
   let g = 'other';

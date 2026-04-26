@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Reads specs/apple_silicon.tsv and emits apple-cpu-presets.json and
-// apple-gpu-presets.json. One GPU preset per TSV row (per RAM SKU).
+// Reads specs/apple_silicon.tsv and emits apple-gpu-presets.json.
+// One GPU preset per TSV row (per RAM SKU).
 //
 // Run: `node scripts/build-apple-presets.js`
 
@@ -10,7 +10,6 @@ import { dirname, join } from 'node:path';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TSV_PATH = join(ROOT, 'specs', 'apple_silicon.tsv');
-const CPU_OUT = join(ROOT, 'apple-cpu-presets.json');
 const GPU_OUT = join(ROOT, 'apple-gpu-presets.json');
 
 function round(n, d) {
@@ -78,7 +77,7 @@ for (let i = 1; i < lines.length; i++) {
   if (!macModel || !memBwGBps || !ramGB) continue;
 
   const chip = chipName(generation, tier);
-  const name = `Apple ${macModel} (${chip} ${year}), ${cpuCores}c CPU / ${gpuCores}c GPU, ${ramStr}`;
+  const name = `${macModel} (${chip} ${year}), ${cpuCores}c CPU / ${gpuCores}c GPU, ${ramStr}`;
   const id = slug(name);
 
   const flags = {};
@@ -114,13 +113,6 @@ gpuPresets.sort((a, b) => {
 function stripMeta(arr) {
   return arr.map(({ _year, _tier, _gpuCores, ...rest }) => rest);
 }
-
-const cpuPresets = [
-  { id: 'apple-unified-memory', name: 'Apple Unified Memory', vendor: 'Apple' },
-];
-
-writeFileSync(CPU_OUT, JSON.stringify(cpuPresets, null, 2) + '\n');
-console.error(`Wrote ${cpuPresets.length} Apple CPU presets to ${CPU_OUT}`);
 
 writeFileSync(GPU_OUT, JSON.stringify(stripMeta(gpuPresets), null, 2) + '\n');
 console.error(`Wrote ${gpuPresets.length} Apple GPU presets to ${GPU_OUT}`);

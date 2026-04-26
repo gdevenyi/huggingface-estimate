@@ -1,8 +1,8 @@
 import { GGMLQuantizationType, KV_VALID_QUANTS, KV_FORK_GROUPS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
 import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
-import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset, getSlowestCpuPreset } from './hardware-presets.js';
+import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 
-const CPU_JSON_FILES = ['apple-cpu-presets.json', 'intel-cpu-presets.json', 'amd-cpu-presets.json'];
+const CPU_JSON_FILES = ['intel-cpu-presets.json', 'amd-cpu-presets.json'];
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
 let _cpuLoaded = 0, _gpuLoaded = 0;
@@ -163,6 +163,7 @@ function populateCpuSelect() {
   if (ssCpu) { ssCpu.destroy(); ssCpu = null; }
   cpuPresetEl.innerHTML = '';
   cpuPresetEl.appendChild(new Option('Custom', 'custom'));
+  cpuPresetEl.appendChild(new Option(UNIFIED_MEMORY_CPU_PRESET.name, UNIFIED_MEMORY_CPU_PRESET.id));
   const byVendor = partitionByGroup(getCpuPresets());
   const fmt = c => (c.fp16Tflops != null && c.defaultRamBwGBps != null)
     ? `${c.name} \u2014 ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`
@@ -298,9 +299,7 @@ gpuPresetEl.addEventListener('change', () => {
     gpuFlopsEl.value = g.fp16Tflops;
     gpuBwEl.value = g.memBwGBps;
     if (g.vramGB) vramEl.value = g.vramGB;
-    if (g.vendor === 'Apple' && ssCpu) ssCpu.setSelected('apple-unified-memory');
-    if (g.vendor === 'AMD' && g.unifiedMemory && ssCpu) ssCpu.setSelected('amd-unified-memory');
-    if (g.vendor === 'Intel' && g.unifiedMemory && ssCpu) ssCpu.setSelected('intel-unified-memory');
+    if (g.unifiedMemory && ssCpu) ssCpu.setSelected('unified-memory');
     if (g.unifiedMemory) {
       cpuFlopsEl.value = '';
       ramBwEl.value = '';
