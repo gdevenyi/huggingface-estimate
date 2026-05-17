@@ -404,6 +404,7 @@ button.reset-btn:hover {
 
 .status-badge.moe { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
 .status-badge.dense { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+.status-badge.mtp { background: rgba(163, 113, 247, 0.18); color: #d2a8ff; }
 
 /* Model selector */
 .model-select {

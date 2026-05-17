@@ -233,10 +233,22 @@ All fields optional. Compose them in the handler: `kvCache: (m, c, kK, kV) => bu
 | `denseFirst: true` | With ISWA, first layer in each period is dense (smallthinker pattern; matches llama.cpp `set_swa_pattern(N, true)`) |
 | `swaPeriodDefault: N` | Fallback SWA period when metadata doesn't supply one (gpt-oss: 2, llama4: 4, gemma3n: 5) |
 | `swaDefault: N` | Fallback `sliding_window` value (llama4: 8192) |
-| `effectiveLayers(meta, n_block)` | Override iteration count (gemma4 `shared_kv_layers`, gemma3n `layer_kv_from_start`, bailingmoe2 `nextn_predict_layers`) |
+| `effectiveLayers(meta, n_block)` | Override iteration count (gemma4 `shared_kv_layers`, gemma3n `layer_kv_from_start`, MTP-aware archs `nextn_predict_layers` — glm4, glm4moe, bailingmoe2, exaone-moe, qwen35, qwen35moe) |
 | `layerFilter(i)` | Skip layers (qwen35moe keeps only every `full_attention_interval`-th layer) |
 
+`effectiveLayers` and `layerFilter` compose: qwen35 / qwen35moe use both to skip MTP trailing blocks *and* keep only every Nth full-attention layer.
+
 Per-layer `head_count_kv == 0` is treated as "no KV cache on this layer" across all options. This handles hybrid recurrent/attention (`lfm2_moe`, `nemotron_h_moe`) without extra config — just declare `kvCache: llamaKvCache`.
+
+### MTP (Multi-Token Prediction / `nextn_predict_layers`)
+
+Some archs (qwen35, qwen35moe, glm4, glm4moe, bailingmoe2, exaone-moe, glm-dsa) emit MTP blocks at the tail of `block_count`. llama.cpp loads MTP weights into model memory but skips them in the main decoder graph — they only run inside the speculative-decoding `LLM_GRAPH_TYPE_DECODER_MTP` (see `resources/llama.cpp/src/models/qwen35.cpp:160-162`).
+
+Estimator accounting:
+- **KV cache** — excluded via `effectiveLayers: (m, n_block) => n_block - getMeta(m, '<arch>.nextn_predict_layers')`. `mlaKvCache` does it inline for MLA archs.
+- **Activations** — `buildActivations`, `sharedExpertActivations`, and `leadingDenseActivations` all read `nextn_predict_layers` and iterate `n_main = n_block - nextn`. No-op when nextn is absent.
+- **Weights** — counted as resident (MTP weights live in VRAM/RAM).
+- **Per-layer perf** — `calcPerLayerFootprint` uses `nLayers = n_block - nextn`. MTP-block tensors (indices ≥ nLayers) fall through to `outputBytes`, so they contribute weight memory without inflating per-token decode latency.
 
 ### Bespoke activations
 

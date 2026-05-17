@@ -445,6 +445,8 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
   const n_head_kv = getMeta(currentMetadata, `${arch}.attention.head_count_kv`);
   const n_layer = getMeta(currentMetadata, `${arch}.block_count`);
   const n_ff = getMeta(currentMetadata, `${arch}.feed_forward_length`);
+  const nextn = getMeta(currentMetadata, `${arch}.nextn_predict_layers`);
+  const n_main = Math.max(0, n_layer - nextn);
   const modelName = currentMetadata['general.name'] || currentMetadata['general.basename'] || arch;
   const archCategories = handler.categories.join(', ');
 
@@ -455,9 +457,13 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
     $('#ctxMaxLabel').textContent = '';
   }
 
-  archBadge.innerHTML = isMoe
+  const denseOrMoeBadge = isMoe
     ? '<span class="status-badge moe">MoE</span>'
     : '<span class="status-badge dense">Dense</span>';
+  const mtpBadge = nextn > 0
+    ? `<span class="status-badge mtp" title="Multi-Token Prediction: ${nextn} trailing layer${nextn > 1 ? 's' : ''} loaded for speculative decoding, skipped by main decoder">MTP</span>`
+    : '';
+  archBadge.innerHTML = denseOrMoeBadge + mtpBadge;
 
   modelInfoGrid.textContent = '';
 
@@ -494,7 +500,7 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
   addInfo('Model', modelName, true);
   addInfo('Architecture', arch);
   addInfo('Categories', archCategories, '0.75rem');
-  addInfo('Layers', n_layer);
+  addInfo('Layers', nextn > 0 ? `${n_layer} (${n_main} + ${nextn} MTP)` : n_layer, nextn > 0 ? '0.85rem' : false);
   addInfo('Heads', n_head);
   addInfo('KV Heads', n_head_kv);
   addInfo('Hidden', n_embd);
@@ -574,17 +580,18 @@ function renderKvCache(kv, kvTypeK, kvTypeV, isMla, arch) {
   }
 }
 
-function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes }) {
+function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes }) {
   const totalBytes = vramBytes + ramBytes;
   const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
+  const mtpBytes = (footprint && footprint.mtpBytes) || 0;
 
   let nonMoEWeightBytes, vramExpertBytes = 0, vramRouterSharedBytes = 0;
   if (moe) {
-    nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes;
-    vramExpertBytes = memBreakdown.vramWeightBytes - nonMoEWeightBytes - moe.routerBytes - moe.sharedBytes;
+    nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes - mtpBytes;
+    vramExpertBytes = memBreakdown.vramWeightBytes - (nonMoEWeightBytes + mtpBytes) - moe.routerBytes - moe.sharedBytes;
     vramRouterSharedBytes = moe.routerBytes + moe.sharedBytes;
   } else {
-    nonMoEWeightBytes = weights.total;
+    nonMoEWeightBytes = weights.total - mtpBytes;
   }
 
   $('#vramSize').textContent = formatBytes(vramBytes);
@@ -607,6 +614,12 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, mmProjBytes, 
     $('#vramRouterRow').style.display = 'none';
   }
   $('#vramWeightsSize').textContent = `${formatBytes(nonMoEWeightBytes)} (${vramPct(nonMoEWeightBytes)})`;
+  if (mtpBytes > 0) {
+    $('#vramMtpRow').style.display = '';
+    $('#vramMtpSize').textContent = `${formatBytes(mtpBytes)} (${vramPct(mtpBytes)})`;
+  } else {
+    $('#vramMtpRow').style.display = 'none';
+  }
   const kvOnlyBytes = kv.bytesK + kv.bytesV;
   $('#vramKVSize').textContent = `${formatBytes(kvOnlyBytes)} (${vramPct(kvOnlyBytes)})`;
   if (kv.bytesRecurrent > 0) {
@@ -908,7 +921,7 @@ function renderResults() {
   renderWeightsTable(weights);
   renderKvCache(kv, kvTypeK, kvTypeV, isMla, arch);
   $('#actSize').textContent = formatBytes(acts.totalBytes);
-  renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes });
+  renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint: layerFootprint, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes });
   renderMmProjPanel(mmProjDevice);
   const um = isUnifiedMemory();
   renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory: um });

@@ -358,21 +358,27 @@ function ffSumOverLayers(meta, arch, n_layer, fromLayer = 0, toLayer = n_layer) 
 }
 
 // ── Standard transformer activations ──
+// nextn_predict_layers (MTP) blocks are loaded but skipped by the main decoder
+// graph in llama.cpp (`for (il = 0; il < n_layer - nextn_predict_layers; ++il)`
+// in src/models/qwen35.cpp:161 and similar), so they don't contribute
+// activations. Subtracting reduces to a no-op for non-MTP arches (nextn=0).
 function buildActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
+  const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+  const n_main = Math.max(0, n_layer - nextn);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const isMoe = expertCount > 0;
   const ffTotal = (isMoe && expertUsedCount > 0 && expertFF > 0)
-    ? expertUsedCount * expertFF * n_layer
-    : ffSumOverLayers(meta, arch, n_layer);
-  const totalBytes = batchSize * (n_embd * n_layer + ffTotal) * 4;
+    ? expertUsedCount * expertFF * n_main
+    : ffSumOverLayers(meta, arch, n_layer, 0, n_main);
+  const totalBytes = batchSize * (n_embd * n_main + ffTotal) * 4;
   return {
     totalBytes,
-    perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0,
+    perLayerBytes: n_main > 0 ? totalBytes / n_main : 0,
     isMoe, expertCount, expertUsedCount, expertFF,
   };
 }
@@ -383,18 +389,20 @@ function sharedExpertActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
+  const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+  const n_main = Math.max(0, n_layer - nextn);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const expertSharedFF = getMeta(meta, `${arch}.expert_shared_feed_forward_length`) || n_embd;
   const isMoe = expertCount > 0;
   const ffTotal = (isMoe && expertUsedCount > 0 && expertFF > 0)
-    ? (expertSharedFF + expertUsedCount * expertFF) * n_layer
-    : ffSumOverLayers(meta, arch, n_layer);
-  const totalBytes = batchSize * (n_embd * n_layer + ffTotal) * 4;
+    ? (expertSharedFF + expertUsedCount * expertFF) * n_main
+    : ffSumOverLayers(meta, arch, n_layer, 0, n_main);
+  const totalBytes = batchSize * (n_embd * n_main + ffTotal) * 4;
   return {
     totalBytes,
-    perLayerBytes: n_layer > 0 ? totalBytes / n_layer : 0,
+    perLayerBytes: n_main > 0 ? totalBytes / n_main : 0,
     isMoe, expertCount, expertUsedCount, expertFF,
   };
 }
@@ -404,16 +412,19 @@ function leadingDenseActivations(meta, batchSize) {
   const arch = meta['general.architecture'];
   const n_embd = getMeta(meta, `${arch}.embedding_length`);
   const n_layer = getMeta(meta, `${arch}.block_count`);
+  const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+  const n_main = Math.max(0, n_layer - nextn);
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   const expertFF = getMeta(meta, `${arch}.expert_feed_forward_length`);
   const leadingDense = getMeta(meta, `${arch}.leading_dense_block_count`);
-  const denseFF = ffSumOverLayers(meta, arch, n_layer, 0, leadingDense);
-  const denseBytes = batchSize * (leadingDense * n_embd + denseFF) * 4;
-  const moeLayers = n_layer - leadingDense;
+  const denseEnd = Math.min(leadingDense, n_main);
+  const denseFF = ffSumOverLayers(meta, arch, n_layer, 0, denseEnd);
+  const denseBytes = batchSize * (denseEnd * n_embd + denseFF) * 4;
+  const moeLayers = Math.max(0, n_main - leadingDense);
   const moeFF = (expertUsedCount > 0 && expertFF > 0)
     ? expertUsedCount * expertFF * moeLayers
-    : ffSumOverLayers(meta, arch, n_layer, leadingDense, n_layer);
+    : ffSumOverLayers(meta, arch, n_layer, leadingDense, n_main);
   const moeBytes = batchSize * (moeLayers * n_embd + moeFF) * 4;
   return {
     totalBytes: denseBytes + moeBytes,
@@ -470,9 +481,19 @@ function buildMoe(meta, tensorInfos, {
   const expertCount = getMeta(meta, `${arch}.expert_count`);
   const expertUsedCount = getMeta(meta, `${arch}.expert_used_count`);
   if (expertCount === 0) return null;
-  const expertTensors = tensorInfos.filter(isExpert);
-  const routerTensors = tensorInfos.filter(isRouter);
-  const sharedTensors = tensorInfos.filter(isShared);
+  // Exclude tensors in MTP / nextn blocks (idx >= n_main) — their experts are
+  // loaded but never routed during the main forward pass, so they don't belong
+  // in active-expert accounting. They surface in footprint.mtpBytes instead.
+  const n_block = getMeta(meta, `${arch}.block_count`);
+  const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+  const n_main = Math.max(0, n_block - nextn);
+  const inMainBlock = (t) => {
+    const idx = layerIndexFromTensorName(t.name);
+    return idx < 0 || idx < n_main;
+  };
+  const expertTensors = tensorInfos.filter(t => inMainBlock(t) && isExpert(t));
+  const routerTensors = tensorInfos.filter(t => inMainBlock(t) && isRouter(t));
+  const sharedTensors = tensorInfos.filter(t => inMainBlock(t) && isShared(t));
   const expertWeightBytes = sumBytes(expertTensors);
   const routerBytes = sumBytes(routerTensors);
   const sharedBytes = sumBytes(sharedTensors);
@@ -650,6 +671,8 @@ export const ARCHITECTURES = {
 
   // ── Qwen3.6 MoE: mixed DeltaNet/attention + MoE with shared experts ──
   // Only every Nth layer has full attention (the rest are DeltaNet with no KV cache).
+  // Trailing nextn_predict_layers blocks are MTP — loaded but not executed by the
+  // main decoder, so excluded from KV iteration via effectiveLayers.
   qwen35moe: {
     name: 'qwen35moe',
     categories: ['transformer', 'moe'],
@@ -658,6 +681,7 @@ export const ARCHITECTURES = {
       const interval = getMeta(meta, `${arch}.full_attention_interval`) || 4;
       return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, {
         layerFilter: (i) => ((i + 1) % interval === 0),
+        effectiveLayers: (m, n_block) => n_block - getMeta(m, `${m['general.architecture']}.nextn_predict_layers`),
       });
     },
     activations: sharedExpertActivations,
@@ -671,7 +695,7 @@ export const ARCHITECTURES = {
   // ── Standard transformers (reuse llama handlers) ──
   qwen2:          { name: 'qwen2',          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3:          { name: 'qwen3',          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  qwen35:         { name: 'qwen35',         categories: ['transformer'],      kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  qwen35:         { name: 'qwen35',         categories: ['transformer'],      kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0), effectiveLayers: (m, n_block) => n_block - getMeta(m, `${m['general.architecture']}.nextn_predict_layers`) }); }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3next:      { name: 'qwen3next',      categories: ['transformer', 'moe'],kvCache(meta, ctxSize, kvTypeK, kvTypeV) { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.full_attention_interval`) || 4; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: sharedExpertActivations, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_inp_shexp*', '*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   qwen2vl:        { name: 'qwen2vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3vl:        { name: 'qwen3vl',        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -1217,7 +1241,14 @@ function layerIndexFromTensorName(name) {
 export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
   const arch = getModelArch(metadata);
   const handler = getArchHandler(arch);
-  const nLayers = getMeta(metadata, `${arch}.block_count`) || (kv ? kv.layers : 0);
+  // MTP (nextn_predict_layers) blocks live at the tail of block_count but are
+  // skipped by the main decoder graph in llama.cpp, so they don't contribute to
+  // per-token decode work. Their tensors fall through the idx >= nLayers branch
+  // below into outputBytes — correctly counted as resident weights but excluded
+  // from the per-layer streaming/compute path.
+  const nextn = getMeta(metadata, `${arch}.nextn_predict_layers`);
+  const nLayersTotal = getMeta(metadata, `${arch}.block_count`) || (kv ? kv.layers : 0);
+  const nLayers = Math.max(0, nLayersTotal - nextn);
   const expertCount = moe ? moe.expertCount : 0;
   const expertUsed = moe ? moe.expertUsedCount : 0;
   const expertFrac = expertCount > 0 ? expertUsed / expertCount : 0;
@@ -1233,14 +1264,24 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
   const layerExpertBytesActive = new Array(nLayers).fill(0);
   const layerExpertElemsActive = new Array(nLayers).fill(0);
   let outputBytes = 0, outputElems = 0;
+  let mtpBytes = 0, mtpElems = 0;
 
   for (const t of tensorInfos) {
     const idx = layerIndexFromTensorName(t.name);
     const elems = tensorElems(t);
     const bytes = elems * tensorBpe(t);
-    if (idx < 0 || idx >= nLayers) {
+    if (idx < 0) {
+      // Global / output-pool tensors (token_embd, output, output_norm, ...).
       outputBytes += bytes;
       outputElems += elems;
+      continue;
+    }
+    if (idx >= nLayers) {
+      // MTP / nextn block — loaded weights, not on the per-token decode path.
+      // Tracked separately so the UI can surface MTP VRAM cost, and so the
+      // perf model doesn't bill them into the per-token output stream.
+      mtpBytes += bytes;
+      mtpElems += elems;
       continue;
     }
     layerBytes[idx] += bytes;
@@ -1278,6 +1319,7 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
     layerExpertBytesActive, layerExpertElemsActive,
     kvBytesPerLayer, recurrentBytesPerLayer,
     outputBytes, outputElems,
+    mtpBytes, mtpElems,
     hasExperts: expertCount > 0,
   };
 }
@@ -1311,7 +1353,7 @@ export function computeOffloadSplit({
 }) {
   const {
     nLayers, kvBytesPerLayer, recurrentBytesPerLayer, outputBytes,
-    layerNonExpertBytes, layerExpertBytesFull,
+    layerNonExpertBytes, layerExpertBytesFull, mtpBytes = 0,
   } = footprint;
 
   const modes = new Array(nLayers).fill('cpu');
@@ -1364,7 +1406,9 @@ export function computeOffloadSplit({
     };
   }
 
-  const reserved = outputBytes + activationBytes;
+  // MTP weights (when present) are loaded into VRAM by llama.cpp alongside the
+  // output pool — reserve their bytes before offloading per-layer weights.
+  const reserved = outputBytes + mtpBytes + activationBytes;
   const hasExperts = footprint.hasExperts;
 
   if (!hasExperts) {
@@ -1473,7 +1517,7 @@ export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, 
 export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nLayerOverride, cpuMoe = false, nCpuMoe = 0, unifiedMemory = false }) {
   const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe, unifiedMemory });
 
-  let actualVram = footprint.outputBytes + activationBytes;
+  let actualVram = footprint.outputBytes + (footprint.mtpBytes || 0) + activationBytes;
   let actualRam = 0;
 
   const rB = footprint.recurrentBytesPerLayer || 0;
