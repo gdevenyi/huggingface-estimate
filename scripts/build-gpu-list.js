@@ -155,14 +155,16 @@ for (let r = 1; r < rows.length; r++) {
   const hasTensor = !!row[COL['Render Config__Tensor Cores']];
 
   // Effective FP16 rate for LLM inference (tensor-core path when available).
-  // On consumer NVIDIA the CSV's FP16 column often reports the 1:64 "shader"
-  // rate, which is meaningless for llama.cpp. Prefer BF16 (populated for
-  // data-center cards), else FP16 when plausibly tensor-core (≥ 2× FP32),
-  // else fall back to FP32 × 2 as an approximation of tensor-core FP16.
+  // Data-center cards (A100, H100, B200, etc.) use tensor cores for FP16,
+  // so FP16 is 2x-16x FP32 — captured by the BF16 column when populated.
+  // Turing/Volta cards (RTX 20-series, GTX 16-series, TITAN RTX/V/Xp,
+  // Quadro RTX/T/GP) use FP16 cores for 2x FP32. But consumer GeForce
+  // RTX 30/40/50-series and professional Ampere/Ada cards do NOT use
+  // tensor cores for FP16, so FP16 = FP32.
   let fp16;
   if (bf16 && bf16 > 0) fp16 = bf16;
-  else if (fp16Raw && fp32 && fp16Raw >= fp32 * 1.5) fp16 = fp16Raw;
-  else if (fp32) fp16 = fp32 * 2;
+  else if (fp16Raw && fp32 && fp16Raw >= fp32 * 1.5 && /RTX [2]0|GTX 1[6]|TITAN [RVXx]|Quadro [RTG]/i.test(name)) fp16 = fp16Raw;
+  else if (fp32) fp16 = fp32;
   else fp16 = fp16Raw;
 
   if (!memBwGBps || !fp16) continue;  // unusable for throughput estimate
