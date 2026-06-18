@@ -125,6 +125,11 @@ export const BPE = {
   ISO4_0: 68 / 128,
   // llama.cpp-tq3 KV cache quantization (string key for KV_VALID_QUANTS dropdown)
   TQ3_0: 14 / 32,
+  // llama.cpp-tq3 additional KV cache types (numeric IDs; BPE differs from
+  // turboquant's string-keyed TURBO3_0/TURBO4_0 — tq3 uses QK=32 for TURBO3_0,
+  // giving 14/32 vs turboquant's 50/128. TURBO4_0 happens to match at 68/128.)
+  201: 14 / 32,  // TURBO3_0 (tq3)
+  202: 68 / 128, // TURBO4_0 (tq3)
 };
 
 // Quantization type names for display
@@ -218,16 +223,22 @@ const ROTORQUANT_QUANT_NAMES = {
 };
 Object.assign(QUANT_NAMES, ROTORQUANT_QUANT_NAMES);
 export const TQ3_QUANT_NAMES = {
+  42: 'Q1_0 (tq3)',
   44: 'TQ3_1S (tq3)',
   45: 'TQ3_1S (tq3)',
   46: 'TQ3_4S (tq3)',
   200: 'TQ3_0 (tq3 KV)',
 };
 QUANT_NAMES[200] = 'TQ3_0 (tq3 KV)';
+QUANT_NAMES[201] = 'TURBO3_0 (tq3 KV)';
+QUANT_NAMES[202] = 'TURBO4_0 (tq3 KV)';
 
 // BPE overrides applied when fork detection identifies a llama.cpp-tq3 model.
 // IDs 44, 45, 46 collide with turboquant (TURBO4_0 / TQ3_1S / TQ4_1S).
+// ID 42 (Q1_0, 18/128) is a tq3-exclusive weight type that also collides with
+// turboquant's TURBO2_0 KV type — detection in parsing.js must resolve tq3 first.
 export const TQ3_FORK_BPE = {
+  42: 18 / 128,  // Q1_0 (tq3 weight type, 1.125 bpw)
   44: 16 / 32,
   45: 16 / 32,
   46: 16 / 32,
@@ -339,6 +350,34 @@ function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
     headDimV: 0,
     totalHeadsKV: n_layer_kv * (kv_lora_rank + n_rot),
     avgHeadsKV: kv_lora_rank + n_rot,
+  };
+}
+
+// ── T5 encoder-decoder KV cache ──
+// The decoder has two KV stores per layer: self-attention (grows with generated
+// tokens) and cross-attention over the encoder output (fixed once the prompt is
+// encoded). The encoder itself is bidirectional and has no KV cache. We assume
+// the encoder output length equals ctxSize (the estimator treats ctx as the full
+// sequence budget), so cross-attn doubles the per-layer decoder KV. decoder layer
+// count comes from `decoder_block_count` (defaults to `block_count` when absent,
+// matching t5.cpp:12). See resources/llama.cpp/src/models/t5.cpp:55-57.
+function t5KvCache(meta, ctxSize, kvTypeK, kvTypeV) {
+  const arch = meta['general.architecture'];
+  const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
+  const headDimK = getMeta(meta, `${arch}.attention.key_length`) || getMeta(meta, `${arch}.embedding_length`);
+  const headDimV = getMeta(meta, `${arch}.attention.value_length`) || headDimK;
+  const n_block = getMeta(meta, `${arch}.block_count`);
+  const dec_n_layer = getMeta(meta, `${arch}.decoder_block_count`) || n_block;
+  // self-attn KV + cross-attn KV (both scale with ctxSize under our assumption)
+  const totalElemsK = 2 * dec_n_layer * n_head_kv * headDimK * ctxSize;
+  const totalElemsV = 2 * dec_n_layer * n_head_kv * headDimV * ctxSize;
+  return {
+    bytesK: totalElemsK * (BPE[kvTypeK] || 0),
+    bytesV: totalElemsV * (BPE[kvTypeV] || 0),
+    layers: n_block,
+    headDimK, headDimV,
+    totalHeadsKV: 2 * dec_n_layer * n_head_kv,
+    avgHeadsKV: 2 * n_head_kv,
   };
 }
 
@@ -890,13 +929,128 @@ export const ARCHITECTURES = {
     }),
     tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*altup_router*'], shared: ['*per_layer_*', '*altup_*'] },
   },
+
+  // ── Cohere2 MoE: ISWA (denseFirst) + leading-dense MoE + MTP + shared experts ──
+  // Mirrors afmoe plus the MTP effectiveLayers hook. set_swa_pattern(N, true)
+  // in cohere2moe.cpp:33 makes the first layer of each SWA period dense.
+  cohere2moe: {
+    name: 'cohere2moe',
+    categories: ['transformer', 'moe', 'iswa'],
+    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, {
+      iswa: true, swaPeriodDefault: 4, denseFirst: true,
+      effectiveLayers: (meta, n_block) => n_block - getMeta(meta, `${meta['general.architecture']}.nextn_predict_layers`),
+    }),
+    activations: leadingDenseActivations,
+    moe: moeShexpOnly,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
+  // ── Explicit registrations for remaining llama.cpp architectures ──
+  // These are served correctly by the llama handler triple below; registering
+  // them removes the unknown-architecture console warning and documents that
+  // they have been audited against resources/llama.cpp/src/models/<arch>.cpp.
+  // Grouped by family. All are standard causal transformers unless noted.
+
+  // Legacy / classic decoder-only transformers (vanilla; llama fallback is exact)
+  falcon:        { name: 'falcon',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gpt2:          { name: 'gpt2',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gptj:          { name: 'gptj',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gptneox:       { name: 'gptneox',       categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  mpt:           { name: 'mpt',           categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  baichuan:      { name: 'baichuan',      categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  starcoder:     { name: 'starcoder',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  starcoder2:    { name: 'starcoder2',    categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  refact:        { name: 'refact',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  bloom:         { name: 'bloom',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  stablelm:      { name: 'stablelm',      categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  qwen:          { name: 'qwen',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  phi2:          { name: 'phi2',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  plamo:         { name: 'plamo',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  codeshell:     { name: 'codeshell',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  orion:         { name: 'orion',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  internlm2:     { name: 'internlm2',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gemma:         { name: 'gemma',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  xverse:        { name: 'xverse',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'command-r':   { name: 'command-r',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  olmo:          { name: 'olmo',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  openelm:       { name: 'openelm',       categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  chatglm:       { name: 'chatglm',       categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  bitnet:        { name: 'bitnet',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  jais:          { name: 'jais',          categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  jais2:         { name: 'jais2',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  nemotron:      { name: 'nemotron',      categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  exaone:        { name: 'exaone',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  chameleon:     { name: 'chameleon',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  arcee:         { name: 'arcee',         categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'pangu-embedded': { name: 'pangu-embedded', categories: ['embedding'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'llama-embed': { name: 'llama-embed',   categories: ['embedding'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  maincoder:     { name: 'maincoder',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  talkie:        { name: 'talkie',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  cogvlm:        { name: 'cogvlm',        categories: ['transformer', 'vl'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  paddleocr:     { name: 'paddleocr',     categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // hunyuan_vl is a dense VLM (reuses hunyuan-dense graph in llama.cpp); llama fallback is exact
+  hunyuan_vl:    { name: 'hunyuan_vl',    categories: ['transformer', 'vl'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // eagle3 is a 1-layer speculative draft head; it has a real self-attention KV cache
+  eagle3:        { name: 'eagle3',        categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // arctic: dense + routed MoE per layer (outputs added). The llama fallback
+  // counts both the dense ffn_* and the _exps. tensors as resident weights
+  // (correct) and the expert activation; it omits the parallel dense-FFN
+  // activation term (~0.5 MB on the 10B model, negligible).
+  arctic:        { name: 'arctic',        categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // minicpm / refact have an optional MoE branch (dense when n_expert==0);
+  // llamaMoe + buildActivations handle both branches correctly via the
+  // expert_count>0 check.
+  minicpm:       { name: 'minicpm',       categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // Mellum: optional SWA (reads sliding_window; swa_type only set when present).
+  // Register with iswa so SWA layers are shrunk correctly when metadata is set;
+  // harmless (no-op) when SWA metadata is absent.
+  mellum:        { name: 'mellum',        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // ── Standard MoE (no shared experts): moeNoShared + buildActivations ──
+  olmoe:         { name: 'olmoe',         categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+  phimoe:        { name: 'phimoe',        categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared, tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] } },
+
+  // ── MoE with shared experts: moeShexpOnly + sharedExpertActivations ──
+  // granitemoe: optional shared experts (the "Shared" variant has _shexp.).
+  granitemoe:    { name: 'granitemoe',    categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: sharedExpertActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // ── T5: encoder-decoder (bespoke KV; see t5KvCache above) ──
+  t5: {
+    name: 't5',
+    categories: ['transformer', 'encdec'],
+    kvCache: t5KvCache,
+    activations: llamaActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
+  // ── gemma4-assistant: all-MTP draft head, not a standalone target ──
+  // Every layer is a nextn block (n_layer_nextn == n_layer_all), and the KV
+  // cache is shared with a parent gemma4 context via ctx_other. Standalone
+  // estimation is weights-only; registered with noKvCache to reflect that.
+  'gemma4-assistant': {
+    name: 'gemma4-assistant',
+    categories: ['transformer', 'vl', 'draft'],
+    kvCache: noKvCache,
+    activations: llamaActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
 };
 
 // ── Alias map: GGUF-returned names → registry keys ──
 export const ARCH_ALIASES = {
   'ernie4_5-moe': 'ernie4_5_moe',
-  'hunyuan-moe': 'hunyuan_moe',
-  'lfm2moe': 'lfm2_moe',
+  'hunyuan-moe':  'hunyuan_moe',
+  'lfm2moe':      'lfm2_moe',
+  // deepseek32 (DeepSeek V3.2) is structurally identical to glm-dsa: MLA +
+  // leading-dense MoE + DSA "lightning indexer" + nextn_predict_layers (MTP).
+  // Same kv class (llama_kv_cache_dsa), same hparams, same tensor names.
+  // Verified against resources/llama.cpp/src/models/deepseek32.cpp.
+  'deepseek32':   'glm-dsa',
 };
 
 // ── Get architecture handler with fallback ──

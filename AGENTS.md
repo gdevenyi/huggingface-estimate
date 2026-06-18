@@ -82,29 +82,33 @@ All tensor size calculations go through `tensorBpe(t)` which checks for a per-te
 
 ## Fork-aware BPE overrides
 
-GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` and `_nameOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
+GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). ID 42 also collides (tq3's Q1_0 weight type vs turboquant's TURBO2_0 KV type). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` and `_nameOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
 
 **Detection heuristics** (first match wins):
-1. Any tensor with dtype 200, or `general.file_type == 200` or `45` → tq3 fork
-2. Any tensor with dtype 42 or 43 → turboquant fork (TURBO2_0/TURBO3_0 are turboquant-exclusive KV types)
+1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or `40` → tq3 fork (ftype 40 = `MOSTLY_Q1_0`; its dtype-42 tensors would otherwise collide with turboquant's TURBO2_0)
+2. Any tensor with dtype 42 or 43 → turboquant fork (only reached when no tq3 signal fired above; dtype 43 = TURBO3_0 is turboquant-exclusive, dtype 42 = TURBO2_0)
 3. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
 
 **Colliding type IDs**:
 
 | ID | Default (turboquant) | tq3 fork |
 |----|----------------------|----------|
+| 42 | TURBO2_0 (KV cache, 0.265625 BPE) | Q1_0 (weight, 0.140625 BPE = 1.125 bpw) |
 | 44 | TURBO4_0 (KV cache, 0.5313 BPE) | TQ3_1S (weight, 0.5 BPE) |
 | 45 | TQ3_1S (weight, 0.5 BPE) | TQ3_1S (weight, 0.5 BPE — same) |
 | 46 | TQ4_1S (weight, 0.625 BPE) | TQ3_4S (weight, 0.5 BPE) |
 
-ID 200 (TQ3_0, KV-only, 0.4375 BPE) is unique to the tq3 fork and does not collide.
+IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.4375 BPE), and 202 (TURBO4_0, KV, 0.53125 BPE) are unique to the tq3 fork and do not collide. Note: tq3's TURBO3_0 (ID 201, QK=32) has a different BPE than turboquant's string-keyed `TURBO3_0` (QK=128), so the numeric ID is used to avoid collision.
 
 **TQ3 fork types** (`resources/llama.cpp-tq3/`):
 | Type | ID | BPE | bpw | KV cache | Weight |
 |------|----|-----|-----|----------|--------|
+| Q1_0 | 42 | 0.140625 (18/128) | 1.125 | No | Yes |
 | TQ3_1S | 44 | 0.5 (16/32) | 4.0 | No | Yes |
 | TQ3_4S | 46 | 0.5 (16/32) | 4.0 | No | Yes |
 | TQ3_0 | 200 | 0.4375 (14/32) | 3.5 | Yes (KV-only) | No |
+| TURBO3_0 | 201 | 0.4375 (14/32) | 3.5 | Yes (KV-only) | No |
+| TURBO4_0 | 202 | 0.53125 (68/128) | 4.25 | Yes (KV-only) | No |
 
 ## Utility exports from `calculations.js`
 
@@ -119,7 +123,7 @@ ID 200 (TQ3_0, KV-only, 0.4375 BPE) is unique to the tq3 fork and does not colli
 
 ## Utility exports from `parsing.js`
 
-- `KV_VALID_QUANTS` — union of valid KV cache quantization types across all supported forks. Standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151), turboquant (TURBO2_0/3_0/4_0), rotorquant (PLANAR3_0/4_0, ISO3_0/4_0 — also includes turboquant types since rotorquant is a superset), tq3 (TQ3_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
+- `KV_VALID_QUANTS` — union of valid KV cache quantization types across all supported forks. Standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151), turboquant (TURBO2_0/3_0/4_0), rotorquant (PLANAR3_0/4_0, ISO3_0/4_0 — also includes turboquant types since rotorquant is a superset), tq3 (TQ3_0, TURBO3_0 via ID 201, TURBO4_0 via ID 202). tq3's TURBO3_0 uses a numeric ID because its BPE (14/32, QK=32) differs from turboquant's string-keyed TURBO3_0 (50/128, QK=128). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
 - `KV_FORK_GROUPS` — optgroup labels for the UI dropdown. Each fork lists all KV types it supports, excluding the 9 mainline types already shown ungrouped. Rotorquant inherits turboquant's 3 types plus its own 4.
 - `parseGGUF(url)` — parses GGUF metadata, detects fork, applies BPE/name overrides. Returns `{ metadata, tensorInfos, fork? }`.
 - `resolveHFModel(path)` — resolves HF repo/path to GGUF URLs.

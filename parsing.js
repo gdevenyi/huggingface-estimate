@@ -8,7 +8,7 @@ export { GGMLQuantizationType };
 //   ik_llama.cpp    — adds Q6_0 (133), Q8_KV (151)
 //   llama-cpp-turboquant  — adds TURBO2_0, TURBO3_0, TURBO4_0
 //   llama-cpp-rotorquant  — adds PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
-//   llama.cpp-tq3   — adds TQ3_0 (200, KV cache only)
+//   llama.cpp-tq3   — adds TQ3_0 (200, KV cache only), TURBO3_0 (201), TURBO4_0 (202)
 // Source of truth: each fork's `kv_cache_types` / `kv_cache_type_from_str`.
 export const KV_VALID_QUANTS = [
   GGMLQuantizationType.F32,
@@ -29,6 +29,8 @@ export const KV_VALID_QUANTS = [
   'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0',
   // tq3 KV cache quantizations
   'TQ3_0',
+  201,  // TURBO3_0 (tq3; numeric ID because BPE differs from turboquant's string-keyed TURBO3_0)
+  202,  // TURBO4_0 (tq3)
 ];
 
 // Fork-specific KV quant groups for UI optgroup rendering.
@@ -37,13 +39,19 @@ export const KV_FORK_GROUPS = [
   { label: 'ik_llama.cpp', quants: [133, 151] },
   { label: 'turboquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0'] },
   { label: 'rotorquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0', 'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
-  { label: 'tq3', quants: ['TQ3_0'] },
+  { label: 'tq3', quants: ['TQ3_0', 201, 202] },
 ];
 
 function detectFork(metadata, tensorInfos) {
   const ftype = Number(metadata['general.file_type'] ?? -1);
   const dtypeSet = new Set(tensorInfos.map((t) => t.dtype));
-  if (dtypeSet.has(200) || ftype === 200 || ftype === 45) return 'tq3';
+  // tq3-unique signals first: dtype 200 (TQ3_0 KV), ftype 200/45/40.
+  // ftype 40 = MOSTLY_Q1_0; its weight tensors carry dtype 42, which collides
+  // with turboquant's TURBO2_0 KV type, so tq3 must be resolved before the
+  // generic dtype-42 turboquant heuristic below.
+  if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || ftype === 40) return 'tq3';
+  // turboquant: dtype 43 (TURBO3_0 KV) is unique to turboquant; dtype 42
+  // (TURBO2_0 KV) is only reached here when no tq3 signal fired above.
   if (dtypeSet.has(42) || dtypeSet.has(43)) return 'turboquant';
   if (ftype === 43) {
     if (dtypeSet.has(44)) return 'tq3';
