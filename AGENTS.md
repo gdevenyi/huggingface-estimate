@@ -15,7 +15,11 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 
 **Import map requirement**: the `<script type="importmap">` in `index.html` must be emitted before any `<script type="module">`. Supported in Chromium ≥89, Firefox ≥108, Safari ≥16.4.
 
-**Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/`, `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
+**Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/` (upstream), `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `beellama.cpp/`, `buun-llama-cpp/`, `prism-ml-llama.cpp/`, `unslothai-llama.cpp/`, `tc-mb-llama.cpp/`, `llama-cpp-codeshell/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
+
+**Not yet implemented — novel quant types discovered in newly-cloned forks**:
+- `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 in a different arrangement than TheTom's turboquant fork — a third collision namespace requiring fork-specific detection.
+- `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary 1-bit weight type. ID 42 collides with turboquant's TURBO2_0 and tq3's Q1_0, so fork detection would need a prism-ml signal (e.g. `general.file_type` for `MOSTLY_Q2_0` or tensor dtype presence).
 
 **Tracked data**: `specs/` — GPU CSV source data used by build scripts.
 
