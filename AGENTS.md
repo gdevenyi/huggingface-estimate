@@ -17,9 +17,9 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 
 **Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/` (upstream), `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `beellama.cpp/`, `buun-llama-cpp/`, `prism-ml-llama.cpp/`, `unslothai-llama.cpp/`, `tc-mb-llama.cpp/`, `llama-cpp-codeshell/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
 
-**Not yet implemented — novel quant types discovered in newly-cloned forks**:
-- `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 in a different arrangement than TheTom's turboquant fork — a third collision namespace requiring fork-specific detection.
-- `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary 1-bit weight type. ID 42 collides with turboquant's TURBO2_0 and tq3's Q1_0, so fork detection would need a prism-ml signal (e.g. `general.file_type` for `MOSTLY_Q2_0` or tensor dtype presence).
+**Implemented — novel quant types from newly-cloned forks**:
+- `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 with QK=32 (different BPEs than TheTom's turboquant fork which uses QK=128). Detected via dtype 47 (unique to buun). KV cache types: TURBO8_0 (47), BUUN_TURBO3_TCQ, BUUN_TURBO2_TCQ.
+- `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary 1-bit weight type. BPE coincidentally matches turboquant's TURBO2_0. Detected via ftype 28 (MOSTLY_Q2_0) or ftype 41 (quant tool bug setting file_type to type ID) with dtype 42 present. Falls back to prism-ml naming when dtype 42 appears in weights without any other fork signal.
 
 **Tracked data**: `specs/` — GPU CSV source data used by build scripts.
 
@@ -90,8 +90,11 @@ GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different 
 
 **Detection heuristics** (first match wins):
 1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or `40` → tq3 fork (ftype 40 = `MOSTLY_Q1_0`; its dtype-42 tensors would otherwise collide with turboquant's TURBO2_0)
-2. Any tensor with dtype 42 or 43 → turboquant fork (only reached when no tq3 signal fired above; dtype 43 = TURBO3_0 is turboquant-exclusive, dtype 42 = TURBO2_0)
-3. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
+2. `general.file_type == 28` (MOSTLY_Q2_0), or ftype 41 with dtype 42 present → prism-ml fork (some prism-ml quant tools set file_type to the type ID 41 instead of the ftype 28)
+3. Any tensor with dtype 47 (TURBO8_0) → buun fork (unique to buun)
+4. Any tensor with dtype 45 or 46 (TQ3_1S/TQ4_1S weight types) → turboquant fork (TheTom). Note: turboquant's IDs 42/43/44 are KV cache types that never appear in model weights, so detection is based on weight types 45/46 only.
+5. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
+6. Fallback: dtype 42 in weights without any fork-specific signal → prism-ml (Q2_0 BPE 34/128 matches the default BPE[42])
 
 **Colliding type IDs**:
 

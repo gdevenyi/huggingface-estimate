@@ -112,6 +112,14 @@ export const BPE = {
   // turboquant weight quantization (numeric IDs from llama-cpp-turboquant ggml.h)
   45: 16 / 32, // TQ3_1S
   46: 20 / 32, // TQ4_1S
+  // Default BPE for colliding IDs 42/43 when no fork is detected. These IDs
+  // appear in tensorInfos (model weights) from tq3 (Q1_0/TQ3_1S), prism-ml
+  // (Q2_0), or buun (TURBO3_0/TURBO4_0). When fork detection succeeds, the
+  // fork-specific override maps take precedence. The defaults below match
+  // turboquant's string-keyed values (34/128, 50/128), which coincidentally
+  // equal prism-ml's Q2_0 BPE — the most common undetected case.
+  42: 34 / 128, // default (prism-ml Q2_0 / turboquant TURBO2_0)
+  43: 50 / 128, // default (turboquant TURBO3_0)
   // turboquant KV cache quantization (string keys used by KV_VALID_QUANTS dropdown)
   TQ3_1S: 16 / 32,
   TQ4_1S: 20 / 32,
@@ -130,6 +138,13 @@ export const BPE = {
   // giving 14/32 vs turboquant's 50/128. TURBO4_0 happens to match at 68/128.)
   201: 14 / 32,  // TURBO3_0 (tq3)
   202: 68 / 128, // TURBO4_0 (tq3)
+  // buun-llama-cpp unique type (ID 47 is unique to buun; IDs 42-46 collide and
+  // are handled via BUUN_FORK_BPE overrides at parse time)
+  47: 130 / 128, // TURBO8_0 (buun)
+  // buun-llama-cpp KV cache quantization (string keys for KV_VALID_QUANTS dropdown;
+  // use BUUN_ prefix because numeric IDs 45/46 collide with TheTom's TQ3_1S/TQ4_1S)
+  BUUN_TURBO3_TCQ: 52 / 128,
+  BUUN_TURBO2_TCQ: 36 / 128,
 };
 
 // Quantization type names for display
@@ -232,6 +247,9 @@ export const TQ3_QUANT_NAMES = {
 QUANT_NAMES[200] = 'TQ3_0 (tq3 KV)';
 QUANT_NAMES[201] = 'TURBO3_0 (tq3 KV)';
 QUANT_NAMES[202] = 'TURBO4_0 (tq3 KV)';
+QUANT_NAMES[47] = 'TURBO8_0 (buun)';
+QUANT_NAMES['BUUN_TURBO3_TCQ'] = 'TURBO3_TCQ (buun)';
+QUANT_NAMES['BUUN_TURBO2_TCQ'] = 'TURBO2_TCQ (buun)';
 
 // BPE overrides applied when fork detection identifies a llama.cpp-tq3 model.
 // IDs 44, 45, 46 collide with turboquant (TURBO4_0 / TQ3_1S / TQ4_1S).
@@ -243,6 +261,37 @@ export const TQ3_FORK_BPE = {
   45: 16 / 32,
   46: 16 / 32,
   200: 14 / 32,
+};
+
+// BPE overrides for buun-llama-cpp fork. buun uses IDs 42-46 with different
+// type assignments AND different BPEs than TheTom's turboquant fork, because
+// buun uses QK_TURBO2=32 and QK_TURBO3=32 (vs TheTom's QK=128 for all).
+// Detection: dtype 47 (TURBO8_0) is unique to buun.
+export const BUUN_FORK_BPE = {
+  42: 14 / 32,   // TURBO3_0 (buun; QK_TURBO3=32 → 14/32 vs TheTom's 50/128)
+  43: 66 / 128,  // TURBO4_0 (buun; 66/128 vs TheTom's 68/128)
+  44: 10 / 32,   // TURBO2_0 (buun; QK_TURBO2=32 → 10/32 vs TheTom's 34/128)
+  45: 52 / 128,  // TURBO3_TCQ (buun; unique type, collides with TheTom's TQ3_1S at 16/32)
+  46: 36 / 128,  // TURBO2_TCQ (buun; unique type, collides with TheTom's TQ4_1S at 20/32)
+};
+export const BUUN_QUANT_NAMES = {
+  42: 'TURBO3_0 (buun)',
+  43: 'TURBO4_0 (buun)',
+  44: 'TURBO2_0 (buun)',
+  45: 'TURBO3_TCQ (buun)',
+  46: 'TURBO2_TCQ (buun)',
+  47: 'TURBO8_0 (buun)',
+};
+
+// BPE overrides for prism-ml-llama.cpp fork (PrismML/Bonsai).
+// Q2_0 (ID 42) has BPE 34/128 — coincidentally the same as TheTom's TURBO2_0,
+// so byte counts are correct even without detection. The override exists to
+// stamp the correct display name. Detection: ftype 28 (MOSTLY_Q2_0) is unique.
+export const PRISM_ML_FORK_BPE = {
+  42: 34 / 128,  // Q2_0 (prism-ml; same BPE as TheTom's TURBO2_0)
+};
+export const PRISM_ML_QUANT_NAMES = {
+  42: 'Q2_0 (prism-ml)',
 };
 
 // ── Tensor size helpers ──
@@ -1034,6 +1083,27 @@ export const ARCHITECTURES = {
   'gemma4-assistant': {
     name: 'gemma4-assistant',
     categories: ['transformer', 'vl', 'draft'],
+    kvCache: noKvCache,
+    activations: llamaActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
+  // ── DFlash: cross-attention speculative decoding (beellama.cpp / buun-llama-cpp) ──
+  // Both dflash and dflash-draft get res=nullptr in llama-model.cpp:2013-2016
+  // (no autoregressive KV cache). DFlash uses cross-attention to the target
+  // model's hidden states via a ring buffer, not standard KV.
+  dflash: {
+    name: 'dflash',
+    categories: ['transformer', 'draft'],
+    kvCache: noKvCache,
+    activations: llamaActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+  'dflash-draft': {
+    name: 'dflash-draft',
+    categories: ['transformer', 'draft'],
     kvCache: noKvCache,
     activations: llamaActivations,
     moe: llamaMoe,

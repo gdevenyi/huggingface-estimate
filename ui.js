@@ -285,6 +285,7 @@ function resetConfig() {
   currentGGUFUrl = null;
   currentMetadata = null;
   currentTensorInfos = null;
+  currentFork = null;
   resetMmProjState();
 }
 
@@ -330,6 +331,7 @@ for (const el of [cpuFlopsEl, ramBwEl]) {
 let currentGGUFUrl = null;
 let currentMetadata = null;
 let currentTensorInfos = null;
+let currentFork = null;
 let currentMmProjUrl = null;
 let currentMmProjMetadata = null;
 let currentMmProjTensorInfos = null;
@@ -352,6 +354,7 @@ async function doParseGGUF(url) {
     const result = await parseGGUF(url);
     currentMetadata = result.metadata;
     currentTensorInfos = result.tensorInfos;
+    currentFork = result.fork || null;
 
     loadingEl.classList.remove('visible');
     resultsEl.classList.add('visible');
@@ -360,6 +363,7 @@ async function doParseGGUF(url) {
     loadingEl.classList.remove('visible');
     readyState.classList.remove('hidden');
     resultsEl.classList.remove('visible');
+    currentFork = null;
     showError(err.message);
   }
 }
@@ -377,6 +381,7 @@ async function doResolveHFModel(path) {
   resetMmProjState();
   currentMetadata = null;
   currentTensorInfos = null;
+  currentFork = null;
   resolveBtn.disabled = true;
 
   try {
@@ -463,7 +468,10 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
   const mtpBadge = nextn > 0
     ? `<span class="status-badge mtp" title="Multi-Token Prediction: ${nextn} trailing layer${nextn > 1 ? 's' : ''} loaded for speculative decoding, skipped by main decoder">MTP</span>`
     : '';
-  archBadge.innerHTML = denseOrMoeBadge + mtpBadge;
+  const forkBadge = currentFork
+    ? `<span class="status-badge fork fork-${currentFork}" title="Quantization fork detected: ${currentFork}. BPE overrides applied to match fork-specific type assignments.">${currentFork}</span>`
+    : '';
+  archBadge.innerHTML = denseOrMoeBadge + mtpBadge + forkBadge;
 
   modelInfoGrid.textContent = '';
 
@@ -869,6 +877,17 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
 
 function renderResults() {
   if (!currentMetadata || !currentTensorInfos) return;
+
+  const forkHintEl = $('#forkHint');
+  if (currentFork && forkHintEl) {
+    const forkKvTypes = KV_FORK_GROUPS.find(g => g.label === currentFork);
+    const hasKvTypes = forkKvTypes && forkKvTypes.quants.length > 0;
+    forkHintEl.innerHTML = `<strong>${currentFork}</strong> fork detected &mdash; weight BPE overrides applied.${hasKvTypes ? ` Use the <strong>${currentFork}</strong> KV cache types below for this fork.` : ''}`;
+    forkHintEl.className = `fork-hint fork-${currentFork}`;
+    forkHintEl.style.display = '';
+  } else if (forkHintEl) {
+    forkHintEl.style.display = 'none';
+  }
 
   const arch = getModelArch(currentMetadata);
   const handler = getArchHandler(arch);

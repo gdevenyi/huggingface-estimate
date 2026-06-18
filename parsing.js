@@ -1,5 +1,9 @@
 import { gguf, ggufAllShards, GGMLQuantizationType } from '@huggingface/gguf';
-import { TQ3_FORK_BPE, TQ3_QUANT_NAMES } from './calculations.js';
+import {
+  TQ3_FORK_BPE, TQ3_QUANT_NAMES,
+  BUUN_FORK_BPE, BUUN_QUANT_NAMES,
+  PRISM_ML_FORK_BPE, PRISM_ML_QUANT_NAMES,
+} from './calculations.js';
 
 export { GGMLQuantizationType };
 
@@ -9,6 +13,8 @@ export { GGMLQuantizationType };
 //   llama-cpp-turboquant  — adds TURBO2_0, TURBO3_0, TURBO4_0
 //   llama-cpp-rotorquant  — adds PLANAR3_0, PLANAR4_0, ISO3_0, ISO4_0
 //   llama.cpp-tq3   — adds TQ3_0 (200, KV cache only), TURBO3_0 (201), TURBO4_0 (202)
+//   buun-llama-cpp  — adds TURBO8_0 (47), TURBO3_TCQ (45 buun), TURBO2_TCQ (46 buun)
+//   prism-ml-llama.cpp — no KV-specific types (Q2_0 is weight-only)
 // Source of truth: each fork's `kv_cache_types` / `kv_cache_type_from_str`.
 export const KV_VALID_QUANTS = [
   GGMLQuantizationType.F32,
@@ -31,6 +37,10 @@ export const KV_VALID_QUANTS = [
   'TQ3_0',
   201,  // TURBO3_0 (tq3; numeric ID because BPE differs from turboquant's string-keyed TURBO3_0)
   202,  // TURBO4_0 (tq3)
+  // buun-llama-cpp KV cache quantizations
+  47,   // TURBO8_0 (unique to buun)
+  'BUUN_TURBO3_TCQ',  // ID 45 in buun (collides with TQ3_1S in other forks)
+  'BUUN_TURBO2_TCQ',  // ID 46 in buun (collides with TQ4_1S in other forks)
 ];
 
 // Fork-specific KV quant groups for UI optgroup rendering.
@@ -40,6 +50,7 @@ export const KV_FORK_GROUPS = [
   { label: 'turboquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0'] },
   { label: 'rotorquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0', 'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
   { label: 'tq3', quants: ['TQ3_0', 201, 202] },
+  { label: 'buun', quants: [47, 'BUUN_TURBO3_TCQ', 'BUUN_TURBO2_TCQ'] },
 ];
 
 function detectFork(metadata, tensorInfos) {
@@ -50,13 +61,28 @@ function detectFork(metadata, tensorInfos) {
   // with turboquant's TURBO2_0 KV type, so tq3 must be resolved before the
   // generic dtype-42 turboquant heuristic below.
   if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || ftype === 40) return 'tq3';
-  // turboquant: dtype 43 (TURBO3_0 KV) is unique to turboquant; dtype 42
-  // (TURBO2_0 KV) is only reached here when no tq3 signal fired above.
-  if (dtypeSet.has(42) || dtypeSet.has(43)) return 'turboquant';
+  // prism-ml: ftype 28 (MOSTLY_Q2_0) is the canonical signal. Some prism-ml
+  // quant tools set file_type to the type ID (41) instead of the ftype (28),
+  // so also check: dtype 42 present (Q2_0 weight) without any tq3 signal above.
+  if (ftype === 28 || (dtypeSet.has(42) && ftype === 41)) return 'prism-ml';
+  // buun: dtype 47 (TURBO8_0) is unique to buun. Must be detected before the
+  // generic dtype-42/43 turboquant check because buun uses IDs 42-46 with
+  // different type assignments and BPEs than TheTom's turboquant fork.
+  if (dtypeSet.has(47)) return 'buun';
+  // turboquant (TheTom): its IDs 42/43/44 are KV cache types that never appear
+  // in model weights (tensorInfos). Detection is based on weight types 45/46
+  // (TQ3_1S/TQ4_1S) when no other fork signal fired. A plain dtype-42 in
+  // tensorInfos without tq3/prism-ml/buun signals defaults to prism-ml naming
+  // (handled by the default BPE[42] = 34/128 and PRISM_ML_QUANT_NAMES fallback).
+  if (dtypeSet.has(45) || dtypeSet.has(46)) return 'turboquant';
   if (ftype === 43) {
     if (dtypeSet.has(44)) return 'tq3';
     if (dtypeSet.has(45)) return 'turboquant';
   }
+  // Fallback: dtype 42 present without any fork-specific signal → prism-ml
+  // (its Q2_0 BPE 34/128 matches the default BPE[42], so byte counts are right
+  // regardless; the fork label just provides the correct display name).
+  if (dtypeSet.has(42)) return 'prism-ml';
   return null;
 }
 
@@ -66,6 +92,20 @@ function applyForkOverrides(tensorInfos, fork) {
       if (TQ3_FORK_BPE[t.dtype] !== undefined) {
         t._bpeOverride = TQ3_FORK_BPE[t.dtype];
         t._nameOverride = TQ3_QUANT_NAMES[t.dtype];
+      }
+    }
+  } else if (fork === 'buun') {
+    for (const t of tensorInfos) {
+      if (BUUN_FORK_BPE[t.dtype] !== undefined) {
+        t._bpeOverride = BUUN_FORK_BPE[t.dtype];
+        t._nameOverride = BUUN_QUANT_NAMES[t.dtype];
+      }
+    }
+  } else if (fork === 'prism-ml') {
+    for (const t of tensorInfos) {
+      if (PRISM_ML_FORK_BPE[t.dtype] !== undefined) {
+        t._bpeOverride = PRISM_ML_FORK_BPE[t.dtype];
+        t._nameOverride = PRISM_ML_QUANT_NAMES[t.dtype];
       }
     }
   }
