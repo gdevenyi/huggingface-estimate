@@ -1109,6 +1109,51 @@ export const ARCHITECTURES = {
     moe: llamaMoe,
     tensorGroups: LLAMA_TENSOR_GROUPS,
   },
+
+  // ── ik_llama.cpp-specific architectures ──
+
+  // bitnet-25 / bitnet-b1.58: dense ternary-weight transformers (I2_S quants).
+  // Both share the same graph (build_bitnet_158); vanilla causal LM with standard
+  // KV cache and GQA. The I2_S BPE (ID 36) is already in the base BPE object.
+  'bitnet-25':    { name: 'bitnet-25',    categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'bitnet-b1.58': { name: 'bitnet-b1.58', categories: ['transformer'], kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+
+  // gemma4_mtp: MTP assistant/draft head for gemma4. Reuses the target model's
+  // frozen KV cache (build_gemma4.cpp:640-643) rather than allocating its own.
+  // Standalone estimation is weights-only, matching gemma4-assistant / eagle3.
+  gemma4_mtp: {
+    name: 'gemma4_mtp',
+    categories: ['transformer', 'draft'],
+    kvCache: noKvCache,
+    activations: buildActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
+  // laguna: ISWA + MoE with shared experts (separate FFN dim via
+  // expert_shared_feed_forward_length). Shares create_step35_tensors.
+  // leading_dense_block_count defaults to 0 (all-MoE); if a real GGUF sets it
+  // >0, the leadingDenseActivations split would be needed instead.
+  laguna: {
+    name: 'laguna',
+    categories: ['transformer', 'moe', 'iswa'],
+    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }),
+    activations: sharedExpertActivations,
+    moe: moeShexpOnly,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
+  // minimax-m3: leading-dense MoE with shared experts (n_ff_exp * n_shared,
+  // not a separate shared FFN dim). Structurally "deepseek2 minus MLA".
+  // Mirrors dots1 / hunyuan_moe / bailingmoe (leading-dense + shexp, no MLA).
+  'minimax-m3': {
+    name: 'minimax-m3',
+    categories: ['transformer', 'moe'],
+    kvCache: llamaKvCache,
+    activations: leadingDenseActivations,
+    moe: moeShexpOnly,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
 };
 
 // ── Alias map: GGUF-returned names → registry keys ──
@@ -1121,6 +1166,9 @@ export const ARCH_ALIASES = {
   // Same kv class (llama_kv_cache_dsa), same hparams, same tensor names.
   // Verified against resources/llama.cpp/src/models/deepseek32.cpp.
   'deepseek32':   'glm-dsa',
+  // ik_llama.cpp uses underscore GGUF strings where upstream uses hyphen/no-sep
+  'cohere2_moe':  'cohere2moe',
+  'gemma4_assistant': 'gemma4-assistant',
 };
 
 // ── Get architecture handler with fallback ──
