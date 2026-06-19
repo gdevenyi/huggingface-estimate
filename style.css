@@ -11,7 +11,37 @@
   --green: #3fb950;
   --yellow: #d29922;
   --red: #f85149;
+
+  /* Spacing scale. Use these instead of raw px values where the magnitude
+   * belongs to the design system (not arbitrary layout one-offs). */
+  --space-1: 4px;
+  --space-2: 6px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-7: 24px;
+  --space-8: 32px;
+  --space-9: 48px;
+
+  /* Type scale. Replace raw `font-size: 0.Xrem` declarations with the
+   * matching token wherever the size carries semantic meaning (label,
+   * caption, body, title). */
+  --fs-xs: 0.7rem;    /* hint text, table cells */
+  --fs-sm: 0.75rem;   /* captions, badges */
+  --fs-md: 0.8rem;    /* form labels, panel titles */
+  --fs-md-2: 0.85rem; /* status text, secondary body */
+  --fs-base: 0.875rem;/* default body text */
+  --fs-lg: 1rem;      /* headings, primary text */
+  --fs-xl: 1.5rem;    /* h1 */
+
+  /* Radii */
   --radius: 8px;
+  --radius-sm: 6px;
+
+  /* Layout breakpoints */
+  --bp-mobile: 960px;
+  --container-max: 1280px;
 }
 
 body {
@@ -22,8 +52,25 @@ body {
   min-height: 100vh;
 }
 
+/* Keyboard-accessible skip link. Hidden by default; visible on focus. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  padding: 8px 16px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 0 0 6px 0;
+  z-index: 1000;
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+
 .container {
-  max-width: 1280px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 24px 16px;
 }
@@ -54,7 +101,7 @@ h1 {
   overflow-y: auto;
 }
 
-@media (max-width: 960px) {
+@media (max-width: var(--bp-mobile)) {
   .grid { grid-template-columns: 1fr; }
   .grid > div:first-child {
     position: static;
@@ -109,7 +156,7 @@ input[type="text"], input[type="number"], select {
   padding: 8px 10px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.875rem;
   outline: none;
@@ -120,6 +167,13 @@ input:focus, select:focus {
   border-color: var(--accent);
 }
 
+/* Visible focus for keyboard users on buttons (previously had no focus styling). */
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 input[type="text"] { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8rem; }
 
 button {
@@ -127,7 +181,7 @@ button {
   background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -170,7 +224,7 @@ button.reset-btn:hover {
 
 .info-item {
   background: var(--bg);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 8px 10px;
 }
 
@@ -193,7 +247,8 @@ button.reset-btn:hover {
 .results { display: none; }
 .results.visible { display: block; }
 
-.result-section { margin-bottom: 16px; }
+/* Spacing between consecutive result panels. Replaces 7× `style="margin-top:12px"`. */
+.panel-gap { margin-top: 12px; }
 
 .result-row {
   display: flex;
@@ -229,27 +284,30 @@ button.reset-btn:hover {
 
 /* VRAM bar */
 
-.vram-bar-container {
+.usage-bar-container {
   background: var(--bg);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   height: 28px;
   overflow: hidden;
   position: relative;
   margin: 8px 0;
 }
 
-.vram-bar {
+.usage-bar {
   height: 100%;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   transition: width 0.3s ease;
   min-width: 2px;
 }
 
-.vram-bar.green { background: var(--green); }
-.vram-bar.yellow { background: var(--yellow); }
-.vram-bar.red { background: var(--red); }
+.usage-bar.green { background: var(--green); }
+.usage-bar.yellow { background: var(--yellow); }
+.usage-bar.red { background: var(--red); }
+/* Dark text on the yellow bar for AA contrast (#fff on #d29922 is ~2.4:1).
+   The .usage-text element is a sibling immediately after the bar. */
+.usage-bar.yellow + .usage-text { color: #1b1b1b; text-shadow: 0 1px 2px rgba(255,255,255,0.4); }
 
-.vram-text {
+.usage-text {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -261,15 +319,15 @@ button.reset-btn:hover {
   white-space: nowrap;
 }
 
-.vram-status {
+.usage-status {
   font-size: 0.85rem;
   font-weight: 500;
   margin-top: 4px;
 }
 
-.vram-status.green { color: var(--green); }
-.vram-status.yellow { color: var(--yellow); }
-.vram-status.red { color: var(--red); }
+.usage-status.green { color: var(--green); }
+.usage-status.yellow { color: var(--yellow); }
+.usage-status.red { color: var(--red); }
 
 /* Quant table */
 .quant-table {
@@ -303,7 +361,7 @@ button.reset-btn:hover {
 /* MoE */
 .moe-section {
   background: var(--bg);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   margin: 8px 0;
   border-left: 3px solid var(--yellow);
@@ -345,7 +403,7 @@ button.reset-btn:hover {
 .error-msg {
   background: rgba(248, 81, 73, 0.1);
   border: 1px solid var(--red);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   padding: 10px 12px;
   color: var(--red);
   font-size: 0.85rem;
@@ -354,26 +412,6 @@ button.reset-btn:hover {
 }
 
 .error-msg.visible { display: block; }
-
-/* Checkbox */
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.checkbox-group input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-}
-
-.checkbox-group label {
-  font-size: 0.85rem;
-  color: var(--text);
-  cursor: pointer;
-}
 
 /* Select group */
 .select-group {
@@ -408,7 +446,6 @@ button.reset-btn:hover {
 
 /* Fork detection badge variants */
 .status-badge.fork { background: rgba(63, 185, 80, 0.15); color: var(--green); }
-.status-badge.fork-tq3 { background: rgba(63, 185, 80, 0.15); color: var(--green); }
 .status-badge.fork-turboquant { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
 .status-badge.fork-buun { background: rgba(255, 140, 0, 0.18); color: #ff8c00; }
 .status-badge.fork-prism-ml { background: rgba(163, 113, 247, 0.18); color: #d2a8ff; }
@@ -418,12 +455,11 @@ button.reset-btn:hover {
   font-size: 0.75rem;
   padding: 6px 10px;
   margin-bottom: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border-left: 3px solid var(--green);
   background: rgba(63, 185, 80, 0.08);
   color: var(--green);
 }
-.fork-hint.fork-tq3 { border-left-color: var(--green); background: rgba(63, 185, 80, 0.08); color: var(--green); }
 .fork-hint.fork-turboquant { border-left-color: var(--yellow); background: rgba(210, 153, 34, 0.08); color: var(--yellow); }
 .fork-hint.fork-buun { border-left-color: #ff8c00; background: rgba(255, 140, 0, 0.08); color: #ff8c00; }
 .fork-hint.fork-prism-ml { border-left-color: #d2a8ff; background: rgba(163, 113, 247, 0.08); color: #d2a8ff; }
@@ -447,13 +483,24 @@ button.reset-btn:hover {
 .empty-state p { font-size: 0.9rem; }
 
 /* Hidden */
+/* Visibility utilities. Two coexisting patterns (deliberate):
+ *   `.hidden`            — always hides (display: none !important). Wins over
+ *                          any other display rule. Use for runtime show/hide
+ *                          toggles via classList.add/remove('hidden').
+ *   `.foo.visible`       — inverse pattern for elements that default to
+ *                          `display: none` (progressive enhancement: stay
+ *                          hidden until JS opts them in). Toggled via
+ *                          classList.add/remove('visible').
+ * The two compose: `.hidden` overrides `.visible` via !important, so an
+ * element can carry both classes safely.
+ */
 .hidden { display: none !important; }
 
 /* SlimSelect overrides */
 .ss-main {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.875rem;
   min-height: 36px;
@@ -468,7 +515,7 @@ button.reset-btn:hover {
 .ss-content {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text);
 }
 .ss-content .ss-search {
@@ -477,7 +524,7 @@ button.reset-btn:hover {
 .ss-content .ss-search input {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.85rem;
   padding: 6px 8px;

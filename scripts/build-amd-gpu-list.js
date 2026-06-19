@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { parseRowsFromPath, parseMHz, round } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_PATH = join(ROOT, 'amd-gpu-presets.json');
@@ -12,48 +13,7 @@ const PRO_CSV = join(ROOT, 'resources', 'amd', 'Compare AMD Radeon\u2122 PRO GPU
 const APU_CSV = join(ROOT, 'resources', 'amd', 'Processor Specifications.csv');
 const EMBEDDED_CSV = join(ROOT, 'resources', 'amd', 'Embedded Processor Specifications.csv');
 
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (c === '"') { inQuotes = false; }
-      else { field += c; }
-    } else {
-      if (c === '"') { inQuotes = true; }
-      else if (c === ',') { row.push(field); field = ''; }
-      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r') { /* skip */ }
-      else { field += c; }
-    }
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-function parseRows(csvPath) {
-  const text = readFileSync(csvPath, 'utf8');
-  const rows = parseCSV(text);
-  const header = rows[0].map(h => h.replace(/^\uFEFF/, ''));
-  const COL = {};
-  header.forEach((h, i) => { COL[h] = i; });
-  const data = [];
-  for (let r = 1; r < rows.length; r++) {
-    const row = rows[r];
-    if (!row || row.length < 3) continue;
-    const rec = {};
-    for (const [k, i] of Object.entries(COL)) {
-      rec[k] = (row[i] || '').trim();
-    }
-    data.push(rec);
-  }
-  return data;
-}
-
+// Vendor-specific helpers (kept local — AMD-specific regex strips & semantics).
 function parseTFLOPS(s) {
   if (!s) return null;
   s = s.replace(/,/g, '').replace(/\u200B/g, '');
@@ -108,11 +68,6 @@ function slug(name) {
     .replace(/^-|-$/g, '');
 }
 
-function round(n, d) {
-  const m = Math.pow(10, d);
-  return Math.round(n * m) / m;
-}
-
 function cleanName(raw) {
   return raw
     .replace(/^AMD\s+/, '')
@@ -122,12 +77,6 @@ function cleanName(raw) {
     .replace(/\u2019/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-function parseMHz(s) {
-  if (!s) return null;
-  const m = s.match(/([\d.]+)\s*MHz/i);
-  return m ? parseFloat(m[1]) : null;
 }
 
 function parseMTs(s) {
@@ -204,7 +153,7 @@ const seenProcBase = new Set();
 
 // ── 1. Consumer Radeon RX GPUs (Graphics Specifications.csv) ──
 {
-  const rows = parseRows(GRAPHICS_CSV);
+  const rows = parseRowsFromPath(GRAPHICS_CSV, { minCols: 3 });
   for (const r of rows) {
     const rawName = r['Name'];
     if (!rawName) continue;
@@ -262,7 +211,7 @@ const seenProcBase = new Set();
 
 // ── 2. AMD Instinct Accelerators (Accelerator Specifications.csv) ──
 {
-  const rows = parseRows(ACCEL_CSV);
+  const rows = parseRowsFromPath(ACCEL_CSV, { minCols: 3 });
   for (const r of rows) {
     const rawName = r['Name'];
     if (!rawName) continue;
@@ -311,7 +260,7 @@ const seenProcBase = new Set();
 
 // ── 3. Radeon PRO / AI PRO / FirePro / Pro V (Radeon PRO CSV) ──
 {
-  const rows = parseRows(PRO_CSV);
+  const rows = parseRowsFromPath(PRO_CSV, { minCols: 3 });
   for (const r of rows) {
     const rawName = r['Name'];
     if (!rawName) continue;
@@ -361,7 +310,7 @@ const seenProcBase = new Set();
 
 // ── 4. Consumer APU iGPUs (Processor Specifications.csv) ──
 {
-  const rows = parseRows(APU_CSV);
+  const rows = parseRowsFromPath(APU_CSV, { minCols: 3 });
   for (const r of rows) {
     const gpuModel = (r['Graphics Model'] || '')
       .replace(/\u2122/g, '').replace(/\u00AE/g, '').trim();
@@ -420,7 +369,7 @@ const seenProcBase = new Set();
 
 // ── 5. Embedded APU iGPUs (Embedded Processor Specifications.csv) ──
 {
-  const rows = parseRows(EMBEDDED_CSV);
+  const rows = parseRowsFromPath(EMBEDDED_CSV, { minCols: 3 });
   for (const r of rows) {
     const gpuBrand = (r['GPU Brand'] || '')
       .replace(/\u2122/g, '').replace(/\u00AE/g, '').trim();

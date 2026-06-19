@@ -1,0 +1,24 @@
+# Curated baseline covering major code paths:
+#   - dense transformer (qwen2)
+#   - ISWA (gemma3)
+#   - MoE (qwen3-30b-a3b)
+#   - MLA + MoE (minimax-m2)
+#   - pure recurrent (lfm2 350m)
+#   - hybrid recurrent (falcon-h1)
+#   - multimodal w/ mmproj (smolvlm)
+#   - embedding (gemma embedding)
+#   - arch display-name cases (ernie4_5_moe, hunyuan_moe, lfm2_moe)
+#   - fork detection (prism-ml Bonsai, tq3 fork)
+Qwen/Qwen2.5-3B-Instruct-GGUF
+unsloth/gemma-3-1b-it-GGUF
+unsloth/Qwen3-30B-A3B-GGUF
+unsloth/MiniMax-M2.5-GGUF
+unsloth/LFM2-350M-GGUF
+unsloth/Falcon-H1-0.5B-Instruct-GGUF
+ggml-org/SmolVLM-500M-Instruct-GGUF
+ggml-org/embeddinggemma-300M-GGUF
+unsloth/ERNIE-4.5-0.3B-PT-GGUF
+unsloth/Hunyuan-A13B-Instruct-GGUF
+unsloth/LFM2-8B-A1B-GGUF
+prism-ml/Bonsai-8B-gguf
+YTan2000/Qwen3.6-35B-A3B-TQ3_4S

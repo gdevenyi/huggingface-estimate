@@ -18,10 +18,15 @@ import {
 } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
+import { readRepoList, parallelMap } from './lib/cli.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Unit constant (Phase 8). Previously `1024 ** 3` was inlined 7× for GiB
+// conversion.
+const GIB = 1024 ** 3;
 
 const CPU_JSON_FILES = ['intel-cpu-presets.json', 'amd-cpu-presets.json'];
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
@@ -55,6 +60,35 @@ function findGpuPreset(query) {
 // Accepts: standard quant names (F16, Q8_0, ...), numeric GGML type IDs, and
 // fork-specific extension names stripped of their "(ik_llama)" / "(rotorquant)"
 // suffix (Q6_0, Q8_KV, TURBO3_0, ...). Only KV-legal types are accepted.
+
+const USAGE = `Usage: node run-calc.js <repo> [options]
+     node run-calc.js --batch testModels.list
+
+Arguments:
+  <repo>             HuggingFace repo (e.g. unsloth/Qwen3-8B-GGUF)
+  --batch <file>     Process all repos from a file (one per line)
+  --ctx <N>          Context size (default: 4096)
+  --batchSize <N>    Batch size (default: 1)
+  --kvTypeK <T>      KV cache K quantization type (name or number, default: F16)
+  --kvTypeV <T>      KV cache V quantization type (name or number, default: F16)
+  --vram <N>         Available VRAM in GiB (enables VRAM fit check + performance split)
+  --ram <N>          Available system RAM in GiB (enables RAM fit check)
+  --mmproj <file>    mmproj GGUF filename within the repo (e.g. mmproj-F16.gguf)
+  --mmprojDevice <d> Where to place mmproj: vram (default) or ram (--no-mmproj-offload)
+
+Performance estimation (supply --gpu or --gpu-flops + --gpu-bw to enable):
+  --gpu <name|id>    GPU preset (e.g. "RTX 4090", "nvidia-geforce-rtx-4090")
+  --gpu-flops <TF>   Override GPU FP16 TFLOPS
+  --gpu-bw <GB/s>    Override GPU memory bandwidth
+  --cpu <name|id>    CPU preset from hardware-presets.js (e.g. "Ryzen 9 7950X")
+  --cpu-flops <TF>   Override CPU FP16 TFLOPS
+  --ram-bw <GB/s>    Override system RAM bandwidth
+  --ngl <n|auto>     GPU layer override (default: auto, sized from --vram)
+  --cpu-moe          Keep all MoE expert weights in CPU (llama.cpp -cmoe)
+  --n-cpu-moe <N>    Keep MoE expert weights of first N layers in CPU (llama.cpp -ncmoe)
+  --concurrency <N>  Batch parallelism (default: 1, sequential; matches scan-metadata)
+
+Quantization type names: F32, F16, BF16, Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, Q4_K, Q5_K, Q6_K, Q8_K, ...`;
 function parseKvType(val, flag) {
   // Standard @huggingface/gguf enum name → numeric ID.
   if (GGMLQuantizationType[val] !== undefined) {
@@ -100,6 +134,7 @@ function parseArgs(argv) {
     ngl: 'auto',
     cpuMoe: false,
     nCpuMoe: 0,
+    concurrency: 1,
   };
 
   const needValue = (flag) => {
@@ -169,8 +204,22 @@ function parseArgs(argv) {
         process.exit(1);
       }
       args.nCpuMoe = v;
+    } else if (arg === '--concurrency') {
+      const v = parseInt(needValue(arg), 10);
+      if (Number.isNaN(v) || v < 1) {
+        console.error('Error: --concurrency requires a positive integer');
+        process.exit(1);
+      }
+      args.concurrency = v;
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
+    } else {
+      // Match scan-metadata.js behavior: unknown flags error rather than
+      // silently being dropped. Previously a typo like `--batchSixe 4` would
+      // be ignored entirely.
+      console.error(`Error: unknown flag "${arg}"`);
+      console.error(USAGE);
+      process.exit(1);
     }
     i++;
   }
@@ -218,7 +267,7 @@ function resolveDevice(args) {
     gpu: {
       flopsFp16Tflops: gpuFlops,
       bwGBps: gpuBw,
-      vramBytes: args.vram > 0 ? args.vram * (1024 ** 3) : 0,
+      vramBytes: args.vram > 0 ? args.vram * GIB : 0,
       preset: gpuPreset,
     },
     cpu: cpu ? { ...cpu, preset: cpuPreset || cpuFallback, fallback: !!cpuFallback } : null,
@@ -467,7 +516,7 @@ function formatPerformance(device, metadata, tensorInfos, args, kvCache, moeInfo
       id: device.gpu.preset ? device.gpu.preset.id : null,
       fp16Tflops: device.gpu.flopsFp16Tflops,
       memBwGBps: device.gpu.bwGBps,
-      vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / (1024 ** 3)).toFixed(2) : 0,
+      vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / GIB).toFixed(2) : 0,
     },
     cpu: device.cpu ? {
       name: device.cpu.preset ? (device.cpu.fallback ? `${device.cpu.preset.name} (fallback)` : device.cpu.preset.name) : 'Custom',
@@ -485,7 +534,7 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
   let actualRamTotal = ramBytes;
   let vramFit = null;
   if (args.vram > 0) {
-    const vramAvailBytes = args.vram * (1024 ** 3);
+    const vramAvailBytes = args.vram * GIB;
     const actual = calcActualMemory({
       vramBytes: vramAvailBytes,
       footprint: layerFootprint,
@@ -498,8 +547,8 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
     actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);
     vramFit = {
       availableGiB: args.vram,
-      actualVramGiB: +(actual.actualVram / (1024 ** 3)).toFixed(2),
-      actualRamGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+      actualVramGiB: +(actual.actualVram / GIB).toFixed(2),
+      actualRamGiB: +(actualRamTotal / GIB).toFixed(2),
       fits: actual.actualVram <= vramAvailBytes,
       usagePct: +usagePct.toFixed(1),
       nGpuLayers: actual.nGpuLayers,
@@ -509,11 +558,11 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
   }
   let ramFit = null;
   if (args.ram > 0) {
-    const ramAvailBytes = args.ram * (1024 ** 3);
+    const ramAvailBytes = args.ram * GIB;
     const usagePct = actualRamTotal / ramAvailBytes * 100;
     ramFit = {
       availableGiB: args.ram,
-      requiredGiB: +(actualRamTotal / (1024 ** 3)).toFixed(2),
+      requiredGiB: +(actualRamTotal / GIB).toFixed(2),
       fits: actualRamTotal <= ramAvailBytes,
       usagePct: +usagePct.toFixed(1),
     };
@@ -522,33 +571,45 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
 }
 
 // ── Batch mode ──
-async function runBatch(batchFile) {
-  const lines = readFileSync(batchFile, 'utf-8')
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l && !l.startsWith('#'));
+async function runBatch(batchFile, concurrency = 1) {
+  const lines = readRepoList(batchFile);
 
-  const results = [];
-  for (let i = 0; i < lines.length; i++) {
-    const repo = lines[i];
-    process.stderr.write(`[${i + 1}/${lines.length}] ${repo}... `);
-    try {
-      const result = await calcModel(repo, args);
-      console.error(`done (${result.arch}, ${result.weightBytesFormatted})`);
-      results.push({ success: true, data: result });
-    } catch (err) {
-      console.error(`failed: ${err.message}`);
-      results.push({ success: false, repo, error: err.message });
+  // Sequential mode preserves the historical stderr progress format
+  // ([i/n] repo... done). Parallel mode (--concurrency > 1) uses a
+  // per-repo one-line format. Default is sequential to preserve output
+  // ordering of the JSON array.
+  if (concurrency <= 1) {
+    const results = [];
+    for (let i = 0; i < lines.length; i++) {
+      const repo = lines[i];
+      process.stderr.write(`[${i + 1}/${lines.length}] ${repo}... `);
+      try {
+        const result = await calcModel(repo, args);
+        console.error(`done (${result.arch}, ${result.weightBytesFormatted})`);
+        results.push({ success: true, data: result });
+      } catch (err) {
+        console.error(`failed: ${err.message}`);
+        results.push({ success: false, repo, error: err.message });
+      }
     }
+    console.log(JSON.stringify(results, null, 2));
+  } else {
+    let progress = 0;
+    const results = await parallelMap(lines, async (repo) => {
+      const result = await calcModel(repo, args);
+      progress++;
+      process.stderr.write(`[${progress}/${lines.length}] ${repo} -> ${result.arch}\n`);
+      return result;
+    }, concurrency);
+    console.log(JSON.stringify(results, null, 2));
   }
-  console.log(JSON.stringify(results, null, 2));
 }
 
 // ── Entry point ──
 const args = parseArgs(process.argv);
 
 if (args.batch) {
-  runBatch(args.batch).catch(err => {
+  runBatch(args.batch, args.concurrency).catch(err => {
     console.error(`Error: ${err.message}`);
     process.exit(1);
   });
@@ -560,33 +621,6 @@ if (args.batch) {
     process.exit(1);
   });
 } else {
-  console.error(`Usage: node run-calc.js <repo> [options]
-       node run-calc.js --batch testModels.list
-
-Arguments:
-  <repo>             HuggingFace repo (e.g. unsloth/Qwen3-8B-GGUF)
-  --batch <file>     Process all repos from a file (one per line)
-  --ctx <N>          Context size (default: 4096)
-  --batchSize <N>    Batch size (default: 1)
-  --kvTypeK <T>      KV cache K quantization type (name or number, default: F16)
-  --kvTypeV <T>      KV cache V quantization type (name or number, default: F16)
-  --vram <N>         Available VRAM in GiB (enables VRAM fit check + performance split)
-  --ram <N>          Available system RAM in GiB (enables RAM fit check)
-  --mmproj <file>    mmproj GGUF filename within the repo (e.g. mmproj-F16.gguf)
-  --mmprojDevice <d> Where to place mmproj: vram (default) or ram (--no-mmproj-offload)
-
-Performance estimation (supply --gpu or --gpu-flops + --gpu-bw to enable):
-  --gpu <name|id>    GPU preset (e.g. "RTX 4090", "nvidia-geforce-rtx-4090")
-  --gpu-flops <TF>   Override GPU FP16 TFLOPS
-  --gpu-bw <GB/s>    Override GPU memory bandwidth
-  --cpu <name|id>    CPU preset from hardware-presets.js (e.g. "Ryzen 9 7950X")
-  --cpu-flops <TF>   Override CPU FP16 TFLOPS
-  --ram-bw <GB/s>    Override system RAM bandwidth
-  --ngl <n|auto>     GPU layer override (default: auto, sized from --vram)
-  --cpu-moe          Keep all MoE expert weights in CPU (llama.cpp -cmoe)
-  --n-cpu-moe <N>    Keep MoE expert weights of first N layers in CPU (llama.cpp -ncmoe)
-
-Quantization type names: F32, F16, BF16, Q8_0, Q4_0, Q4_1, Q5_0, Q5_1, Q4_K, Q5_K, Q6_K, Q8_K, ...
-`);
+  console.error(USAGE);
   process.exit(1);
 }

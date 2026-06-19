@@ -1,36 +1,83 @@
-import { GGMLQuantizationType, KV_VALID_QUANTS, KV_FORK_GROUPS, parseGGUF, resolveHFModel, buildResolveUrl } from './parsing.js';
+import { GGMLQuantizationType, KV_VALID_QUANTS, KV_FORK_GROUPS, parseGGUF, resolveHFModel, buildResolveUrl, extractHfSlug } from './parsing.js';
 import { QUANT_NAMES, getArchHandler, getModelArch, getMeta, calcWeightSize, calcKVCache, calcActivations, calcMoEInfo, calcMmProj, calcPerLayerFootprint, calcMemoryBreakdown, calcActualMemory, estimatePerformance, formatBytes, formatElements } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, getCpuPresets, getGpuPresets, findCpuPreset, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 
 const CPU_JSON_FILES = ['intel-cpu-presets.json', 'amd-cpu-presets.json'];
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
 
-let _cpuLoaded = 0, _gpuLoaded = 0;
+const _cpuCounter = { n: 0 };
+const _gpuCounter = { n: 0 };
 let _configLoaded = false;
 
 function tryLoadConfig() {
   if (_configLoaded) return;
-  if (_cpuLoaded >= CPU_JSON_FILES.length && _gpuLoaded >= GPU_JSON_FILES.length) {
+  if (_cpuCounter.n >= CPU_JSON_FILES.length && _gpuCounter.n >= GPU_JSON_FILES.length) {
     _configLoaded = true;
     loadConfig();
   }
 }
 
-for (const f of CPU_JSON_FILES) {
-  fetch('./' + f)
-    .then(r => r.ok ? r.json() : [])
-    .then(d => { mergeCpuPresets(d); _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) { populateCpuSelect(); tryLoadConfig(); } })
-    .catch(() => { _cpuLoaded++; if (_cpuLoaded === CPU_JSON_FILES.length) { populateCpuSelect(); tryLoadConfig(); } });
-}
-
-for (const f of GPU_JSON_FILES) {
-  fetch('./' + f)
-    .then(r => r.ok ? r.json() : [])
-    .then(d => { mergeGpuPresets(d); _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) { populateGpuSelect(); tryLoadConfig(); } })
-    .catch(() => { _gpuLoaded++; if (_gpuLoaded === GPU_JSON_FILES.length) { populateGpuSelect(); tryLoadConfig(); } });
+// Load all vendor JSON files for a hardware class (CPU or GPU), then invoke
+// the populate callback once everything has settled (success or failure).
+// Replaces two near-identical 6-line startup loops that differed only in
+// the merge function, the counter, and the populate callback.
+function loadPresetFiles(files, { merge, counter, populate }) {
+  for (const f of files) {
+    fetch('./' + f)
+      .then(r => r.ok ? r.json() : [])
+      .then(d => { merge(d); })
+      .catch(() => { /* tolerate missing vendor file */ })
+      .finally(() => {
+        counter.n++;
+        if (counter.n === files.length) {
+          populate();
+          tryLoadConfig();
+        }
+      });
+  }
 }
 
 const $ = (s) => document.querySelector(s);
+
+// Unit constants (Phase 8 magic-number sweep). Previously 1024 ** 3 was
+// inlined 4× and the RAM thresholds 80/100 appeared as bare literals.
+const GIB = 1024 ** 3;
+const RAM_GREEN_PCT = 80;
+const RAM_YELLOW_PCT = 100;
+
+// Sum of mmproj weights + per-image activation bytes. Single source of truth
+// used by renderMemoryPanel, renderFitCheck, and the resolveMmProj path.
+// Previously this was duplicated in three places (ui.js:726, ui.js:940, plus
+// run-calc.js) and could drift.
+function totalMmProjBytes(info) {
+  if (!info) return 0;
+  return info.weightBytes + (info.perImageActBytes || 0);
+}
+
+// Tiny DOM helpers used in many places. Extracted to dedupe ~12 sites.
+function fillSelectWithOptions(select, values) {
+  for (const v of values) {
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v;
+    select.appendChild(opt);
+  }
+}
+
+// Apply a saved config value to a <select>, going through SlimSelect when present.
+function applySelectValue(el, ss, value) {
+  if (value == null) return;
+  if (!el.querySelector(`option[value="${value}"]`)) return;
+  if (ss) ss.setSelected(value);
+  else el.value = value;
+}
+
+// Tiny visibility helpers (Phase 11 consolidation: replaces ~16 inline
+// `style.display = 'none'|''` assignments). `.hidden` is defined as
+// `display: none !important`, so adding it always hides; removing it restores
+// the element's CSS default display (block / flex / etc.).
+function show(el) { el?.classList.remove('hidden'); }
+function hide(el) { el?.classList.add('hidden'); }
 
 if (location.protocol === 'file:') {
   showError('\u26A0 Open via a local server for best results. Run: python3 -m http.server 8000 then visit http://localhost:8000');
@@ -141,44 +188,68 @@ function partitionByGroup(entries) {
   return byVendor;
 }
 
-function populateGpuSelect() {
-  if (ssGpu) { ssGpu.destroy(); ssGpu = null; }
-  gpuPresetEl.innerHTML = '';
-  gpuPresetEl.appendChild(new Option('Custom', 'custom'));
-  const byVendor = partitionByGroup(getGpuPresets());
-  const fmt = g => `${g.name} \u2014 ${g.fp16Tflops} TF, ${g.memBwGBps} GB/s${g.vramGB ? `, ${g.vramGB} GiB` : ''}`;
-  for (const [vendor, all] of Object.entries(byVendor)) {
-    const desktop = all.filter(g => (!g.mobile && !g.server) || g.desktop);
-    const mobile = all.filter(g => g.mobile);
-    const server = all.filter(g => g.server);
-    addOptgroup(gpuPresetEl, vendor, desktop, fmt);
-    addOptgroup(gpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
-    addOptgroup(gpuPresetEl, `${vendor} (server)`, server, fmt);
+// Shared hardware-select populator. populateGpuSelect and populateCpuSelect
+// are 95% structurally identical; only the formatter, the placeholder text,
+// and (for CPU) the unified-memory option differ. The caller supplies
+// getSS/destroySS/setSS callbacks because ssGpu/ssCpu are module-level lets
+// (can't be passed by reference).
+function populateHardwareSelect({ el, selectId, presets, fmt, extraOptions, placeholder, getSS, destroySS, setSS }) {
+  if (getSS()) { destroySS(); }
+  el.innerHTML = '';
+  el.appendChild(new Option('Custom', 'custom'));
+  for (const opt of (extraOptions || [])) {
+    el.appendChild(new Option(opt.name, opt.id));
   }
-  ssGpu = new SlimSelect({ select: '#gpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search GPU...' }, events: { searchFilter: allWordsSearchFilter } });
-  allowSpaceInSearch(ssGpu);
+  const byVendor = partitionByGroup(presets);
+  for (const [vendor, all] of Object.entries(byVendor)) {
+    const desktop = all.filter(p => (!p.mobile && !p.server) || p.desktop);
+    const mobile  = all.filter(p => p.mobile);
+    const server  = all.filter(p => p.server);
+    addOptgroup(el, vendor, desktop, fmt);
+    addOptgroup(el, `${vendor} (mobile)`, mobile, fmt);
+    addOptgroup(el, `${vendor} (server)`, server, fmt);
+  }
+  const ss = new SlimSelect({
+    select: el,
+    settings: { showSearch: true, searchPlaceholder: placeholder },
+    events: { searchFilter: allWordsSearchFilter },
+  });
+  allowSpaceInSearch(ss);
+  setSS(ss);
+}
+
+function populateGpuSelect() {
+  populateHardwareSelect({
+    el: gpuPresetEl,
+    presets: getGpuPresets(),
+    fmt: g => `${g.name} \u2014 ${g.fp16Tflops} TF, ${g.memBwGBps} GB/s${g.vramGB ? `, ${g.vramGB} GiB` : ''}`,
+    placeholder: 'Search GPU...',
+    getSS: () => ssGpu,
+    destroySS: () => { ssGpu.destroy(); ssGpu = null; },
+    setSS: (ss) => { ssGpu = ss; },
+  });
 }
 
 function populateCpuSelect() {
-  if (ssCpu) { ssCpu.destroy(); ssCpu = null; }
-  cpuPresetEl.innerHTML = '';
-  cpuPresetEl.appendChild(new Option('Custom', 'custom'));
-  cpuPresetEl.appendChild(new Option(UNIFIED_MEMORY_CPU_PRESET.name, UNIFIED_MEMORY_CPU_PRESET.id));
-  const byVendor = partitionByGroup(getCpuPresets());
-  const fmt = c => (c.fp16Tflops != null && c.defaultRamBwGBps != null)
-    ? `${c.name} \u2014 ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`
-    : c.name;
-  for (const [vendor, all] of Object.entries(byVendor)) {
-    const desktop = all.filter(c => (!c.mobile && !c.server) || c.desktop);
-    const mobile = all.filter(c => c.mobile);
-    const server = all.filter(c => c.server);
-    addOptgroup(cpuPresetEl, vendor, desktop, fmt);
-    addOptgroup(cpuPresetEl, `${vendor} (mobile)`, mobile, fmt);
-    addOptgroup(cpuPresetEl, `${vendor} (server)`, server, fmt);
-  }
-  ssCpu = new SlimSelect({ select: '#cpuPreset', settings: { showSearch: true, searchPlaceholder: 'Search CPU...' }, events: { searchFilter: allWordsSearchFilter } });
-  allowSpaceInSearch(ssCpu);
+  populateHardwareSelect({
+    el: cpuPresetEl,
+    presets: getCpuPresets(),
+    fmt: c => (c.fp16Tflops != null && c.defaultRamBwGBps != null)
+      ? `${c.name} \u2014 ${c.fp16Tflops} TF, ${c.defaultRamBwGBps} GB/s RAM`
+      : c.name,
+    extraOptions: [UNIFIED_MEMORY_CPU_PRESET],
+    placeholder: 'Search CPU...',
+    getSS: () => ssCpu,
+    destroySS: () => { ssCpu.destroy(); ssCpu = null; },
+    setSS: (ss) => { ssCpu = ss; },
+  });
 }
+
+// Kick off vendor-preset loading. The populate callbacks fire once each
+// class (CPU/GPU) has fully settled, and tryLoadConfig() runs once both
+// classes are done.
+loadPresetFiles(CPU_JSON_FILES, { merge: mergeCpuPresets, counter: _cpuCounter, populate: populateCpuSelect });
+loadPresetFiles(GPU_JSON_FILES, { merge: mergeGpuPresets, counter: _gpuCounter, populate: populateGpuSelect });
 
 const CONFIG_KEY = 'gguf-estimator-config';
 const CONFIG_DEFAULTS = {
@@ -240,20 +311,10 @@ function applyConfigValues(cfg) {
   if (cfg.nCpuMoe != null) nCpuMoeEl.value = cfg.nCpuMoe;
   if (cfg.cpuMoe != null) cpuMoeEl.checked = cfg.cpuMoe;
   if (cfg.mmProjDevice != null) mmProjDeviceEl.value = cfg.mmProjDevice;
-  if (cfg.kvTypeK != null && kvTypeKEl.querySelector(`option[value="${cfg.kvTypeK}"]`)) {
-    kvTypeKEl.value = cfg.kvTypeK;
-  }
-  if (cfg.kvTypeV != null && kvTypeVEl.querySelector(`option[value="${cfg.kvTypeV}"]`)) {
-    kvTypeVEl.value = cfg.kvTypeV;
-  }
-  if (cfg.gpuPreset != null && gpuPresetEl.querySelector(`option[value="${cfg.gpuPreset}"]`)) {
-    if (ssGpu) ssGpu.setSelected(cfg.gpuPreset);
-    else gpuPresetEl.value = cfg.gpuPreset;
-  }
-  if (cfg.cpuPreset != null && cpuPresetEl.querySelector(`option[value="${cfg.cpuPreset}"]`)) {
-    if (ssCpu) ssCpu.setSelected(cfg.cpuPreset);
-    else cpuPresetEl.value = cfg.cpuPreset;
-  }
+  if (cfg.kvTypeK != null) applySelectValue(kvTypeKEl, null, cfg.kvTypeK);
+  if (cfg.kvTypeV != null) applySelectValue(kvTypeVEl, null, cfg.kvTypeV);
+  if (cfg.gpuPreset != null) applySelectValue(gpuPresetEl, ssGpu, cfg.gpuPreset);
+  if (cfg.cpuPreset != null) applySelectValue(cpuPresetEl, ssCpu, cfg.cpuPreset);
 }
 
 function loadConfig() {
@@ -273,7 +334,7 @@ function resetConfig() {
   if (ssCpu) ssCpu.setSelected('custom');
   modelSelectWrap.classList.remove('visible');
   mmProjSelectWrap.classList.remove('visible');
-  mmProjDeviceWrap.style.display = 'none';
+  hide(mmProjDeviceWrap);
   moeOffloadGroup.classList.add('hidden');
   errorMsg.classList.remove('visible');
   errorMsg.textContent = '';
@@ -332,17 +393,11 @@ let currentGGUFUrl = null;
 let currentMetadata = null;
 let currentTensorInfos = null;
 let currentFork = null;
-let currentMmProjUrl = null;
-let currentMmProjMetadata = null;
-let currentMmProjTensorInfos = null;
 let currentMmProjInfo = null;
 
 function resetMmProjState() {
-  currentMmProjUrl = null;
-  currentMmProjMetadata = null;
-  currentMmProjTensorInfos = null;
   currentMmProjInfo = null;
-  mmProjDeviceWrap.style.display = 'none';
+  hide(mmProjDeviceWrap);
 }
 
 async function doParseGGUF(url) {
@@ -391,12 +446,7 @@ async function doResolveHFModel(path) {
 
     if (!result.url) {
       modelSelect.innerHTML = '';
-      for (const f of result.ggufFiles) {
-        const opt = document.createElement('option');
-        opt.value = f;
-        opt.textContent = f;
-        modelSelect.appendChild(opt);
-      }
+      fillSelectWithOptions(modelSelect, result.ggufFiles);
       modelSelectWrap.classList.add('visible');
       currentGGUFUrl = buildResolveUrl(path, modelSelect.value);
     } else {
@@ -405,12 +455,7 @@ async function doResolveHFModel(path) {
 
     mmProjSelect.innerHTML = '<option value="">None</option>';
     if (result.mmProjFiles && result.mmProjFiles.length) {
-      for (const f of result.mmProjFiles) {
-        const opt = document.createElement('option');
-        opt.value = f;
-        opt.textContent = f;
-        mmProjSelect.appendChild(opt);
-      }
+      fillSelectWithOptions(mmProjSelect, result.mmProjFiles);
       mmProjSelectWrap.classList.add('visible');
     }
 
@@ -432,9 +477,7 @@ function showError(msg) {
 
 function deriveGgufId(repoPath, ggufUrl, basename) {
   if (!repoPath || !ggufUrl) return null;
-  let repo = repoPath.trim();
-  const urlMatch = repo.match(/^https?:\/\/huggingface\.co\/([^/?#]+\/[^/?#]+)/i);
-  if (urlMatch) repo = urlMatch[1];
+  const repo = extractHfSlug(repoPath) ?? repoPath.trim();
   const filename = decodeURIComponent(ggufUrl.split('/').pop().replace(/#.*$/, ''));
   const stem = filename.replace(/\.gguf$/i, '');
   if (!stem) return null;
@@ -457,6 +500,15 @@ function renderModelInfo(arch, handler, isMoe, isMla, moe, ctx_len, vocab) {
 
   if (ctx_len && ctx_len > 0) {
     contextLenEl.max = ctx_len;
+    // Clamp existing input value to the new model max. Previously this ran
+    // inside renderResults(), which fires on every input change and could
+    // fight the user's typing as well as leave saveConfig() persisting the
+    // un-clamped value. Doing it here runs once per model load.
+    const cur = parseInt(contextLenEl.value, 10);
+    if (Number.isFinite(cur) && cur > ctx_len) {
+      contextLenEl.value = ctx_len;
+      saveConfig();
+    }
     $('#ctxMaxLabel').textContent = `(max ${formatElements(BigInt(ctx_len))})`;
   } else {
     $('#ctxMaxLabel').textContent = '';
@@ -606,47 +658,47 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
 
   if (moe) {
     $('#vramWeightsRow .label').textContent = 'Attention + embedding weights';
-    $('#vramActiveExpertRow').style.display = '';
+    show($('#vramActiveExpertRow'));
     const expertLabel = cpuMoe ? 'Expert weights (in VRAM)' : (nCpuMoe > 0 ? `Experts in VRAM (layers ${nCpuMoe}+)` : `All experts (${moe.expertCount})`);
     $('#vramActiveExpertLabel').textContent = expertLabel;
     $('#vramActiveExpertSize').textContent = `${formatBytes(vramExpertBytes)} (${vramPct(vramExpertBytes)})`;
     if (vramRouterSharedBytes > 0) {
-      $('#vramRouterRow').style.display = '';
+      show($('#vramRouterRow'));
       $('#vramRouterSize').textContent = `${formatBytes(vramRouterSharedBytes)} (${vramPct(vramRouterSharedBytes)})`;
     } else {
-      $('#vramRouterRow').style.display = 'none';
+      hide($('#vramRouterRow'));
     }
   } else {
     $('#vramWeightsRow .label').textContent = 'Weights';
-    $('#vramActiveExpertRow').style.display = 'none';
-    $('#vramRouterRow').style.display = 'none';
+    hide($('#vramActiveExpertRow'));
+    hide($('#vramRouterRow'));
   }
   $('#vramWeightsSize').textContent = `${formatBytes(nonMoEWeightBytes)} (${vramPct(nonMoEWeightBytes)})`;
   if (mtpBytes > 0) {
-    $('#vramMtpRow').style.display = '';
+    show($('#vramMtpRow'));
     $('#vramMtpSize').textContent = `${formatBytes(mtpBytes)} (${vramPct(mtpBytes)})`;
   } else {
-    $('#vramMtpRow').style.display = 'none';
+    hide($('#vramMtpRow'));
   }
   const kvOnlyBytes = kv.bytesK + kv.bytesV;
   $('#vramKVSize').textContent = `${formatBytes(kvOnlyBytes)} (${vramPct(kvOnlyBytes)})`;
   if (kv.bytesRecurrent > 0) {
-    $('#vramRecurrentRow').style.display = '';
+    show($('#vramRecurrentRow'));
     $('#vramRecurrentSize').textContent = `${formatBytes(kv.bytesRecurrent)} (${vramPct(kv.bytesRecurrent)})`;
   } else {
-    $('#vramRecurrentRow').style.display = 'none';
+    hide($('#vramRecurrentRow'));
   }
   $('#vramActSize').textContent = `${formatBytes(acts.totalBytes)} (${vramPct(acts.totalBytes)})`;
   if (currentMmProjInfo && mmProjDevice === 'vram') {
-    $('#vramMmProjRow').style.display = '';
+    show($('#vramMmProjRow'));
     $('#vramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${vramPct(mmProjBytes)})`;
   } else {
-    $('#vramMmProjRow').style.display = 'none';
+    hide($('#vramMmProjRow'));
   }
 
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
   if (moe && ramBytes > 0) {
-    $('#ramInactiveRow').style.display = '';
+    show($('#ramInactiveRow'));
     const expertInRam = memBreakdown.ramExpertBytes;
     if (cpuMoe) {
       $('#ramInactiveLabel').textContent = `All experts (${moe.expertCount})`;
@@ -657,14 +709,14 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
     }
     $('#ramInactiveSize').textContent = `${formatBytes(expertInRam)} (${ramBytes > 0 ? (expertInRam / ramBytes * 100).toFixed(1) : '0'}%)`;
   } else {
-    $('#ramInactiveRow').style.display = 'none';
+    hide($('#ramInactiveRow'));
   }
   if (currentMmProjInfo && mmProjDevice === 'ram') {
-    $('#ramMmProjRow').style.display = '';
+    show($('#ramMmProjRow'));
     const ramPct = ramBytes > 0 ? (mmProjBytes / ramBytes * 100).toFixed(1) : '0';
     $('#ramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${ramPct}%)`;
   } else {
-    $('#ramMmProjRow').style.display = 'none';
+    hide($('#ramMmProjRow'));
   }
 
   $('#totalSize').textContent = formatBytes(totalBytes);
@@ -714,10 +766,10 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
 
   fitPanel.classList.remove('hidden');
 
-  const mmProjActBytes = currentMmProjInfo ? (currentMmProjInfo.weightBytes + (currentMmProjInfo.perImageActBytes || 0)) : 0;
+  const mmProjActBytes = totalMmProjBytes(currentMmProjInfo);
   const reservedBytes = acts.totalBytes + (mmProjDevice !== 'ram' ? mmProjActBytes : 0);
   const actual = calcActualMemory({
-    vramBytes: vramGB * (1024 ** 3),
+    vramBytes: vramGB * GIB,
     footprint: layerFootprint,
     activationBytes: reservedBytes,
     nLayerOverride: nglOverride,
@@ -726,8 +778,8 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
     unifiedMemory: !!unifiedMemory,
   });
 
-  $('#vramFitSection').style.display = '';
-  const vramAvailBytes = vramGB * (1024 ** 3);
+  show($('#vramFitSection'));
+  const vramAvailBytes = vramGB * GIB;
   const vramUsagePct = (actual.actualVram / vramAvailBytes * 100);
   const clampedVramPct = Math.min(vramUsagePct, 100);
 
@@ -744,16 +796,16 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
       : `${actual.nGpuLayers} GPU (full offload)`;
 
   if (vramUsagePct > 100) {
-    vramBar.className = 'vram-bar red';
-    vramStatus.className = 'vram-status red';
+    vramBar.className = 'usage-bar red';
+    vramStatus.className = 'usage-status red';
     vramStatus.textContent = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
   } else if (actual.nCpuLayers === 0 && (actual.nHybridLayers === 0 || cpuMoe || nCpuMoe > 0)) {
-    vramBar.className = 'vram-bar green';
-    vramStatus.className = 'vram-status green';
+    vramBar.className = 'usage-bar green';
+    vramStatus.className = 'usage-status green';
     vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   } else {
-    vramBar.className = 'vram-bar yellow';
-    vramStatus.className = 'vram-status yellow';
+    vramBar.className = 'usage-bar yellow';
+    vramStatus.className = 'usage-status yellow';
     vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   }
 
@@ -763,8 +815,8 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
   const actualRamBytes = actual.actualRam + (mmProjDevice === 'ram' ? mmProjActBytes : 0);
   const showRamBar = ramGB > 0 && actualRamBytes > 0;
   if (showRamBar) {
-    $('#ramFitSection').style.display = '';
-    const ramUsagePct = (actualRamBytes / (ramGB * (1024 ** 3)) * 100);
+    show($('#ramFitSection'));
+    const ramUsagePct = (actualRamBytes / (ramGB * GIB) * 100);
     const clampedRamPct = Math.min(ramUsagePct, 100);
 
     const ramBar = $('#ramBar');
@@ -773,24 +825,24 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
 
     ramBar.style.width = `${clampedRamPct}%`;
 
-    if (ramUsagePct <= 80) {
-      ramBar.className = 'vram-bar green';
-      ramStatus.className = 'vram-status green';
+    if (ramUsagePct <= RAM_GREEN_PCT) {
+      ramBar.className = 'usage-bar green';
+      ramStatus.className = 'usage-status green';
       ramStatus.textContent = `\u2713 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
-    } else if (ramUsagePct <= 100) {
-      ramBar.className = 'vram-bar yellow';
-      ramStatus.className = 'vram-status yellow';
+    } else if (ramUsagePct <= RAM_YELLOW_PCT) {
+      ramBar.className = 'usage-bar yellow';
+      ramStatus.className = 'usage-status yellow';
       ramStatus.textContent = `\u26A0 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
     } else {
-      ramBar.className = 'vram-bar red';
-      ramStatus.className = 'vram-status red';
+      ramBar.className = 'usage-bar red';
+      ramStatus.className = 'usage-status red';
       ramStatus.textContent = `\u2717 RAM overflow \u2014 ${formatBytes(actualRamBytes)} needed, ${ramGB} GiB available`;
     }
 
     ramBarText.textContent = `${ramUsagePct.toFixed(1)}%`;
     $('#ramFitLabel').textContent = `${formatBytes(actualRamBytes)} / ${ramGB} GiB`;
   } else {
-    $('#ramFitSection').style.display = 'none';
+    hide($('#ramFitSection'));
   }
 }
 
@@ -827,7 +879,7 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
       gpu: {
         flopsFp16Tflops: gpuFlopsV,
         bwGBps: gpuBwV,
-        vramBytes: vramGB > 0 ? vramGB * (1024 ** 3) : 0,
+        vramBytes: vramGB > 0 ? vramGB * GIB : 0,
       },
       cpu: hasCpuPerf ? { flopsFp16Tflops: cpuFlopsV, bwGBps: ramBwV } : null,
       nGpuLayers: nglOverride,
@@ -884,23 +936,29 @@ function renderResults() {
     const hasKvTypes = forkKvTypes && forkKvTypes.quants.length > 0;
     forkHintEl.innerHTML = `<strong>${currentFork}</strong> fork detected &mdash; weight BPE overrides applied.${hasKvTypes ? ` Use the <strong>${currentFork}</strong> KV cache types below for this fork.` : ''}`;
     forkHintEl.className = `fork-hint fork-${currentFork}`;
-    forkHintEl.style.display = '';
+    show(forkHintEl);
   } else if (forkHintEl) {
-    forkHintEl.style.display = 'none';
+    hide(forkHintEl);
   }
 
   const arch = getModelArch(currentMetadata);
   const handler = getArchHandler(arch);
 
   const modelCtxLen = getMeta(currentMetadata, `${arch}.context_length`);
-  let ctxSize = parseInt(contextLenEl.value, 10) || 4096;
-  if (modelCtxLen > 0 && ctxSize > modelCtxLen) {
-    ctxSize = modelCtxLen;
-    contextLenEl.value = modelCtxLen;
-  }
-  const batchSize = parseInt(batchSizeEl.value, 10) || 1;
-  const kvTypeK = isNaN(kvTypeKEl.value) ? kvTypeKEl.value : parseInt(kvTypeKEl.value, 10);
-  const kvTypeV = isNaN(kvTypeVEl.value) ? kvTypeVEl.value : parseInt(kvTypeVEl.value, 10);
+  // ctxSize clamping happens in renderModelInfo() on model load; here we
+  // just read the (already-valid) input value.
+  const ctxSize = parseInt(contextLenEl.value, 10) || 4096;
+  // Use CONFIG_DEFAULTS.batchSize as the fallback so that HTML default,
+  // reset-to-default, and cleared-field all agree. Previously fell back to
+  // `1` (the CLI default), disagreeing with both HTML value="2048" and
+  // CONFIG_DEFAULTS.
+  const batchSize = parseInt(batchSizeEl.value, 10) || parseInt(CONFIG_DEFAULTS.batchSize, 10);
+  // Parse kvTypeK/V: numeric IDs become numbers, named types (F16, TURBO3_0, etc.) stay strings.
+  // Use a strict integer regex instead of isNaN() because isNaN('') === false, which would
+  // propagate NaN through parseInt('', 10) when the select is momentarily empty.
+  const parseKv = (v) => /^\d+$/.test(v) ? parseInt(v, 10) : v;
+  const kvTypeK = parseKv(kvTypeKEl.value);
+  const kvTypeV = parseKv(kvTypeVEl.value);
   const vramGB = parseFloat(vramEl.value) || 0;
   const ramGB = parseFloat(ramEl.value) || 0;
   const nglRaw = nglOverrideEl.value.trim();
@@ -924,9 +982,8 @@ function renderResults() {
   const mmProjDevice = mmProjDeviceEl.value;
   let vramBytes = memBreakdown.vramBytes;
   let ramBytes = memBreakdown.ramBytes;
-  let mmProjBytes = 0;
-  if (currentMmProjInfo) {
-    mmProjBytes = currentMmProjInfo.weightBytes + (currentMmProjInfo.perImageActBytes || 0);
+  const mmProjBytes = totalMmProjBytes(currentMmProjInfo);
+  if (mmProjBytes > 0) {
     if (mmProjDevice === 'ram') ramBytes += mmProjBytes;
     else vramBytes += mmProjBytes;
   }
@@ -994,10 +1051,8 @@ modelSelect.addEventListener('change', () => {
 async function doParseMmProj(url) {
   try {
     const { metadata, tensorInfos } = await parseGGUF(url);
-    currentMmProjMetadata = metadata;
-    currentMmProjTensorInfos = tensorInfos;
     currentMmProjInfo = calcMmProj(metadata, tensorInfos);
-    mmProjDeviceWrap.style.display = '';
+    show(mmProjDeviceWrap);
   } catch (err) {
     resetMmProjState();
     showError(`mmproj parse failed: ${err.message}`);
@@ -1012,10 +1067,10 @@ mmProjSelect.addEventListener('change', async () => {
     return;
   }
   const path = hfPathEl.value.trim();
-  currentMmProjUrl = buildResolveUrl(path, filename);
+  const mmProjUrl = buildResolveUrl(path, filename);
   loadingEl.classList.add('visible');
   loadingText.textContent = 'Parsing mmproj metadata...';
-  await doParseMmProj(currentMmProjUrl);
+  await doParseMmProj(mmProjUrl);
   loadingEl.classList.remove('visible');
   if (currentMetadata) renderResults();
 });

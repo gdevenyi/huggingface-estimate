@@ -5,11 +5,10 @@ import {
   getModelArch,
   ARCHITECTURES,
   ARCH_ALIASES,
-  BPE,
-  QUANT_NAMES,
   globMatch,
 } from './calculations.js';
-import { readFileSync } from 'node:fs';
+import { BPE, QUANT_NAMES } from './quant-types.js';
+import { readRepoList, parallelMap } from './lib/cli.js';
 
 // ── Consumed metadata key suffixes (after stripping arch prefix) ──
 // Sourced from calculations.js + ui.js. Split into:
@@ -233,25 +232,6 @@ async function scanRepo(repo) {
   return { repo, arch, allMetaKeys, dtypes, tensorNames, projType, url };
 }
 
-// ── Concurrency limiter ──
-
-async function parallelMap(items, fn, concurrency) {
-  const results = new Array(items.length);
-  let next = 0;
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
-    while (next < items.length) {
-      const idx = next++;
-      try {
-        results[idx] = { success: true, data: await fn(items[idx], idx) };
-      } catch (err) {
-        results[idx] = { success: false, repo: items[idx], error: err.message };
-      }
-    }
-  });
-  await Promise.all(workers);
-  return results;
-}
-
 // ── Analysis ──
 
 function classifyKey(key, arch) {
@@ -287,7 +267,6 @@ function analyzeResults(results) {
         repos: [],
         metaKeyPresence: new Map(),
         unhandledCalcKeys: new Map(),
-        unhandledDisplayKeys: new Map(),
         unknownDtypes: new Map(),
         unmatchedTensors: new Set(),
       });
@@ -520,8 +499,7 @@ async function main() {
 
   let repos;
   if (args.batch) {
-    repos = readFileSync(args.batch, 'utf-8')
-      .split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('#'));
+    repos = readRepoList(args.batch);
   } else {
     repos = [args.repo];
   }

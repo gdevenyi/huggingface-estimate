@@ -1,67 +1,15 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { parseRowsFromPath, parseInt_, parseGHz, round } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DESKTOP_CSV = join(ROOT, 'resources', 'amd', 'Processor Specifications.csv');
 const SERVER_CSV = join(ROOT, 'resources', 'amd', 'Server Processor Specifications.csv');
 const OUT_PATH = join(ROOT, 'amd-cpu-presets.json');
 
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (c === '"') { inQuotes = false; }
-      else { field += c; }
-    } else {
-      if (c === '"') { inQuotes = true; }
-      else if (c === ',') { row.push(field); field = ''; }
-      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r') { /* skip */ }
-      else { field += c; }
-    }
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
-
-function parseRows(csvPath) {
-  const text = readFileSync(csvPath, 'utf8');
-  const rows = parseCSV(text);
-  const header = rows[0].map(h => h.replace(/^\uFEFF/, ''));
-  const COL = {};
-  header.forEach((h, i) => { COL[h] = i; });
-  const data = [];
-  for (let r = 1; r < rows.length; r++) {
-    const row = rows[r];
-    if (!row || row.length < 5) continue;
-    const rec = {};
-    for (const [k, i] of Object.entries(COL)) {
-      rec[k] = (row[i] || '').trim();
-    }
-    data.push(rec);
-  }
-  return data;
-}
-
-function parseGHz(s) {
-  if (!s) return null;
-  const m = s.match(/([\d.]+)\s*GHz/i);
-  return m ? parseFloat(m[1]) : null;
-}
-
-function parseInt_(s) {
-  if (!s) return null;
-  const m = s.match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : null;
-}
-
+// Vendor-specific helpers (kept local because they vary per vendor).
 function parseMTs(s) {
   if (!s) return null;
   const m = s.match(/([\d.]+)\s*MT\/s/i);
@@ -92,11 +40,6 @@ function cleanName(raw) {
     .replace(/\u2019/g, "'")
     .replace(/\s+/g, ' ')
     .trim();
-}
-
-function round(n, d) {
-  const m = Math.pow(10, d);
-  return Math.round(n * m) / m;
 }
 
 // ── Zen detection ──
@@ -330,7 +273,7 @@ function addPreset(rec, isServer) {
 
 // ── Parse Desktop/Mobile Processors ──
 {
-  const rows = parseRows(DESKTOP_CSV);
+  const rows = parseRowsFromPath(DESKTOP_CSV);
   for (const r of rows) {
     const formFactor = (r['Form Factor'] || '').toLowerCase();
     const series = (r['Series'] || '').toLowerCase();
@@ -347,7 +290,7 @@ function addPreset(rec, isServer) {
 
 // ── Parse Server Processors (EPYC) ──
 {
-  const rows = parseRows(SERVER_CSV);
+  const rows = parseRowsFromPath(SERVER_CSV);
   for (const r of rows) {
     addPreset(r, true);
   }

@@ -7,16 +7,14 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { round, stripUnderscored } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const TSV_PATH = join(ROOT, 'specs', 'apple_silicon.tsv');
 const GPU_OUT = join(ROOT, 'apple-gpu-presets.json');
 
-function round(n, d) {
-  const m = Math.pow(10, d);
-  return Math.round(n * m) / m;
-}
-
+// Vendor-specific (Apple TSV uses a different slug convention than the CSV
+// scripts — drops hyphens, not preserved — kept local on purpose).
 function slug(text) {
   return text
     .toLowerCase()
@@ -110,11 +108,7 @@ gpuPresets.sort((a, b) => {
   return a.name.localeCompare(b.name);
 });
 
-function stripMeta(arr) {
-  return arr.map(({ _year, _tier, _gpuCores, ...rest }) => rest);
-}
-
-writeFileSync(GPU_OUT, JSON.stringify(stripMeta(gpuPresets), null, 2) + '\n');
+writeFileSync(GPU_OUT, JSON.stringify(gpuPresets.map(stripUnderscored), null, 2) + '\n');
 console.error(`Wrote ${gpuPresets.length} Apple GPU presets to ${GPU_OUT}`);
 
 const byYear = {};

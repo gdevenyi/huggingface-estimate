@@ -14,23 +14,36 @@
 <meta name="twitter:description" content="Estimate VRAM, RAM, and tokens/s performance for any GGUF model from HuggingFace" />
 <meta name="twitter:image" content="og-image.png" />
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.css" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.css"
+      integrity="sha384-SGd+Jq1pTVPJ/zMxyDpM2aTTAvR/+91eDiQHsaMsJIXR4ejjJXLqvSACtiJICqhl"
+      crossorigin="anonymous" />
 <link rel="stylesheet" href="style.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.global.min.js"></script>
+<!-- `defer` runs after parsing; ui.js is type="module" (= deferred) and is the only SlimSelect consumer. -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.13.1/slimselect.global.min.js"
+        integrity="sha384-09mjUYUGaLUKv8SNrz4+W+UNJmez2g8FEQicdUpHW6egb1ex6aLp/3iHgjXx0NVo"
+        crossorigin="anonymous"></script>
 <script type="importmap">
 { "imports": { "@huggingface/gguf": "https://cdn.jsdelivr.net/npm/@huggingface/gguf@0.4.2/+esm" } }
 </script>
+<!-- importmap cannot carry integrity hashes; the URL-pinned version (0.4.2) is the integrity guarantee. -->
 </head>
 <body>
+<a href="#results" class="skip-link">Skip to results</a>
 <div class="container">
-  <h1>GGUF Memory Estimator</h1>
-  <p class="subtitle">Estimate VRAM requirements for any GGUF model from HuggingFace <a href="https://github.com/gdevenyi/huggingface-estimate" target="_blank" style="color:var(--accent);text-decoration:none">GitHub ↗</a></p>
+  <header>
+    <h1>GGUF Memory Estimator</h1>
+    <p class="subtitle">Estimate VRAM requirements for any GGUF model from HuggingFace <a href="https://github.com/gdevenyi/huggingface-estimate" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none">GitHub ↗</a></p>
+  </header>
+
+  <main>
 
   <div class="grid">
     <!-- LEFT: Inputs -->
     <div>
       <div class="panel">
-        <div class="panel-title"><span class="icon">&#x1F4C2;</span> Model Input</div>
+        <div class="panel-title"><span class="icon" aria-hidden="true">&#x1F4C2;</span> Model Input</div>
 
         <div class="form-group">
           <label for="hfPath">HuggingFace path or URL</label>
@@ -52,7 +65,7 @@
             <label for="mmProjSelect">Multimodal projector (mmproj)</label>
             <select id="mmProjSelect"><option value="">None</option></select>
           </div>
-          <div class="form-group" id="mmProjDeviceWrap" style="display:none">
+          <div class="form-group hidden" id="mmProjDeviceWrap">
             <label for="mmProjDevice">mmproj location</label>
             <select id="mmProjDevice">
               <option value="vram" selected>VRAM (default)</option>
@@ -74,8 +87,8 @@
           </div>
         </div>
 
-        <div class="panel-title" style="margin-bottom:8px"><span class="icon">&#x1F4CA;</span> KV Cache Quantization</div>
-        <div id="forkHint" class="fork-hint" style="display:none"></div>
+        <div class="panel-title" style="margin-bottom:8px"><span class="icon" aria-hidden="true">&#x1F4CA;</span> KV Cache Quantization</div>
+        <div id="forkHint" class="fork-hint hidden"></div>
         <div class="select-group">
           <div class="form-group">
             <label for="kvTypeK">K cache</label>
@@ -89,7 +102,7 @@
 
         <hr class="divider">
 
-        <div class="panel-title" style="margin-bottom:8px"><span class="icon">&#x26A1;</span> Hardware (tokens/sec)</div>
+        <div class="panel-title" style="margin-bottom:8px"><span class="icon" aria-hidden="true">&#x26A1;</span> Hardware (tokens/sec)</div>
         <div class="form-group">
           <label for="gpuPreset">GPU preset</label>
           <select id="gpuPreset"><option value="custom">Custom</option></select>
@@ -133,8 +146,8 @@
           <label for="nglOverride">GPU layers (auto if empty)</label>
           <input type="text" id="nglOverride" placeholder="auto" />
         </div>
-        <div class="form-group hidden" id="moeOffloadGroup">
-          <label>MoE expert placement</label>
+        <fieldset class="form-group hidden" id="moeOffloadGroup" style="border:none;padding:0;margin:0">
+          <legend style="font-size:0.85rem;font-weight:600;margin-bottom:6px">MoE expert placement</legend>
           <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
             <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
               <input type="checkbox" id="cpuMoe" /> --cpu-moe (all experts in RAM)
@@ -144,22 +157,22 @@
               <input type="number" id="nCpuMoe" min="0" step="1" placeholder="0" style="width:60px" />
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <hr class="divider">
 
-        <div style="margin-top:12px;display:flex;gap:8px">
+        <div style="display:flex;gap:8px">
           <button id="calcBtn" style="flex:1">Calculate Memory</button>
           <button id="resetBtn" class="reset-btn" title="Reset all fields to defaults">Reset</button>
         </div>
 
-        <div class="error-msg" id="errorMsg"></div>
+        <div class="error-msg" id="errorMsg" aria-live="assertive"></div>
       </div>
     </div>
 
     <!-- RIGHT: Results -->
     <div>
-      <div class="loading" id="loading">
+      <div class="loading" id="loading" role="status" aria-live="polite">
         <div class="spinner"></div>
         <div id="loadingText">Fetching model metadata...</div>
       </div>
@@ -177,7 +190,7 @@
       <div class="results" id="results">
         <!-- Model Info -->
         <div class="panel model-info visible" id="modelInfoPanel">
-          <div class="panel-title"><span class="icon">&#x2139;&#xFE0F;</span> Model Info <span id="archBadge"></span></div>
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x2139;&#xFE0F;</span> Model Info <span id="archBadge"></span></div>
           <div class="info-grid" id="modelInfoGrid"></div>
         </div>
 
@@ -191,8 +204,8 @@
         </div>
 
         <!-- Weights -->
-        <div class="panel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x2696;&#xFE0F;</span> Model Weights</div>
+        <div class="panel panel-gap">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x2696;&#xFE0F;</span> Model Weights</div>
           <div class="result-row">
             <span class="label">Total weight size</span>
             <span class="value" id="weightTotal">-</span>
@@ -211,8 +224,8 @@
         </div>
 
         <!-- KV Cache -->
-        <div class="panel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x1F4CB;</span> KV Cache</div>
+        <div class="panel panel-gap">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x1F4CB;</span> KV Cache</div>
           <div class="result-row">
             <span class="label">K cache (<span id="kvKLabel">F16</span>)</span>
             <span class="value" id="kvKSize">-</span>
@@ -232,8 +245,8 @@
         </div>
 
         <!-- Activations -->
-        <div class="panel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x26A1;</span> Activations</div>
+        <div class="panel panel-gap">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x26A1;</span> Activations</div>
           <div class="result-row">
             <span class="label">Activation memory (FP32)</span>
             <span class="value" id="actSize">-</span>
@@ -241,8 +254,8 @@
         </div>
 
         <!-- Multimodal Projector -->
-        <div class="panel hidden" id="mmProjPanel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x1F5BC;&#xFE0F;</span> Multimodal Projector</div>
+        <div class="panel hidden" id="mmProjPanel">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x1F5BC;&#xFE0F;</span> Multimodal Projector</div>
           <div class="result-row"><span class="label">File</span><span class="value" id="mmProjFile" style="font-size:0.8rem">-</span></div>
           <div class="result-row"><span class="label">Projector type</span><span class="value" id="mmProjType">-</span></div>
           <div class="result-row"><span class="label">Modality</span><span class="value" id="mmProjModality">-</span></div>
@@ -255,8 +268,8 @@
         </div>
 
         <!-- Memory Requirements -->
-        <div class="panel" style="margin-top:12px" id="memReqPanel">
-          <div class="panel-title"><span class="icon">&#x1F4CA;</span> Memory Requirements</div>
+        <div class="panel panel-gap" id="memReqPanel">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x1F4CA;</span> Memory Requirements</div>
 
           <div class="result-row total">
             <span class="label">VRAM required</span>
@@ -266,15 +279,15 @@
             <span class="label">Weights</span>
             <span class="value" id="vramWeightsSize">-</span>
           </div>
-          <div class="result-row indent" id="vramActiveExpertRow" style="display:none">
+          <div class="result-row indent hidden" id="vramActiveExpertRow">
             <span class="label" id="vramActiveExpertLabel">Active experts</span>
             <span class="value" id="vramActiveExpertSize">-</span>
           </div>
-          <div class="result-row indent" id="vramRouterRow" style="display:none">
+          <div class="result-row indent hidden" id="vramRouterRow">
             <span class="label">Router + shared</span>
             <span class="value" id="vramRouterSize">-</span>
           </div>
-          <div class="result-row indent" id="vramMtpRow" style="display:none">
+          <div class="result-row indent hidden" id="vramMtpRow">
             <span class="label" title="Multi-Token Prediction layers — loaded for speculative decoding, skipped by the main decoder">MTP weights</span>
             <span class="value" id="vramMtpSize">-</span>
           </div>
@@ -282,7 +295,7 @@
             <span class="label">KV cache</span>
             <span class="value" id="vramKVSize">-</span>
           </div>
-          <div class="result-row indent" id="vramRecurrentRow" style="display:none">
+          <div class="result-row indent hidden" id="vramRecurrentRow">
             <span class="label">Recurrent state</span>
             <span class="value" id="vramRecurrentSize">-</span>
           </div>
@@ -290,7 +303,7 @@
             <span class="label">Activations</span>
             <span class="value" id="vramActSize">-</span>
           </div>
-          <div class="result-row indent" id="vramMmProjRow" style="display:none">
+          <div class="result-row indent hidden" id="vramMmProjRow">
             <span class="label">mmproj</span>
             <span class="value" id="vramMmProjSize">-</span>
           </div>
@@ -301,11 +314,11 @@
             <span class="label">RAM required</span>
             <span class="value" id="ramSize" style="color:var(--text2)">-</span>
           </div>
-          <div class="result-row indent" id="ramInactiveRow" style="display:none">
+          <div class="result-row indent hidden" id="ramInactiveRow">
             <span class="label" id="ramInactiveLabel">Inactive experts</span>
             <span class="value" id="ramInactiveSize">-</span>
           </div>
-          <div class="result-row indent" id="ramMmProjRow" style="display:none">
+          <div class="result-row indent hidden" id="ramMmProjRow">
             <span class="label">mmproj</span>
             <span class="value" id="ramMmProjSize">-</span>
           </div>
@@ -319,37 +332,37 @@
         </div>
 
         <!-- System Fit Check -->
-        <div class="panel" id="fitCheckPanel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x1F50B;</span> System Fit Check</div>
+        <div class="panel" id="fitCheckPanel">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x1F50B;</span> System Fit Check</div>
 
           <div id="vramFitSection">
             <div class="result-row">
               <span class="label" style="font-size:0.8rem">VRAM</span>
               <span class="value" id="vramFitLabel" style="font-size:0.8rem">-</span>
             </div>
-            <div class="vram-bar-container">
-              <div class="vram-bar green" id="vramBar" style="width:0%"></div>
-              <div class="vram-text" id="vramBarText">-</div>
+            <div class="usage-bar-container">
+              <div class="usage-bar green" id="vramBar" style="width:0%"></div>
+              <div class="usage-text" id="vramBarText">-</div>
             </div>
-            <div class="vram-status green" id="vramStatus">-</div>
+            <div class="usage-status green" id="vramStatus">-</div>
           </div>
 
-          <div id="ramFitSection" style="display:none; margin-top:12px">
+          <div id="ramFitSection" class="hidden">
             <div class="result-row">
               <span class="label" style="font-size:0.8rem">RAM</span>
               <span class="value" id="ramFitLabel" style="font-size:0.8rem">-</span>
             </div>
-            <div class="vram-bar-container">
-              <div class="vram-bar green" id="ramBar" style="width:0%"></div>
-              <div class="vram-text" id="ramBarText">-</div>
+            <div class="usage-bar-container">
+              <div class="usage-bar green" id="ramBar" style="width:0%"></div>
+              <div class="usage-text" id="ramBarText">-</div>
             </div>
-            <div class="vram-status green" id="ramStatus">-</div>
+            <div class="usage-status green" id="ramStatus">-</div>
           </div>
         </div>
 
         <!-- Performance -->
-        <div class="panel hidden" id="perfPanel" style="margin-top:12px">
-          <div class="panel-title"><span class="icon">&#x26A1;</span> Performance (estimated, SOL upper bound)</div>
+        <div class="panel hidden" id="perfPanel">
+          <div class="panel-title"><span class="icon" aria-hidden="true">&#x26A1;</span> Performance (estimated, SOL upper bound)</div>
           <div class="result-row">
             <span class="label">Decode throughput</span>
             <span class="value" id="perfDecode" style="color:var(--accent)">-</span>
@@ -390,6 +403,7 @@
       </div>
     </div>
   </div>
+  </main>
 </div>
 
 <script type="module" src="ui.js"></script>

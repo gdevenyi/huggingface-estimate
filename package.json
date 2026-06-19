@@ -2,5 +2,10 @@
   "type": "module",
   "dependencies": {
     "@huggingface/gguf": "^0.4.2"
+  },
+  "scripts": {
+    "test": "node --test test/unit.mjs",
+    "test:snapshot": "node --test test/unit.mjs test/snapshot.mjs",
+    "test:update-golden": "node run-calc.js --batch test/baseline.list > test/golden/run-calc-batch.json 2> test/golden/run-calc-batch.stderr && node scan-metadata.js --batch test/baseline.list --json > test/golden/scan-metadata-batch.json 2> test/golden/scan-metadata-batch.stderr"
   }
 }

@@ -1,9 +1,5 @@
 import { gguf, ggufAllShards, GGMLQuantizationType } from '@huggingface/gguf';
-import {
-  TQ3_FORK_BPE, TQ3_QUANT_NAMES,
-  BUUN_FORK_BPE, BUUN_QUANT_NAMES,
-  PRISM_ML_FORK_BPE, PRISM_ML_QUANT_NAMES,
-} from './calculations.js';
+import { FORK_OVERRIDES } from './quant-types.js';
 
 export { GGMLQuantizationType };
 
@@ -16,7 +12,15 @@ export { GGMLQuantizationType };
 //   buun-llama-cpp  — adds TURBO8_0 (47), TURBO3_TCQ (45 buun), TURBO2_TCQ (46 buun)
 //   prism-ml-llama.cpp — no KV-specific types (Q2_0 is weight-only)
 // Source of truth: each fork's `kv_cache_types` / `kv_cache_type_from_str`.
-export const KV_VALID_QUANTS = [
+// KV_VALID_QUANTS is now derived from STANDARD_KV_QUANTS + KV_FORK_GROUPS
+// (see below) to prevent drift between the two lists.
+
+// Fork-specific KV quant groups for UI optgroup rendering.
+// Standard (llama.cpp) types are ungrouped; fork-exclusive types appear in labeled optgroups.
+// KV_FORK_GROUPS + STANDARD_KV_QUANTS together compose KV_VALID_QUANTS
+// (single source of truth: previously KV_VALID_QUANTS was a parallel list
+// that had to be hand-kept in sync with this one).
+const STANDARD_KV_QUANTS = [
   GGMLQuantizationType.F32,
   GGMLQuantizationType.F16,
   GGMLQuantizationType.BF16,
@@ -26,25 +30,7 @@ export const KV_VALID_QUANTS = [
   GGMLQuantizationType.IQ4_NL,
   GGMLQuantizationType.Q5_0,
   GGMLQuantizationType.Q5_1,
-  // ik_llama.cpp KV cache quantizations
-  133,  // Q6_0
-  151,  // Q8_KV
-  // turboquant KV cache quantizations
-  'TURBO2_0', 'TURBO3_0', 'TURBO4_0',
-  // rotorquant KV cache quantizations
-  'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0',
-  // tq3 KV cache quantizations
-  'TQ3_0',
-  201,  // TURBO3_0 (tq3; numeric ID because BPE differs from turboquant's string-keyed TURBO3_0)
-  202,  // TURBO4_0 (tq3)
-  // buun-llama-cpp KV cache quantizations
-  47,   // TURBO8_0 (unique to buun)
-  'BUUN_TURBO3_TCQ',  // ID 45 in buun (collides with TQ3_1S in other forks)
-  'BUUN_TURBO2_TCQ',  // ID 46 in buun (collides with TQ4_1S in other forks)
 ];
-
-// Fork-specific KV quant groups for UI optgroup rendering.
-// Standard (llama.cpp) types are ungrouped; fork-exclusive types appear in labeled optgroups.
 export const KV_FORK_GROUPS = [
   { label: 'ik_llama.cpp', quants: [133, 151] },
   { label: 'turboquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0'] },
@@ -53,7 +39,17 @@ export const KV_FORK_GROUPS = [
   { label: 'buun', quants: [47, 'BUUN_TURBO3_TCQ', 'BUUN_TURBO2_TCQ'] },
 ];
 
-function detectFork(metadata, tensorInfos) {
+// Union of allowed --cache-type-k / --cache-type-v values across supported forks.
+// Auto-derived from STANDARD_KV_QUANTS + KV_FORK_GROUPS so the two lists
+// cannot drift apart. Deduped (rotorquant re-lists turboquant's three types).
+export const KV_VALID_QUANTS = [...new Set([
+  ...STANDARD_KV_QUANTS,
+  ...KV_FORK_GROUPS.flatMap(g => g.quants),
+])];
+export const STANDARD_KV_QUANT_SET = new Set(STANDARD_KV_QUANTS);
+
+
+export function detectFork(metadata, tensorInfos) {
   const ftype = Number(metadata['general.file_type'] ?? -1);
   const dtypeSet = new Set(tensorInfos.map((t) => t.dtype));
   // tq3-unique signals first: dtype 200 (TQ3_0 KV), ftype 200/45/40.
@@ -79,6 +75,11 @@ function detectFork(metadata, tensorInfos) {
     if (dtypeSet.has(44)) return 'tq3';
     if (dtypeSet.has(45)) return 'turboquant';
   }
+  // ik_llama.cpp: ID 202 (Q4_0_R8 weight type) collides with tq3's TURBO4_0
+  // KV cache type. tq3's TURBO4_0 is KV-only and never appears in weight
+  // tensors, so a dtype-202 in tensorInfos uniquely identifies ik_llama.
+  // Must come AFTER the tq3 checks above (which also detect dtype 200/201).
+  if (dtypeSet.has(202)) return 'ik_llama';
   // Fallback: dtype 42 present without any fork-specific signal → prism-ml
   // (its Q2_0 BPE 34/128 matches the default BPE[42], so byte counts are right
   // regardless; the fork label just provides the correct display name).
@@ -86,27 +87,15 @@ function detectFork(metadata, tensorInfos) {
   return null;
 }
 
-function applyForkOverrides(tensorInfos, fork) {
-  if (fork === 'tq3') {
-    for (const t of tensorInfos) {
-      if (TQ3_FORK_BPE[t.dtype] !== undefined) {
-        t._bpeOverride = TQ3_FORK_BPE[t.dtype];
-        t._nameOverride = TQ3_QUANT_NAMES[t.dtype];
-      }
-    }
-  } else if (fork === 'buun') {
-    for (const t of tensorInfos) {
-      if (BUUN_FORK_BPE[t.dtype] !== undefined) {
-        t._bpeOverride = BUUN_FORK_BPE[t.dtype];
-        t._nameOverride = BUUN_QUANT_NAMES[t.dtype];
-      }
-    }
-  } else if (fork === 'prism-ml') {
-    for (const t of tensorInfos) {
-      if (PRISM_ML_FORK_BPE[t.dtype] !== undefined) {
-        t._bpeOverride = PRISM_ML_FORK_BPE[t.dtype];
-        t._nameOverride = PRISM_ML_QUANT_NAMES[t.dtype];
-      }
+export function applyForkOverrides(tensorInfos, fork) {
+  // Single registry-driven loop. Adding a new fork only requires appending
+  // an entry to FORK_OVERRIDES in quant-types.js — this function need not change.
+  const entry = FORK_OVERRIDES[fork];
+  if (!entry) return;
+  for (const t of tensorInfos) {
+    if (entry.bpe[t.dtype] !== undefined) {
+      t._bpeOverride = entry.bpe[t.dtype];
+      t._nameOverride = entry.names[t.dtype];
     }
   }
 }
@@ -150,16 +139,13 @@ const isMmProjName = (f) => MMPROJ_RE.test(f.replace(/^.*\//, ''));
  */
 export async function resolveHFModel(path) {
   // HF page URL → extract owner/model slug and fall through to the API lookup
-  if (path.match(/^https?:\/\/huggingface\.co\//i)) {
-    const match = path.match(/^https?:\/\/huggingface\.co\/([^/?#]+\/[^/?#]+)/i);
-    if (match) {
-      const slug = match[1];
-      const fileInfo = path.match(/[?&]show_file_info=([^&#]+)/);
-      if (fileInfo && fileInfo[1].toLowerCase().endsWith('.gguf')) {
-        return { url: `https://huggingface.co/${slug}/resolve/main/${decodeURIComponent(fileInfo[1])}` };
-      }
-      path = slug;
+  const slugFromUrl = extractHfSlug(path);
+  if (slugFromUrl !== null) {
+    const fileInfo = path.match(/[?&]show_file_info=([^&#]+)/);
+    if (fileInfo && fileInfo[1].toLowerCase().endsWith('.gguf')) {
+      return { url: `https://huggingface.co/${slugFromUrl}/resolve/main/${decodeURIComponent(fileInfo[1])}` };
     }
+    path = slugFromUrl;
   }
 
   // Direct URL to a .gguf file → normalize /blob/ → /resolve/, strip query/fragment
@@ -211,13 +197,22 @@ export async function resolveHFModel(path) {
 }
 
 /**
+ * Extract the owner/model slug from a HuggingFace URL.
+ * Returns null if `path` is not a HF URL (e.g. it's already a bare "owner/model" slug).
+ *
+ * Shared by resolveHFModel, buildResolveUrl, and ui.js's deriveGgufId.
+ * Previously the same regex was inlined 3× across these files.
+ */
+export function extractHfSlug(path) {
+  if (!path.match(/^https?:\/\/huggingface\.co\//i)) return null;
+  const match = path.match(/^https?:\/\/huggingface\.co\/([^/?#]+\/[^/?#]+)/i);
+  return match ? match[1] : null;
+}
+
+/**
  * Build a resolve URL from a model path and selected GGUF filename.
  */
 export function buildResolveUrl(path, filename) {
-  let modelPath = path;
-  if (path.match(/^https?:\/\/huggingface\.co\//i)) {
-    const match = path.match(/^https?:\/\/huggingface\.co\/([^/?#]+\/[^/?#]+)/i);
-    if (match) modelPath = match[1];
-  }
+  const modelPath = extractHfSlug(path) ?? path;
   return `https://huggingface.co/${modelPath}/resolve/main/${filename}`;
 }

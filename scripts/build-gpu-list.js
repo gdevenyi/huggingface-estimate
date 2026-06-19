@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { round } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CSV_PATH = join(ROOT, 'specs', 'gpu_1986-2026.csv');
@@ -194,10 +195,7 @@ for (let r = 1; r < rows.length; r++) {
   });
 }
 
-function round(n, d) {
-  const m = Math.pow(10, d);
-  return Math.round(n * m) / m;
-}
+// (round imported from ./lib/format.js)
 
 // Sort so the dropdown reads in the order users expect:
 // NVIDIA GeForce: newer series first (50 → 10), within a series top-tier

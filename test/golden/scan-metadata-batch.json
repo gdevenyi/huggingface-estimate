@@ -1,0 +1,410 @@
+{
+  "hasGaps": true,
+  "architectures": {
+    "gemma3": {
+      "known": true,
+      "repos": [
+        "unsloth/gemma-3-1b-it-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "gemma3.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma3.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.post_attention_norm.weight",
+        "blk.N.post_ffw_norm.weight"
+      ]
+    },
+    "qwen3moe": {
+      "known": true,
+      "repos": [
+        "unsloth/Qwen3-30B-A3B-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "qwen3moe.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen3moe.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "lfm2": {
+      "known": true,
+      "repos": [
+        "unsloth/LFM2-350M-GGUF"
+      ],
+      "unhandledCalcKeys": [
+        {
+          "key": "lfm2.shortconv.l_cache",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "nonSizingKeys": [
+        {
+          "key": "lfm2.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "lfm2.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.shortconv.conv.weight",
+        "blk.N.shortconv.in_proj.weight",
+        "blk.N.shortconv.out_proj.weight"
+      ]
+    },
+    "falcon-h1": {
+      "known": true,
+      "repos": [
+        "unsloth/Falcon-H1-0.5B-Instruct-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "falcon-h1.ssm.conv_kernel",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.ssm.inner_size",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.ssm.state_size",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.ssm.time_step_rank",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.ssm.group_count",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "falcon-h1.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.ssm_a",
+        "blk.N.ssm_conv1d.bias",
+        "blk.N.ssm_conv1d.weight",
+        "blk.N.ssm_d",
+        "blk.N.ssm_dt.bias",
+        "blk.N.ssm_in.weight",
+        "blk.N.ssm_out.weight"
+      ]
+    },
+    "llama": {
+      "known": true,
+      "repos": [
+        "ggml-org/SmolVLM-500M-Instruct-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "llama.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "llama.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "gemma-embedding": {
+      "known": true,
+      "repos": [
+        "ggml-org/embeddinggemma-300M-GGUF"
+      ],
+      "unhandledCalcKeys": [
+        {
+          "key": "gemma-embedding.dense_2_feat_in",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.dense_2_feat_out",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.dense_3_feat_in",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.dense_3_feat_out",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "nonSizingKeys": [
+        {
+          "key": "gemma-embedding.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.rope.freq_base_swa",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "gemma-embedding.pooling_type",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.post_attention_norm.weight",
+        "blk.N.post_ffw_norm.weight",
+        "dense_2.weight",
+        "dense_3.weight"
+      ]
+    },
+    "ernie4_5": {
+      "known": true,
+      "repos": [
+        "unsloth/ERNIE-4.5-0.3B-PT-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "ernie4_5.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "ernie4_5.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "hunyuan-moe": {
+      "known": true,
+      "repos": [
+        "unsloth/Hunyuan-A13B-Instruct-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "hunyuan-moe.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "hunyuan-moe.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "hunyuan-moe.expert_shared_count",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "hunyuan-moe.rope.scaling.type",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "hunyuan-moe.rope.scaling.factor",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "hunyuan-moe.rope.scaling.original_context_length",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "lfm2moe": {
+      "known": true,
+      "repos": [
+        "unsloth/LFM2-8B-A1B-GGUF"
+      ],
+      "unhandledCalcKeys": [
+        {
+          "key": "lfm2moe.shortconv.l_cache",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "nonSizingKeys": [
+        {
+          "key": "lfm2moe.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "lfm2moe.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "lfm2moe.expert_gating_func",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.exp_probs_b.bias",
+        "blk.N.shortconv.conv.weight",
+        "blk.N.shortconv.in_proj.weight",
+        "blk.N.shortconv.out_proj.weight"
+      ]
+    },
+    "qwen3": {
+      "known": true,
+      "repos": [
+        "prism-ml/Bonsai-8B-gguf"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "qwen3.rope.scaling.type",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen3.rope.scaling.factor",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen3.rope.scaling.original_context_length",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen3.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen3.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "qwen35moe": {
+      "known": true,
+      "repos": [
+        "YTan2000/Qwen3.6-35B-A3B-TQ3_4S"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "qwen35moe.rope.dimension_sections",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.ssm.conv_kernel",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.ssm.state_size",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.ssm.group_count",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.ssm.time_step_rank",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen35moe.ssm.inner_size",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": [
+        "blk.N.post_attention_norm.weight",
+        "blk.N.ssm_a",
+        "blk.N.ssm_alpha.weight",
+        "blk.N.ssm_beta.weight",
+        "blk.N.ssm_conv1d.weight",
+        "blk.N.ssm_dt.bias",
+        "blk.N.ssm_norm.weight",
+        "blk.N.ssm_out.weight"
+      ]
+    }
+  },
+  "unknownQuants": {},
+  "unknownProjTypes": {}
+}
