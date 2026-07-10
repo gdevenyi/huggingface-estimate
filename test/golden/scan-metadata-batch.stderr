@@ -1,14 +1,14 @@
 Scanning 13 repo(s) with concurrency 3...
-[1/13] unsloth/gemma-3-1b-it-GGUF → gemma3
-[2/13] unsloth/Qwen3-30B-A3B-GGUF → qwen3moe
-[3/13] unsloth/LFM2-350M-GGUF → lfm2
-[4/13] unsloth/Falcon-H1-0.5B-Instruct-GGUF → falcon-h1
-[5/13] ggml-org/SmolVLM-500M-Instruct-GGUF → llama
-[6/13] ggml-org/embeddinggemma-300M-GGUF → gemma-embedding
-[7/13] unsloth/ERNIE-4.5-0.3B-PT-GGUF → ernie4_5
-[8/13] unsloth/Hunyuan-A13B-Instruct-GGUF → hunyuan-moe
-[9/13] unsloth/LFM2-8B-A1B-GGUF → lfm2moe
-[10/13] prism-ml/Bonsai-8B-gguf → qwen3
-[11/13] YTan2000/Qwen3.6-35B-A3B-TQ3_4S → qwen35moe
-  ERROR: Qwen/Qwen2.5-3B-Instruct-GGUF: fetch failed
-  ERROR: unsloth/MiniMax-M2.5-GGUF: fetch failed
+[1/13] unsloth/Qwen3-30B-A3B-GGUF → qwen3moe
+[2/13] Qwen/Qwen2.5-3B-Instruct-GGUF → qwen2
+[3/13] unsloth/gemma-3-1b-it-GGUF → gemma3
+[4/13] unsloth/LFM2-350M-GGUF → lfm2
+[5/13] unsloth/Falcon-H1-0.5B-Instruct-GGUF → falcon-h1
+[6/13] unsloth/MiniMax-M2.5-GGUF → minimax-m2
+[7/13] ggml-org/SmolVLM-500M-Instruct-GGUF → llama
+[8/13] ggml-org/embeddinggemma-300M-GGUF → gemma-embedding
+[9/13] unsloth/ERNIE-4.5-0.3B-PT-GGUF → ernie4_5
+[10/13] unsloth/LFM2-8B-A1B-GGUF → lfm2moe
+[11/13] unsloth/Hunyuan-A13B-Instruct-GGUF → hunyuan-moe
+[12/13] prism-ml/Bonsai-8B-gguf → qwen3
+[13/13] YTan2000/Qwen3.6-35B-A3B-TQ3_4S → qwen35moe

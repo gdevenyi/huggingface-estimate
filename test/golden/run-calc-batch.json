@@ -3,9 +3,26 @@
     "success": true,
     "data": {
       "repo": "Qwen/Qwen2.5-3B-Instruct-GGUF",
+      "filename": "qwen2.5-3b-instruct-fp16-00001-of-00002.gguf",
       "url": "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-fp16-00001-of-00002.gguf",
       "arch": "qwen2",
+      "fork": null,
       "quant": "F16",
+      "modelInfo": {
+        "name": "qwen2.5-3b-instruct",
+        "architecture": "qwen2",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 32768,
+        "vocabSize": 0,
+        "layers": 36,
+        "mtpLayers": 0,
+        "embeddingLength": 2048,
+        "headCount": 16,
+        "headCountKv": 2,
+        "feedForwardLength": 11008
+      },
       "totalParams": 3397103616,
       "totalParamsFormatted": "3.40B",
       "weightBytes": 6794690560,
@@ -44,18 +61,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 1880064,
-        "totalBytesFormatted": "1.8 MiB",
-        "perLayerBytes": 52224,
-        "perLayerBytesFormatted": "51.0 KiB",
+        "totalBytes": 3850371072,
+        "totalBytesFormatted": "3.59 GiB",
+        "perLayerBytes": 106954752,
+        "perLayerBytesFormatted": "102.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 6947565568,
-      "vramBytesFormatted": "6.47 GiB",
+      "vramBytes": 10796056576,
+      "vramBytesFormatted": "10.05 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -67,9 +89,28 @@
     "success": true,
     "data": {
       "repo": "unsloth/gemma-3-1b-it-GGUF",
+      "filename": "gemma-3-1b-it-BF16.gguf",
       "url": "https://huggingface.co/unsloth/gemma-3-1b-it-GGUF/resolve/main/gemma-3-1b-it-BF16.gguf",
       "arch": "gemma3",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Gemma-3-1B-It",
+        "architecture": "gemma3",
+        "categories": [
+          "transformer",
+          "iswa"
+        ],
+        "contextLength": 32768,
+        "vocabSize": 0,
+        "layers": 26,
+        "mtpLayers": 0,
+        "embeddingLength": 1152,
+        "headCount": 4,
+        "headCountKv": 1,
+        "feedForwardLength": 6912,
+        "slidingWindow": 512
+      },
       "totalParams": 999885952,
       "totalParamsFormatted": "999.89M",
       "weightBytes": 2000040448,
@@ -108,18 +149,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 838656,
-        "totalBytesFormatted": "819.0 KiB",
-        "perLayerBytes": 32256,
-        "perLayerBytesFormatted": "31.5 KiB",
+        "totalBytes": 1717567488,
+        "totalBytesFormatted": "1.60 GiB",
+        "perLayerBytes": 66060288,
+        "perLayerBytesFormatted": "63.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 2040724992,
-      "vramBytesFormatted": "1.90 GiB",
+      "vramBytes": 3757453824,
+      "vramBytesFormatted": "3.50 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -131,9 +177,29 @@
     "success": true,
     "data": {
       "repo": "unsloth/Qwen3-30B-A3B-GGUF",
+      "filename": "BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf",
       "url": "https://huggingface.co/unsloth/Qwen3-30B-A3B-GGUF/resolve/main/BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf",
       "arch": "qwen3moe",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Qwen3-30B-A3B",
+        "architecture": "qwen3moe",
+        "categories": [
+          "transformer",
+          "moe"
+        ],
+        "contextLength": 40960,
+        "vocabSize": 0,
+        "layers": 48,
+        "mtpLayers": 0,
+        "embeddingLength": 2048,
+        "headCount": 32,
+        "headCountKv": 4,
+        "feedForwardLength": 6144,
+        "expertCount": 128,
+        "expertUsedCount": 8
+      },
       "totalParams": 30532122624,
       "totalParamsFormatted": "30.53B",
       "weightBytes": 61089832960,
@@ -172,10 +238,10 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 1572864,
-        "totalBytesFormatted": "1.5 MiB",
-        "perLayerBytes": 32768,
-        "perLayerBytesFormatted": "32.0 KiB",
+        "totalBytes": 3221225472,
+        "totalBytesFormatted": "3.00 GiB",
+        "perLayerBytes": 67108864,
+        "perLayerBytesFormatted": "64.0 MiB",
         "isMoe": true,
         "expertCount": 128,
         "expertUsedCount": 8
@@ -198,9 +264,14 @@
         "activeExpertWeightBytes": 3623878656,
         "activeExpertWeightBytesFormatted": "3.38 GiB"
       },
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 61494059008,
-      "vramBytesFormatted": "57.27 GiB",
+      "vramBytes": 64713711616,
+      "vramBytesFormatted": "60.27 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -212,9 +283,28 @@
     "success": true,
     "data": {
       "repo": "unsloth/MiniMax-M2.5-GGUF",
+      "filename": "BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf",
       "url": "https://huggingface.co/unsloth/MiniMax-M2.5-GGUF/resolve/main/BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf",
       "arch": "minimax-m2",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Minimax-M2.5",
+        "architecture": "minimax-m2",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 196608,
+        "vocabSize": 0,
+        "layers": 62,
+        "mtpLayers": 0,
+        "embeddingLength": 3072,
+        "headCount": 48,
+        "headCountKv": 8,
+        "feedForwardLength": 1536,
+        "expertCount": 256,
+        "expertUsedCount": 8
+      },
       "totalParams": 228689764864,
       "totalParamsFormatted": "228.69B",
       "weightBytes": 457478735872,
@@ -253,10 +343,10 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 3809280,
-        "totalBytesFormatted": "3.6 MiB",
-        "perLayerBytes": 61440,
-        "perLayerBytesFormatted": "60.0 KiB",
+        "totalBytes": 7801405440,
+        "totalBytesFormatted": "7.27 GiB",
+        "perLayerBytes": 125829120,
+        "perLayerBytesFormatted": "120.0 MiB",
         "isMoe": true,
         "expertCount": 256,
         "expertUsedCount": 8
@@ -279,9 +369,14 @@
         "activeExpertWeightBytes": 14042531776,
         "activeExpertWeightBytesFormatted": "13.08 GiB"
       },
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 458522732544,
-      "vramBytesFormatted": "427.03 GiB",
+      "vramBytes": 466320328704,
+      "vramBytesFormatted": "434.29 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -293,9 +388,43 @@
     "success": true,
     "data": {
       "repo": "unsloth/LFM2-350M-GGUF",
+      "filename": "LFM2-350M-F16.gguf",
       "url": "https://huggingface.co/unsloth/LFM2-350M-GGUF/resolve/main/LFM2-350M-F16.gguf",
       "arch": "lfm2",
+      "fork": null,
       "quant": "F16",
+      "modelInfo": {
+        "name": "Lfm2-350M",
+        "architecture": "lfm2",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 32768,
+        "vocabSize": 65536,
+        "layers": 16,
+        "mtpLayers": 0,
+        "embeddingLength": 1024,
+        "headCount": 16,
+        "headCountKv": [
+          0,
+          0,
+          8,
+          0,
+          0,
+          8,
+          0,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0,
+          8,
+          0
+        ],
+        "feedForwardLength": 4608
+      },
       "totalParams": 354483968,
       "totalParamsFormatted": "354.48M",
       "weightBytes": 709098496,
@@ -334,18 +463,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 360448,
-        "totalBytesFormatted": "352.0 KiB",
-        "perLayerBytes": 22528,
-        "perLayerBytesFormatted": "22.0 KiB",
+        "totalBytes": 738197504,
+        "totalBytesFormatted": "704.0 MiB",
+        "perLayerBytes": 46137344,
+        "perLayerBytesFormatted": "44.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 759872512,
-      "vramBytesFormatted": "724.7 MiB",
+      "vramBytes": 1497709568,
+      "vramBytesFormatted": "1.39 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -357,9 +491,26 @@
     "success": true,
     "data": {
       "repo": "unsloth/Falcon-H1-0.5B-Instruct-GGUF",
+      "filename": "Falcon-H1-0.5B-Instruct-BF16.gguf",
       "url": "https://huggingface.co/unsloth/Falcon-H1-0.5B-Instruct-GGUF/resolve/main/Falcon-H1-0.5B-Instruct-BF16.gguf",
       "arch": "falcon-h1",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Falcon-H1-0.5B-Instruct",
+        "architecture": "falcon-h1",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 16384,
+        "vocabSize": 32784,
+        "layers": 36,
+        "mtpLayers": 0,
+        "embeddingLength": 1024,
+        "headCount": 8,
+        "headCountKv": 2,
+        "feedForwardLength": 2048
+      },
       "totalParams": 521411104,
       "totalParamsFormatted": "521.41M",
       "weightBytes": 1043622016,
@@ -398,18 +549,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 442368,
-        "totalBytesFormatted": "432.0 KiB",
-        "perLayerBytes": 12288,
-        "perLayerBytesFormatted": "12.0 KiB",
+        "totalBytes": 905969664,
+        "totalBytesFormatted": "864.0 MiB",
+        "perLayerBytes": 25165824,
+        "perLayerBytesFormatted": "24.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 1148647552,
-      "vramBytesFormatted": "1.07 GiB",
+      "vramBytes": 2054174848,
+      "vramBytesFormatted": "1.91 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -421,9 +577,26 @@
     "success": true,
     "data": {
       "repo": "ggml-org/SmolVLM-500M-Instruct-GGUF",
+      "filename": "SmolVLM-500M-Instruct-f16.gguf",
       "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/SmolVLM-500M-Instruct-f16.gguf",
       "arch": "llama",
+      "fork": null,
       "quant": "F16",
+      "modelInfo": {
+        "name": "SmolVLM 500M Instruct",
+        "architecture": "llama",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 8192,
+        "vocabSize": 49280,
+        "layers": 32,
+        "mtpLayers": 0,
+        "embeddingLength": 960,
+        "headCount": 15,
+        "headCountKv": 5,
+        "feedForwardLength": 2560
+      },
       "totalParams": 409252800,
       "totalParamsFormatted": "409.25M",
       "weightBytes": 818630400,
@@ -462,18 +635,46 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 450560,
-        "totalBytesFormatted": "440.0 KiB",
-        "perLayerBytes": 14080,
-        "perLayerBytesFormatted": "13.8 KiB",
+        "totalBytes": 922746880,
+        "totalBytesFormatted": "880.0 MiB",
+        "perLayerBytes": 28835840,
+        "perLayerBytesFormatted": "27.5 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
-      "mmproj": null,
-      "vramBytes": 986853120,
-      "vramBytesFormatted": "941.1 MiB",
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
+      "mmproj": {
+        "filename": "mmproj-SmolVLM-500M-Instruct-f16.gguf",
+        "autoDetected": true,
+        "url": "https://huggingface.co/ggml-org/SmolVLM-500M-Instruct-GGUF/resolve/main/mmproj-SmolVLM-500M-Instruct-f16.gguf",
+        "placement": "vram",
+        "hasVision": true,
+        "hasAudio": false,
+        "isAudioProj": false,
+        "projType": "idefics3",
+        "projTypeKnown": true,
+        "imageSize": 512,
+        "patchSize": 16,
+        "nLayerV": 12,
+        "nEmbdV": 768,
+        "projDim": 960,
+        "nMerge": 4,
+        "nOutputTokens": 64,
+        "weightBytes": 199455744,
+        "weightBytesFormatted": "190.2 MiB",
+        "perImageActBytes": 245760,
+        "perImageActBytesFormatted": "240.0 KiB",
+        "totalBytes": 199701504,
+        "totalBytesFormatted": "190.5 MiB"
+      },
+      "vramBytes": 2108850944,
+      "vramBytesFormatted": "1.96 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -485,9 +686,26 @@
     "success": true,
     "data": {
       "repo": "ggml-org/embeddinggemma-300M-GGUF",
+      "filename": "embeddinggemma-300M-Q8_0.gguf",
       "url": "https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF/resolve/main/embeddinggemma-300M-Q8_0.gguf",
       "arch": "gemma-embedding",
+      "fork": null,
       "quant": "Q8_0",
+      "modelInfo": {
+        "name": "Embeddinggemma 300m",
+        "architecture": "gemma-embedding",
+        "categories": [
+          "embedding"
+        ],
+        "contextLength": 2048,
+        "vocabSize": 0,
+        "layers": 24,
+        "mtpLayers": 0,
+        "embeddingLength": 768,
+        "headCount": 3,
+        "headCountKv": 1,
+        "feedForwardLength": 1152
+      },
       "totalParams": 307581696,
       "totalParamsFormatted": "307.58M",
       "weightBytes": 327060480,
@@ -526,18 +744,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 184320,
-        "totalBytesFormatted": "180.0 KiB",
-        "perLayerBytes": 7680,
-        "perLayerBytesFormatted": "7.5 KiB",
+        "totalBytes": 377487360,
+        "totalBytesFormatted": "360.0 MiB",
+        "perLayerBytes": 15728640,
+        "perLayerBytesFormatted": "15.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 327244800,
-      "vramBytesFormatted": "312.1 MiB",
+      "vramBytes": 704547840,
+      "vramBytesFormatted": "671.9 MiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -549,9 +772,26 @@
     "success": true,
     "data": {
       "repo": "unsloth/ERNIE-4.5-0.3B-PT-GGUF",
+      "filename": "ERNIE-4.5-0.3B-PT-F16.gguf",
       "url": "https://huggingface.co/unsloth/ERNIE-4.5-0.3B-PT-GGUF/resolve/main/ERNIE-4.5-0.3B-PT-F16.gguf",
       "arch": "ernie4_5",
+      "fork": null,
       "quant": "F16",
+      "modelInfo": {
+        "name": "Ernie-4.5-0.3B-Pt",
+        "architecture": "ernie4_5",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 131072,
+        "vocabSize": 0,
+        "layers": 18,
+        "mtpLayers": 0,
+        "embeddingLength": 1024,
+        "headCount": 16,
+        "headCountKv": 2,
+        "feedForwardLength": 3072
+      },
       "totalParams": 360748032,
       "totalParamsFormatted": "360.75M",
       "weightBytes": 721571840,
@@ -590,18 +830,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 294912,
-        "totalBytesFormatted": "288.0 KiB",
-        "perLayerBytes": 16384,
-        "perLayerBytesFormatted": "16.0 KiB",
+        "totalBytes": 603979776,
+        "totalBytesFormatted": "576.0 MiB",
+        "perLayerBytes": 33554432,
+        "perLayerBytesFormatted": "32.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 797364224,
-      "vramBytesFormatted": "760.4 MiB",
+      "vramBytes": 1401049088,
+      "vramBytesFormatted": "1.30 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -613,9 +858,29 @@
     "success": true,
     "data": {
       "repo": "unsloth/Hunyuan-A13B-Instruct-GGUF",
+      "filename": "BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf",
       "url": "https://huggingface.co/unsloth/Hunyuan-A13B-Instruct-GGUF/resolve/main/BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf",
       "arch": "hunyuan-moe",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Hunyuan-A13B-Instruct",
+        "architecture": "hunyuan-moe",
+        "categories": [
+          "transformer",
+          "moe"
+        ],
+        "contextLength": 262144,
+        "vocabSize": 0,
+        "layers": 32,
+        "mtpLayers": 0,
+        "embeddingLength": 4096,
+        "headCount": 32,
+        "headCountKv": 8,
+        "feedForwardLength": 3072,
+        "expertCount": 64,
+        "expertUsedCount": 8
+      },
       "totalParams": 80393183232,
       "totalParamsFormatted": "80.39B",
       "weightBytes": 160803692544,
@@ -654,8 +919,8 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 3670016,
-        "totalBytesFormatted": "3.5 MiB",
+        "totalBytes": 7516192768,
+        "totalBytesFormatted": "7.00 GiB",
         "perLayerBytes": 0,
         "perLayerBytesFormatted": "0.0 KiB",
         "isMoe": true,
@@ -680,9 +945,14 @@
         "activeExpertWeightBytes": 19327352832,
         "activeExpertWeightBytesFormatted": "18.00 GiB"
       },
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 161344233472,
-      "vramBytesFormatted": "150.26 GiB",
+      "vramBytes": 168856756224,
+      "vramBytesFormatted": "157.26 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -694,9 +964,54 @@
     "success": true,
     "data": {
       "repo": "unsloth/LFM2-8B-A1B-GGUF",
+      "filename": "LFM2-8B-A1B-BF16.gguf",
       "url": "https://huggingface.co/unsloth/LFM2-8B-A1B-GGUF/resolve/main/LFM2-8B-A1B-BF16.gguf",
       "arch": "lfm2moe",
+      "fork": null,
       "quant": "BF16",
+      "modelInfo": {
+        "name": "Lfm2-8B-A1B",
+        "architecture": "lfm2moe",
+        "categories": [
+          "transformer",
+          "moe"
+        ],
+        "contextLength": 128000,
+        "vocabSize": 65536,
+        "layers": 24,
+        "mtpLayers": 0,
+        "embeddingLength": 2048,
+        "headCount": 32,
+        "headCountKv": [
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          0,
+          8,
+          0,
+          0,
+          8,
+          0,
+          0
+        ],
+        "feedForwardLength": 7168,
+        "expertCount": 32,
+        "expertUsedCount": 4
+      },
       "totalParams": 8339930560,
       "totalParamsFormatted": "8.34B",
       "weightBytes": 16683169536,
@@ -735,8 +1050,8 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 884736,
-        "totalBytesFormatted": "864.0 KiB",
+        "totalBytes": 1811939328,
+        "totalBytesFormatted": "1.69 GiB",
         "perLayerBytes": 0,
         "perLayerBytesFormatted": "0.0 KiB",
         "isMoe": true,
@@ -761,9 +1076,14 @@
         "activeExpertWeightBytes": 1937768800,
         "activeExpertWeightBytesFormatted": "1.80 GiB"
       },
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 16734680832,
-      "vramBytesFormatted": "15.59 GiB",
+      "vramBytes": 18545735424,
+      "vramBytesFormatted": "17.27 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -775,9 +1095,26 @@
     "success": true,
     "data": {
       "repo": "prism-ml/Bonsai-8B-gguf",
+      "filename": "Bonsai-8B-Q1_0.gguf",
       "url": "https://huggingface.co/prism-ml/Bonsai-8B-gguf/resolve/main/Bonsai-8B-Q1_0.gguf",
       "arch": "qwen3",
+      "fork": null,
       "quant": "Q1_0",
+      "modelInfo": {
+        "name": "Bonsai-8B",
+        "architecture": "qwen3",
+        "categories": [
+          "transformer"
+        ],
+        "contextLength": 65536,
+        "vocabSize": 0,
+        "layers": 36,
+        "mtpLayers": 0,
+        "embeddingLength": 4096,
+        "headCount": 32,
+        "headCountKv": 8,
+        "feedForwardLength": 12288
+      },
       "totalParams": 8188548096,
       "totalParamsFormatted": "8.19B",
       "weightBytes": 1152704128,
@@ -816,18 +1153,23 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 2359296,
-        "totalBytesFormatted": "2.3 MiB",
-        "perLayerBytes": 65536,
-        "perLayerBytesFormatted": "64.0 KiB",
+        "totalBytes": 4831838208,
+        "totalBytesFormatted": "4.50 GiB",
+        "perLayerBytes": 134217728,
+        "perLayerBytesFormatted": "128.0 MiB",
         "isMoe": false,
         "expertCount": 0,
         "expertUsedCount": 0
       },
       "moe": null,
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
       "mmproj": null,
-      "vramBytes": 1759043200,
-      "vramBytesFormatted": "1.64 GiB",
+      "vramBytes": 6588522112,
+      "vramBytesFormatted": "6.14 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,
@@ -839,9 +1181,29 @@
     "success": true,
     "data": {
       "repo": "YTan2000/Qwen3.6-35B-A3B-TQ3_4S",
+      "filename": "Qwen3.6-35B-A3B-TQ3_4S.gguf",
       "url": "https://huggingface.co/YTan2000/Qwen3.6-35B-A3B-TQ3_4S/resolve/main/Qwen3.6-35B-A3B-TQ3_4S.gguf",
       "arch": "qwen35moe",
+      "fork": "tq3",
       "quant": "Q2_K",
+      "modelInfo": {
+        "name": "Qwen3.6-35B-A3B",
+        "architecture": "qwen35moe",
+        "categories": [
+          "transformer",
+          "moe"
+        ],
+        "contextLength": 262144,
+        "vocabSize": 0,
+        "layers": 40,
+        "mtpLayers": 0,
+        "embeddingLength": 2048,
+        "headCount": 16,
+        "headCountKv": 2,
+        "feedForwardLength": 0,
+        "expertCount": 256,
+        "expertUsedCount": 8
+      },
       "totalParams": 34660610688,
       "totalParamsFormatted": "34.66B",
       "weightBytes": 13287885312,
@@ -901,10 +1263,10 @@
         "kvTypeV": "F16"
       },
       "activations": {
-        "totalBytes": 1064960,
-        "totalBytesFormatted": "1.0 MiB",
-        "perLayerBytes": 26624,
-        "perLayerBytesFormatted": "26.0 KiB",
+        "totalBytes": 2181038080,
+        "totalBytesFormatted": "2.03 GiB",
+        "perLayerBytes": 54525952,
+        "perLayerBytesFormatted": "52.0 MiB",
         "isMoe": true,
         "expertCount": 256,
         "expertUsedCount": 8
@@ -927,9 +1289,37 @@
         "activeExpertWeightBytes": 364380160,
         "activeExpertWeightBytesFormatted": "347.5 MiB"
       },
-      "mmproj": null,
-      "vramBytes": 13438700032,
-      "vramBytesFormatted": "12.52 GiB",
+      "mtp": {
+        "weightBytes": 0,
+        "weightBytesFormatted": "0.0 KiB",
+        "elements": 0
+      },
+      "mmproj": {
+        "filename": "mmproj-BF16.gguf",
+        "autoDetected": true,
+        "url": "https://huggingface.co/YTan2000/Qwen3.6-35B-A3B-TQ3_4S/resolve/main/mmproj-BF16.gguf",
+        "placement": "vram",
+        "hasVision": true,
+        "hasAudio": false,
+        "isAudioProj": false,
+        "projType": "qwen3vl_merger",
+        "projTypeKnown": true,
+        "imageSize": 768,
+        "patchSize": 16,
+        "nLayerV": 27,
+        "nEmbdV": 1152,
+        "projDim": 2048,
+        "nMerge": 2,
+        "nOutputTokens": 576,
+        "weightBytes": 902802368,
+        "weightBytesFormatted": "861.0 MiB",
+        "perImageActBytes": 4718592,
+        "perImageActBytesFormatted": "4.5 MiB",
+        "totalBytes": 907520960,
+        "totalBytesFormatted": "865.5 MiB"
+      },
+      "vramBytes": 16526194112,
+      "vramBytesFormatted": "15.39 GiB",
       "ramBytes": 0,
       "ramBytesFormatted": "0.0 KiB",
       "vramFit": null,

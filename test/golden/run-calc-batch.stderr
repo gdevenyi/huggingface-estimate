@@ -1,24 +1,26 @@
-[1/13] Qwen/Qwen2.5-3B-Instruct-GGUF... Model "Qwen/Qwen2.5-3B-Instruct-GGUF" has multiple GGUF files. Auto-selecting first: qwen2.5-3b-instruct-fp16-00001-of-00002.gguf
+[1/13] Qwen/Qwen2.5-3B-Instruct-GGUF... Multiple GGUF files found. Using first: qwen2.5-3b-instruct-fp16-00001-of-00002.gguf. Use --file <name> or --all for others.
 done (qwen2, 6.33 GiB)
-[2/13] unsloth/gemma-3-1b-it-GGUF... Model "unsloth/gemma-3-1b-it-GGUF" has multiple GGUF files. Auto-selecting first: gemma-3-1b-it-BF16.gguf
+[2/13] unsloth/gemma-3-1b-it-GGUF... Multiple GGUF files found. Using first: gemma-3-1b-it-BF16.gguf. Use --file <name> or --all for others.
 done (gemma3, 1.86 GiB)
-[3/13] unsloth/Qwen3-30B-A3B-GGUF... Model "unsloth/Qwen3-30B-A3B-GGUF" has multiple GGUF files. Auto-selecting first: BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf
+[3/13] unsloth/Qwen3-30B-A3B-GGUF... Multiple GGUF files found. Using first: BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
 done (qwen3moe, 56.89 GiB)
-[4/13] unsloth/MiniMax-M2.5-GGUF... Model "unsloth/MiniMax-M2.5-GGUF" has multiple GGUF files. Auto-selecting first: BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf
+[4/13] unsloth/MiniMax-M2.5-GGUF... Multiple GGUF files found. Using first: BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf. Use --file <name> or --all for others.
 done (minimax-m2, 426.06 GiB)
-[5/13] unsloth/LFM2-350M-GGUF... Model "unsloth/LFM2-350M-GGUF" has multiple GGUF files. Auto-selecting first: LFM2-350M-F16.gguf
+[5/13] unsloth/LFM2-350M-GGUF... Multiple GGUF files found. Using first: LFM2-350M-F16.gguf. Use --file <name> or --all for others.
 done (lfm2, 676.2 MiB)
-[6/13] unsloth/Falcon-H1-0.5B-Instruct-GGUF... Model "unsloth/Falcon-H1-0.5B-Instruct-GGUF" has multiple GGUF files. Auto-selecting first: Falcon-H1-0.5B-Instruct-BF16.gguf
+[6/13] unsloth/Falcon-H1-0.5B-Instruct-GGUF... Multiple GGUF files found. Using first: Falcon-H1-0.5B-Instruct-BF16.gguf. Use --file <name> or --all for others.
 done (falcon-h1, 995.3 MiB)
-[7/13] ggml-org/SmolVLM-500M-Instruct-GGUF... Model "ggml-org/SmolVLM-500M-Instruct-GGUF" has multiple GGUF files. Auto-selecting first: SmolVLM-500M-Instruct-f16.gguf
+[7/13] ggml-org/SmolVLM-500M-Instruct-GGUF... Multiple GGUF files found. Using first: SmolVLM-500M-Instruct-f16.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-SmolVLM-500M-Instruct-f16.gguf. Use --no-mmproj to suppress.
 done (llama, 780.7 MiB)
 [8/13] ggml-org/embeddinggemma-300M-GGUF... done (gemma-embedding, 311.9 MiB)
-[9/13] unsloth/ERNIE-4.5-0.3B-PT-GGUF... Model "unsloth/ERNIE-4.5-0.3B-PT-GGUF" has multiple GGUF files. Auto-selecting first: ERNIE-4.5-0.3B-PT-F16.gguf
+[9/13] unsloth/ERNIE-4.5-0.3B-PT-GGUF... Multiple GGUF files found. Using first: ERNIE-4.5-0.3B-PT-F16.gguf. Use --file <name> or --all for others.
 done (ernie4_5, 688.1 MiB)
-[10/13] unsloth/Hunyuan-A13B-Instruct-GGUF... Model "unsloth/Hunyuan-A13B-Instruct-GGUF" has multiple GGUF files. Auto-selecting first: BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf
+[10/13] unsloth/Hunyuan-A13B-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf. Use --file <name> or --all for others.
 done (hunyuan-moe, 149.76 GiB)
-[11/13] unsloth/LFM2-8B-A1B-GGUF... Model "unsloth/LFM2-8B-A1B-GGUF" has multiple GGUF files. Auto-selecting first: LFM2-8B-A1B-BF16.gguf
+[11/13] unsloth/LFM2-8B-A1B-GGUF... Multiple GGUF files found. Using first: LFM2-8B-A1B-BF16.gguf. Use --file <name> or --all for others.
 done (lfm2moe, 15.54 GiB)
-[12/13] prism-ml/Bonsai-8B-gguf... Model "prism-ml/Bonsai-8B-gguf" has multiple GGUF files. Auto-selecting first: Bonsai-8B-Q1_0.gguf
+[12/13] prism-ml/Bonsai-8B-gguf... Multiple GGUF files found. Using first: Bonsai-8B-Q1_0.gguf. Use --file <name> or --all for others.
 done (qwen3, 1.07 GiB)
-[13/13] YTan2000/Qwen3.6-35B-A3B-TQ3_4S... done (qwen35moe, 12.38 GiB)
+[13/13] YTan2000/Qwen3.6-35B-A3B-TQ3_4S... Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (qwen35moe, 12.38 GiB)

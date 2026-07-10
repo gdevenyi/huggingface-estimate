@@ -1109,11 +1109,11 @@ export function calcRecurrentState(metadata, nSeqMax = 1) {
   };
 }
 
-export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV) {
+export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV, nSeqMax = 1) {
   const arch = getModelArch(metadata);
   const handler = getArchHandler(arch);
   const result = handler.kvCache(metadata, ctxSize, kvTypeK, kvTypeV);
-  const recurrent = calcRecurrentState(metadata);
+  const recurrent = calcRecurrentState(metadata, nSeqMax);
   result.bytesRecurrent = recurrent ? recurrent.totalBytes : 0;
   result.recurrentLayers = recurrent ? recurrent.recurrentLayers : 0;
   result.totalBytes = result.bytesK + result.bytesV + result.bytesRecurrent;

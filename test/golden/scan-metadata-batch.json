@@ -1,6 +1,27 @@
 {
   "hasGaps": true,
   "architectures": {
+    "qwen2": {
+      "known": true,
+      "repos": [
+        "Qwen/Qwen2.5-3B-Instruct-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "qwen2.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "qwen2.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
     "gemma3": {
       "known": true,
       "repos": [
@@ -39,6 +60,32 @@
         },
         {
           "key": "qwen3moe.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        }
+      ],
+      "unknownDtypes": [],
+      "unmatchedTensors": []
+    },
+    "minimax-m2": {
+      "known": true,
+      "repos": [
+        "unsloth/MiniMax-M2.5-GGUF"
+      ],
+      "unhandledCalcKeys": [],
+      "nonSizingKeys": [
+        {
+          "key": "minimax-m2.rope.freq_base",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "minimax-m2.attention.layer_norm_rms_epsilon",
+          "repoCount": 1,
+          "totalRepos": 1
+        },
+        {
+          "key": "minimax-m2.expert_gating_func",
           "repoCount": 1,
           "totalRepos": 1
         }
