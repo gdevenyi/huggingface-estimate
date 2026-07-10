@@ -11,6 +11,7 @@ import {
   BUUN_FORK_BPE,
   PRISM_ML_FORK_BPE,
   IK_LLAMA_FORK_BPE,
+  BEELLAMA_FORK_BPE,
 } from '../quant-types.js';
 import {
   globMatch,
@@ -42,7 +43,7 @@ describe('BPE registry', () => {
   test('fork BPE maps only contain keys also present in base BPE or documented as fork-unique', () => {
     // Fork-unique IDs (200, 201, 202) are intentionally not in base BPE if
     // they collide; this test just guards against typos.
-    for (const [fork, map] of [['tq3', TQ3_FORK_BPE], ['buun', BUUN_FORK_BPE], ['prism-ml', PRISM_ML_FORK_BPE]]) {
+    for (const [fork, map] of [['tq3', TQ3_FORK_BPE], ['buun', BUUN_FORK_BPE], ['prism-ml', PRISM_ML_FORK_BPE], ['beellama', BEELLAMA_FORK_BPE]]) {
       for (const [k, v] of Object.entries(map)) {
         assert.ok(typeof v === 'number' && Number.isFinite(v) && v > 0,
           `${fork} BPE[${k}] = ${v} invalid`);
@@ -55,7 +56,9 @@ describe('BPE registry', () => {
     // tq3 TURBO4_0 line 140), and last-wins silently lost the ik_llama value.
     // After the fix: base BPE[202] holds tq3's value (for KV cache use via
     // --kvTypeK=202), and ik_llama tensor sizing uses IK_LLAMA_FORK_BPE[202].
-    assert.equal(BPE[202], 68 / 128, 'BPE[202] should hold tq3 value (68/128)');
+    // Value corrected from 68/128 to 66/128: tq3's TURBO4_USE_4BIT=1 default
+    // drops rnorm (66 bytes per QK=128 block, not 68).
+    assert.equal(BPE[202], 66 / 128, 'BPE[202] should hold tq3 value (66/128)');
     assert.equal(IK_LLAMA_FORK_BPE[202], 18 / 32,
       'IK_LLAMA_FORK_BPE[202] must hold ik_llama Q4_0_R8 value (18/32)');
     // Display names should be present for both.
@@ -101,10 +104,14 @@ describe('detectFork', () => {
     assert.equal(detectFork(model(undefined, [202]).metadata, model(undefined, [202]).tensorInfos), 'ik_llama');
   });
 
-  test('tq3 still detected via its unique signals (dtype 200, ftype 200/45/40)', () => {
+  test('tq3 still detected via its unique signals (dtype 200, ftype 200/45, ftype 40+dtype42)', () => {
     assert.equal(detectFork(model(200, [42]).metadata, model(200, [42]).tensorInfos), 'tq3');
     assert.equal(detectFork(model(45, [42]).metadata, model(45, [42]).tensorInfos), 'tq3');
     assert.equal(detectFork(model(40, [42]).metadata, model(40, [42]).tensorInfos), 'tq3');
+  });
+
+  test('ftype 40 without dtype 42 does NOT trigger tq3 (upstream MOSTLY_Q1_0 uses dtype 41)', () => {
+    assert.equal(detectFork(model(40, [41]).metadata, model(40, [41]).tensorInfos), null);
   });
 
   test('tq3 with dtype 202 in tensors still resolves to tq3 (ftype signal fires first)', () => {
@@ -119,6 +126,13 @@ describe('detectFork', () => {
 
   test('buun detected via dtype 47 (TURBO8_0)', () => {
     assert.equal(detectFork(model(undefined, [47]).metadata, model(undefined, [47]).tensorInfos), 'buun');
+  });
+
+  test('beellama detected via ftype 43+dtype47 (MOSTLY_TQ3_1S) or ftype 44+dtype48 (MOSTLY_TQ4_1S)', () => {
+    assert.equal(detectFork(model(43, [47]).metadata, model(43, [47]).tensorInfos), 'beellama');
+    assert.equal(detectFork(model(44, [48]).metadata, model(44, [48]).tensorInfos), 'beellama');
+    // beellama takes priority over buun when ftype signals are present
+    assert.equal(detectFork(model(43, [47, 49]).metadata, model(43, [47, 49]).tensorInfos), 'beellama');
   });
 
   test('turboquant detected via dtype 45/46', () => {
@@ -144,6 +158,26 @@ describe('applyForkOverrides (Phase 3 FORK_OVERRIDES table)', () => {
     applyForkOverrides(tensors, 'ik_llama');
     assert.equal(tensors[0]._bpeOverride, 18 / 32);
     assert.equal(tensors[0]._nameOverride, 'Q4_0_R8 (ik_llama)');
+  });
+
+  test('beellama fork: dtype-47 tensor gets TQ3_1S BPE override (not buun TURBO8_0)', () => {
+    const tensors = [{ dtype: 47, shape: [1] }, { dtype: 48, shape: [1] }, { dtype: 49, shape: [1] }];
+    applyForkOverrides(tensors, 'beellama');
+    assert.equal(tensors[0]._bpeOverride, 16 / 32);
+    assert.equal(tensors[0]._nameOverride, 'TQ3_1S (beellama)');
+    assert.equal(tensors[1]._bpeOverride, 20 / 32);
+    assert.equal(tensors[1]._nameOverride, 'TQ4_1S (beellama)');
+    assert.equal(tensors[2]._bpeOverride, 26 / 32);
+    assert.equal(tensors[2]._nameOverride, 'Q6_0 (beellama)');
+  });
+
+  test('tq3 BPE values match current ggml-common.h (QK=128, not legacy QK=32)', () => {
+    // tq3 updated TURBO3_0/TURBO4_0 to QK=128 (matching turboquant). The old
+    // values (14/32, 68/128) are stale; current values are 50/128 and 66/128.
+    assert.equal(BPE[201], 50 / 128, 'tq3 TURBO3_0 BPE should be 50/128 (QK=128)');
+    assert.equal(BPE[202], 66 / 128, 'tq3 TURBO4_0 BPE should be 66/128 (TURBO4_USE_4BIT=1)');
+    // String-keyed TURBO4_0 matches turboquant's default (66, drops rnorm)
+    assert.equal(BPE['TURBO4_0'], 66 / 128, 'string-keyed TURBO4_0 should be 66/128');
   });
 
   test('non-colliding dtypes are left untouched (no override stamping)', () => {

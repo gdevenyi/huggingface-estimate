@@ -8,6 +8,7 @@ import {
   TQ3_QUANT_NAMES, TQ3_FORK_BPE,
   BUUN_QUANT_NAMES, BUUN_FORK_BPE,
   PRISM_ML_QUANT_NAMES, PRISM_ML_FORK_BPE,
+  BEELLAMA_QUANT_NAMES, BEELLAMA_FORK_BPE,
   tensorBpe, tensorElems, tensorQuantName, sumBytes, sumElems,
 } from './quant-types.js';
 export {
@@ -16,6 +17,7 @@ export {
   TQ3_QUANT_NAMES, TQ3_FORK_BPE,
   BUUN_QUANT_NAMES, BUUN_FORK_BPE,
   PRISM_ML_QUANT_NAMES, PRISM_ML_FORK_BPE,
+  BEELLAMA_QUANT_NAMES, BEELLAMA_FORK_BPE,
 } from './quant-types.js';
 
 // ── Standard transformer KV cache (parameterized) ──
@@ -809,6 +811,49 @@ export const ARCHITECTURES = {
     tensorGroups: LLAMA_TENSOR_GROUPS,
   },
 
+  // ── DeepSeek4: DSV4 sparse attention + MLA-like Q + MoE with shared experts ──
+  // Uses a custom multi-level KV cache (raw SWA + CSA/HCA compressed). The raw
+  // SWA cache is K-only and dominates at typical context sizes; compressed
+  // caches are much smaller (ctx/4 and ctx/128 resolution). This handler
+  // approximates the raw SWA component, which is an upper bound.
+  // Verified against resources/llama.cpp/src/models/deepseek4.cpp.
+  deepseek4: {
+    categories: ['transformer', 'moe', 'mla'],
+    kvCache(meta, ctxSize, kvTypeK, kvTypeV) {
+      const arch = meta['general.architecture'];
+      const n_embd = getMeta(meta, `${arch}.embedding_length`);
+      const n_head = getMeta(meta, `${arch}.attention.head_count`);
+      const headDimK = getMeta(meta, `${arch}.attention.key_length`) || (n_embd / n_head);
+      const n_head_kv_raw = getMeta(meta, `${arch}.attention.head_count_kv`);
+      const n_head_kv = Array.isArray(n_head_kv_raw)
+        ? (Number(n_head_kv_raw[0]) || Number(n_head_kv_raw[n_head_kv_raw.length - 1]) || 0)
+        : n_head_kv_raw;
+      const n_layer = getMeta(meta, `${arch}.block_count`);
+      const n_swa = getMeta(meta, `${arch}.attention.sliding_window`) || 0;
+      // DSV4 set_swa_pattern(0) makes ALL layers SWA. K-only cache
+      // (dsv4_make_k_only sets V size to 0). SWA cell padding matches
+      // buildKvCache's GGML_PAD(min(ctx, n_swa + n_ubatch), 256).
+      const N_UBATCH_DEFAULT = 512;
+      const KV_CELL_PAD = 256;
+      const layerCtx = n_swa > 0
+        ? Math.min(ctxSize, Math.ceil((n_swa + N_UBATCH_DEFAULT) / KV_CELL_PAD) * KV_CELL_PAD)
+        : ctxSize;
+      const totalElemsK = n_layer * n_head_kv * headDimK * layerCtx;
+      return {
+        bytesK: totalElemsK * (BPE[kvTypeK] || 0),
+        bytesV: 0,
+        layers: n_layer,
+        headDimK,
+        headDimV: 0,
+        totalHeadsKV: n_layer * n_head_kv,
+        avgHeadsKV: n_head_kv,
+      };
+    },
+    activations: deepseek2MlaMoeActivations,
+    moe: moeShexpOnly,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+
   // ── DFlash: cross-attention speculative decoding (beellama.cpp / buun-llama-cpp) ──
   // Both dflash and dflash-draft get res=nullptr in llama-model.cpp:2013-2016
   // (no autoregressive KV cache). DFlash uses cross-attention to the target
@@ -821,6 +866,15 @@ export const ARCHITECTURES = {
     tensorGroups: LLAMA_TENSOR_GROUPS,
   },
   'dflash-draft': {
+    categories: ['transformer', 'draft'],
+    kvCache: noKvCache,
+    activations: llamaActivations,
+    moe: llamaMoe,
+    tensorGroups: LLAMA_TENSOR_GROUPS,
+  },
+  // gemma4-dflash-draft: buun-specific Gemma-4 DFlash speculative drafter.
+  // Same no-KV-cache pattern as dflash-draft (cross-attention to target model).
+  'gemma4-dflash-draft': {
     categories: ['transformer', 'draft'],
     kvCache: noKvCache,
     activations: llamaActivations,

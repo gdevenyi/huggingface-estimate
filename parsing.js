@@ -37,6 +37,7 @@ export const KV_FORK_GROUPS = [
   { label: 'rotorquant', quants: ['TURBO2_0', 'TURBO3_0', 'TURBO4_0', 'PLANAR3_0', 'PLANAR4_0', 'ISO3_0', 'ISO4_0'] },
   { label: 'tq3', quants: ['TQ3_0', 201, 202] },
   { label: 'buun', quants: [47, 'BUUN_TURBO3_TCQ', 'BUUN_TURBO2_TCQ'] },
+  { label: 'beellama', quants: ['BEELLAMA_Q6_0'] },
 ];
 
 // Union of allowed --cache-type-k / --cache-type-v values across supported forks.
@@ -52,18 +53,21 @@ export const STANDARD_KV_QUANT_SET = new Set(STANDARD_KV_QUANTS);
 export function detectFork(metadata, tensorInfos) {
   const ftype = Number(metadata['general.file_type'] ?? -1);
   const dtypeSet = new Set(tensorInfos.map((t) => t.dtype));
-  // tq3-unique signals first: dtype 200 (TQ3_0 KV), ftype 200/45/40.
-  // ftype 40 = MOSTLY_Q1_0; its weight tensors carry dtype 42, which collides
-  // with turboquant's TURBO2_0 KV type, so tq3 must be resolved before the
-  // generic dtype-42 turboquant heuristic below.
-  if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || ftype === 40) return 'tq3';
+  // tq3-unique signals first: dtype 200 (TQ3_0 KV), ftype 200/45.
+  // ftype 40 = MOSTLY_Q1_0: shared by upstream (dtype 41) and tq3 (dtype 42).
+  // Only trigger tq3 when dtype 42 is present (tq3's Q1_0 ID); upstream Q1_0
+  // uses dtype 41 and should NOT trigger tq3 detection.
+  if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || (ftype === 40 && dtypeSet.has(42))) return 'tq3';
   // prism-ml: ftype 28 (MOSTLY_Q2_0) is the canonical signal. Some prism-ml
   // quant tools set file_type to the type ID (41) instead of the ftype (28),
   // so also check: dtype 42 present (Q2_0 weight) without any tq3 signal above.
   if (ftype === 28 || (dtypeSet.has(42) && ftype === 41)) return 'prism-ml';
-  // buun: dtype 47 (TURBO8_0) is unique to buun. Must be detected before the
-  // generic dtype-42/43 turboquant check because buun uses IDs 42-46 with
-  // different type assignments and BPEs than TheTom's turboquant fork.
+  // beellama: ftype 43 (MOSTLY_TQ3_1S, dtype 47) or ftype 44 (MOSTLY_TQ4_1S,
+  // dtype 48). Must be checked BEFORE buun because beellama's TQ3_1S (dtype 47)
+  // collides with buun's TURBO8_0 (also dtype 47). Distinguishing signal:
+  // beellama uses ftype 43/44, while buun never sets ftype above 40.
+  if ((ftype === 43 && dtypeSet.has(47)) || (ftype === 44 && dtypeSet.has(48))) return 'beellama';
+  // buun: dtype 47 (TURBO8_0) is unique to buun (when no beellama ftype signal).
   if (dtypeSet.has(47)) return 'buun';
   // turboquant (TheTom): its IDs 42/43/44 are KV cache types that never appear
   // in model weights (tensorInfos). Detection is based on weight types 45/46

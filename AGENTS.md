@@ -18,7 +18,8 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 **Gitignored reference dirs**: `resources/` (entire directory) — contains local clones of llama.cpp forks and vendor hardware CSVs for quantization type reference. Not part of the app. Active forks: `llama.cpp/` (upstream), `ik_llama.cpp/`, `llama.cpp-tq3/`, `llama-cpp-turboquant/`, `llama-cpp-rotorquant/`, `beellama.cpp/`, `buun-llama-cpp/`, `prism-ml-llama.cpp/`, `unslothai-llama.cpp/`, `tc-mb-llama.cpp/`, `llama-cpp-codeshell/`, `gguf-parser-go/`. Hardware data: `gpu_1986-2026.csv`, `apple_silicon_macs.csv`, `amd/`, `intel/`.
 
 **Implemented — novel quant types from newly-cloned forks**:
-- `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 with QK=32 (different BPEs than TheTom's turboquant fork which uses QK=128). Detected via dtype 47 (unique to buun). KV cache types: TURBO8_0 (47), BUUN_TURBO3_TCQ, BUUN_TURBO2_TCQ.
+- `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625), TURBO1_TCQ (ID 51, BPE 20/128 = 0.15625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 with QK=32 (different BPEs than TheTom's turboquant fork which uses QK=128). Detected via dtype 47 (unique to buun). KV cache types: TURBO8_0 (47), BUUN_TURBO3_TCQ, BUUN_TURBO2_TCQ. IDs 48–50 are reserved (codec removed, slot kept for type-id stability).
+- `beellama.cpp/` (Anbeeld): TQ3_1S (ID 47, BPE 16/32 = 0.5), TQ4_1S (ID 48, BPE 20/32 = 0.625), Q6_0 (ID 49, BPE 26/32 = 0.8125). Weight types at IDs 47–49; turbo KV types at IDs 42–46 use QK=128 (same BPE as turboquant). Detected via ftype 43 (MOSTLY_TQ3_1S) or ftype 44 (MOSTLY_TQ4_1S). TQ3_1S (47) collides with buun's TURBO8_0. KV cache types: Q6_0 (BEELLAMA_Q6_0 string key), plus shared turbo types from turboquant group. Also defines `gemma4-dflash-draft` architecture (DFlash speculative drafter, no KV cache).
 - `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary 1-bit weight type. BPE coincidentally matches turboquant's TURBO2_0. Detected via ftype 28 (MOSTLY_Q2_0) or ftype 41 (quant tool bug setting file_type to type ID) with dtype 42 present. Falls back to prism-ml naming when dtype 42 appears in weights without any other fork signal.
 
 **Tracked data**: `specs/` — GPU CSV source data used by build scripts.
@@ -89,23 +90,29 @@ All tensor size calculations go through `tensorBpe(t)` which checks for a per-te
 GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). ID 42 also collides (tq3's Q1_0 weight type vs turboquant's TURBO2_0 KV type). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` and `_nameOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
 
 **Detection heuristics** (first match wins):
-1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or `40` → tq3 fork (ftype 40 = `MOSTLY_Q1_0`; its dtype-42 tensors would otherwise collide with turboquant's TURBO2_0)
-2. `general.file_type == 28` (MOSTLY_Q2_0), or ftype 41 with dtype 42 present → prism-ml fork (some prism-ml quant tools set file_type to the type ID 41 instead of the ftype 28)
-3. Any tensor with dtype 47 (TURBO8_0) → buun fork (unique to buun)
-4. Any tensor with dtype 45 or 46 (TQ3_1S/TQ4_1S weight types) → turboquant fork (TheTom). Note: turboquant's IDs 42/43/44 are KV cache types that never appear in model weights, so detection is based on weight types 45/46 only.
-5. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant
-6. Fallback: dtype 42 in weights without any fork-specific signal → prism-ml (Q2_0 BPE 34/128 matches the default BPE[42])
+1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or (`40` AND dtype 42 present) → tq3 fork. ftype 40 = `MOSTLY_Q1_0` is now also used by upstream (dtype 41), so dtype 42 presence is required to distinguish tq3's Q1_0 (ID 42) from upstream's Q1_0 (ID 41)
+2. `general.file_type == 28` (MOSTLY_Q2_0), or ftype 41 with dtype 42 present → prism-ml fork
+3. `general.file_type == 43` with dtype 47, or ftype 44 with dtype 48 → beellama fork (ftype 43/44 are MOSTLY_TQ3_1S/MOSTLY_TQ4_1S). Must be checked BEFORE buun because dtype 47 collides with buun's TURBO8_0
+4. Any tensor with dtype 47 (TURBO8_0, without beellama ftype signal) → buun fork (unique to buun)
+5. Any tensor with dtype 45 or 46 (TQ3_1S/TQ4_1S weight types) → turboquant fork (TheTom). Note: turboquant's IDs 42/43/44 are KV cache types that never appear in model weights, so detection is based on weight types 45/46 only.
+6. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant (edge case: ftype 43 without beellama's dtype 47)
+7. Fallback: dtype 42 in weights without any fork-specific signal → prism-ml (Q2_0 BPE 34/128 matches the default BPE[42])
 
 **Colliding type IDs**:
 
-| ID | Default (turboquant) | tq3 fork |
-|----|----------------------|----------|
-| 42 | TURBO2_0 (KV cache, 0.265625 BPE) | Q1_0 (weight, 0.140625 BPE = 1.125 bpw) |
-| 44 | TURBO4_0 (KV cache, 0.5313 BPE) | TQ3_1S (weight, 0.5 BPE) |
-| 45 | TQ3_1S (weight, 0.5 BPE) | TQ3_1S (weight, 0.5 BPE — same) |
-| 46 | TQ4_1S (weight, 0.625 BPE) | TQ3_4S (weight, 0.5 BPE) |
+| ID | Default (turboquant) | tq3 fork | buun fork | beellama fork |
+|----|----------------------|----------|-----------|---------------|
+| 42 | TURBO2_0 (KV cache, 0.265625 BPE) | Q1_0 (weight, 0.140625 BPE = 1.125 bpw) | TURBO3_0 (KV, 0.4375 BPE) | TURBO3_0 (KV, 0.390625 BPE) |
+| 43 | TURBO3_0 (KV cache, 0.390625 BPE) | — | TURBO4_0 (KV, 0.515625 BPE) | TURBO4_0 (KV, 0.515625 BPE) |
+| 44 | TURBO4_0 (KV cache, 0.515625 BPE) | TQ3_1S (weight, 0.5 BPE) | TURBO2_0 (KV, 0.3125 BPE) | TURBO2_0 (KV, 0.265625 BPE) |
+| 45 | TQ3_1S (weight, 0.5 BPE) | TQ3_1S (weight, 0.5 BPE — same) | TURBO3_TCQ (KV, 0.40625 BPE) | TURBO3_TCQ (KV, 0.40625 BPE) |
+| 46 | TQ4_1S (weight, 0.625 BPE) | TQ3_4S (weight, 0.5 BPE) | TURBO2_TCQ (KV, 0.28125 BPE) | TURBO2_TCQ (KV, 0.28125 BPE) |
+| 47 | — | — | TURBO8_0 (KV, 1.015625 BPE) | TQ3_1S (weight, 0.5 BPE) |
+| 48 | — | — | (reserved, 0.140625) | TQ4_1S (weight, 0.625 BPE) |
+| 49 | — | — | (reserved, 0.15625) | Q6_0 (weight+KV, 0.8125 BPE) |
+| 51 | — | — | TURBO1_TCQ (KV, 0.15625 BPE) | — |
 
-IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.4375 BPE), and 202 (TURBO4_0, KV, 0.53125 BPE) are unique to the tq3 fork and do not collide. Note: tq3's TURBO3_0 (ID 201, QK=32) has a different BPE than turboquant's string-keyed `TURBO3_0` (QK=128), so the numeric ID is used to avoid collision.
+IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.390625 BPE), and 202 (TURBO4_0, KV, 0.515625 BPE) are unique to the tq3 fork and do not collide. tq3 now uses QK_TURBO3=128 and QK_TURBO4=128 (matching turboquant), so TURBO3_0 and TURBO4_0 BPEs match turboquant's string-keyed values.
 
 **TQ3 fork types** (`resources/llama.cpp-tq3/`):
 | Type | ID | BPE | bpw | KV cache | Weight |
@@ -114,8 +121,8 @@ IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.4375 BPE), and 202 (T
 | TQ3_1S | 44 | 0.5 (16/32) | 4.0 | No | Yes |
 | TQ3_4S | 46 | 0.5 (16/32) | 4.0 | No | Yes |
 | TQ3_0 | 200 | 0.4375 (14/32) | 3.5 | Yes (KV-only) | No |
-| TURBO3_0 | 201 | 0.4375 (14/32) | 3.5 | Yes (KV-only) | No |
-| TURBO4_0 | 202 | 0.53125 (68/128) | 4.25 | Yes (KV-only) | No |
+| TURBO3_0 | 201 | 0.390625 (50/128) | 3.125 | Yes (KV-only) | No |
+| TURBO4_0 | 202 | 0.515625 (66/128) | 4.125 | Yes (KV-only) | No |
 
 ## Utility exports from `calculations.js`
 
@@ -130,7 +137,7 @@ IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.4375 BPE), and 202 (T
 
 ## Utility exports from `parsing.js`
 
-- `KV_VALID_QUANTS` — union of valid KV cache quantization types across all supported forks. Standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151), turboquant (TURBO2_0/3_0/4_0), rotorquant (PLANAR3_0/4_0, ISO3_0/4_0 — also includes turboquant types since rotorquant is a superset), tq3 (TQ3_0, TURBO3_0 via ID 201, TURBO4_0 via ID 202). tq3's TURBO3_0 uses a numeric ID because its BPE (14/32, QK=32) differs from turboquant's string-keyed TURBO3_0 (50/128, QK=128). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
+- `KV_VALID_QUANTS` — union of valid KV cache quantization types across all supported forks. Standard (F32, F16, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1), ik_llama.cpp (Q6_0 via ID 133, Q8_KV via 151), turboquant (TURBO2_0/3_0/4_0), rotorquant (PLANAR3_0/4_0, ISO3_0/4_0 — also includes turboquant types since rotorquant is a superset), tq3 (TQ3_0, TURBO3_0 via ID 201, TURBO4_0 via ID 202), buun (TURBO8_0 via ID 47, BUUN_TURBO3_TCQ, BUUN_TURBO2_TCQ), beellama (BEELLAMA_Q6_0). Used to populate KV cache type dropdowns in the UI and validate CLI `--kvTypeK`/`--kvTypeV` args.
 - `KV_FORK_GROUPS` — optgroup labels for the UI dropdown. Each fork lists all KV types it supports, excluding the 9 mainline types already shown ungrouped. Rotorquant inherits turboquant's 3 types plus its own 4.
 - `parseGGUF(url)` — parses GGUF metadata, detects fork, applies BPE/name overrides. Returns `{ metadata, tensorInfos, fork? }`.
 - `resolveHFModel(path)` — resolves HF repo/path to GGUF URLs.

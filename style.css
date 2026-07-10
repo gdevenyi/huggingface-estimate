@@ -449,6 +449,7 @@ button.reset-btn:hover {
 .status-badge.fork-turboquant { background: rgba(210, 153, 34, 0.2); color: var(--yellow); }
 .status-badge.fork-buun { background: rgba(255, 140, 0, 0.18); color: #ff8c00; }
 .status-badge.fork-prism-ml { background: rgba(163, 113, 247, 0.18); color: #d2a8ff; }
+.status-badge.fork-beellama { background: rgba(88, 166, 255, 0.18); color: #58a6ff; }
 
 /* Fork hint near KV cache dropdowns */
 .fork-hint {
@@ -463,6 +464,7 @@ button.reset-btn:hover {
 .fork-hint.fork-turboquant { border-left-color: var(--yellow); background: rgba(210, 153, 34, 0.08); color: var(--yellow); }
 .fork-hint.fork-buun { border-left-color: #ff8c00; background: rgba(255, 140, 0, 0.08); color: #ff8c00; }
 .fork-hint.fork-prism-ml { border-left-color: #d2a8ff; background: rgba(163, 113, 247, 0.08); color: #d2a8ff; }
+.fork-hint.fork-beellama { border-left-color: #58a6ff; background: rgba(88, 166, 255, 0.08); color: #58a6ff; }
 
 /* Model selector */
 .model-select {

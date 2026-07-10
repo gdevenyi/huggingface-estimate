@@ -140,7 +140,7 @@ export const BPE = {
   TQ4_1S: 20 / 32,
   TURBO2_0: 34 / 128,
   TURBO3_0: 50 / 128,
-  TURBO4_0: 68 / 128,
+  TURBO4_0: 66 / 128,
   // rotorquant KV cache quantization
   PLANAR3_0: 50 / 128,
   PLANAR4_0: 68 / 128,
@@ -148,22 +148,34 @@ export const BPE = {
   ISO4_0: 68 / 128,
   // llama.cpp-tq3 KV cache quantization (string key for KV_VALID_QUANTS dropdown)
   TQ3_0: 14 / 32,
-  // llama.cpp-tq3 additional KV cache types (numeric IDs; BPE differs from
-  // turboquant's string-keyed TURBO3_0/TURBO4_0 — tq3 uses QK=32 for TURBO3_0,
-  // giving 14/32 vs turboquant's 50/128. TURBO4_0 happens to match at 68/128.)
-  201: 14 / 32,  // TURBO3_0 (tq3)
+  // llama.cpp-tq3 additional KV cache types (numeric IDs). tq3 uses QK_TURBO3=128
+  // and QK_TURBO4=128 (matching turboquant), so the BPEs match turboquant's
+  // string-keyed values: TURBO3_0 = 50/128, TURBO4_0 = 66/128 (TURBO4_USE_4BIT=1
+  // default drops rnorm). Earlier versions used QK=32 for these; the current
+  // source (ggml-common.h:292-317) confirms QK=128 with static_asserts.
+  201: 50 / 128, // TURBO3_0 (tq3)
   // ID 202 collides with ik_llama.cpp's Q4_0_R8 weight type (18/32).
-  // For tq3 KV cache use (--kvTypeK=202), this entry (68/128) is correct
+  // For tq3 KV cache use (--kvTypeK=202), this entry (66/128) is correct
   // and matches llama.cpp-tq3's kv_cache_type. For ik_llama tensor sizing
   // of dtype-202 weights, IK_LLAMA_FORK_BPE below overrides to 18/32.
-  202: 68 / 128, // TURBO4_0 (tq3 KV; see IK_LLAMA_FORK_BPE for tensor override)
+  202: 66 / 128, // TURBO4_0 (tq3 KV; see IK_LLAMA_FORK_BPE for tensor override)
   // buun-llama-cpp unique type (ID 47 is unique to buun; IDs 42-46 collide and
   // are handled via BUUN_FORK_BPE overrides at parse time)
   47: 130 / 128, // TURBO8_0 (buun)
+  // beellama weight types (TQ3_1S=47 collides with buun TURBO8_0; detected via
+  // ftype 43/44 in parsing.js. BPEs: TQ3_1S 16/32, TQ4_1S 20/32, Q6_0 26/32.
+  // Default BPE[47] = 130/128 (buun TURBO8_0); beellama overrides via
+  // BEELLAMA_FORK_BPE at parse time.)
+  48: 20 / 32,  // TQ4_1S (beellama weight type)
+  49: 26 / 32,  // Q6_0 (beellama weight + KV type; QK=32, same BPE as ik_llama ID 133)
   // buun-llama-cpp KV cache quantization (string keys for KV_VALID_QUANTS dropdown;
   // use BUUN_ prefix because numeric IDs 45/46 collide with TheTom's TQ3_1S/TQ4_1S)
   BUUN_TURBO3_TCQ: 52 / 128,
   BUUN_TURBO2_TCQ: 36 / 128,
+  // buun TURBO1_TCQ (ID 51, BPE 20/128 = 1.25 bpw; active KV type)
+  51: 20 / 128, // TURBO1_TCQ (buun)
+  // beellama Q6_0 KV cache string key (same BPE as numeric ID 49)
+  BEELLAMA_Q6_0: 26 / 32,
 };
 
 // Quantization type names for display
@@ -275,6 +287,10 @@ QUANT_NAMES[202] = 'TURBO4_0 (tq3 KV)';
 QUANT_NAMES[47] = 'TURBO8_0 (buun)';
 QUANT_NAMES['BUUN_TURBO3_TCQ'] = 'TURBO3_TCQ (buun)';
 QUANT_NAMES['BUUN_TURBO2_TCQ'] = 'TURBO2_TCQ (buun)';
+QUANT_NAMES[48] = 'TQ4_1S (beellama)';
+QUANT_NAMES[49] = 'Q6_0 (beellama)';
+QUANT_NAMES[51] = 'TURBO1_TCQ (buun)';
+QUANT_NAMES['BEELLAMA_Q6_0'] = 'Q6_0 (beellama)';
 
 // BPE overrides applied when fork detection identifies a llama.cpp-tq3 model.
 // IDs 44, 45, 46 collide with turboquant (TURBO4_0 / TQ3_1S / TQ4_1S).
@@ -294,7 +310,7 @@ export const TQ3_FORK_BPE = {
 // Detection: dtype 47 (TURBO8_0) is unique to buun.
 export const BUUN_FORK_BPE = {
   42: 14 / 32,   // TURBO3_0 (buun; QK_TURBO3=32 → 14/32 vs TheTom's 50/128)
-  43: 66 / 128,  // TURBO4_0 (buun; 66/128 vs TheTom's 68/128)
+  43: 66 / 128,  // TURBO4_0 (buun; TURBO4_USE_4BIT=1, same BPE as turboquant)
   44: 10 / 32,   // TURBO2_0 (buun; QK_TURBO2=32 → 10/32 vs TheTom's 34/128)
   45: 52 / 128,  // TURBO3_TCQ (buun; unique type, collides with TheTom's TQ3_1S at 16/32)
   46: 36 / 128,  // TURBO2_TCQ (buun; unique type, collides with TheTom's TQ4_1S at 20/32)
@@ -319,6 +335,21 @@ export const PRISM_ML_QUANT_NAMES = {
   42: 'Q2_0 (prism-ml)',
 };
 
+// BPE overrides for beellama.cpp fork (Anbeeld). beellama uses IDs 47-49 for
+// weight types that collide with buun's reserved/turbo slots. Detection: ftype
+// 43 (MOSTLY_TQ3_1S) or 44 (MOSTLY_TQ4_1S) with the corresponding dtype present.
+// TQ3_1S (47, 16/32) collides with buun's TURBO8_0 (130/128).
+export const BEELLAMA_FORK_BPE = {
+  47: 16 / 32,   // TQ3_1S (beellama weight type)
+  48: 20 / 32,   // TQ4_1S (beellama weight type)
+  49: 26 / 32,   // Q6_0 (beellama weight type)
+};
+export const BEELLAMA_QUANT_NAMES = {
+  47: 'TQ3_1S (beellama)',
+  48: 'TQ4_1S (beellama)',
+  49: 'Q6_0 (beellama)',
+};
+
 // ── Fork registry ──
 // Single source of truth for "given a detected fork, which BPE/name maps apply?"
 // Each entry's `bpe` and `names` map dtype ID → override values stamped on
@@ -327,10 +358,11 @@ export const PRISM_ML_QUANT_NAMES = {
 //
 // Individual maps are still exported above for direct consumers (tests, docs).
 export const FORK_OVERRIDES = {
-  tq3:      { bpe: TQ3_FORK_BPE,           names: TQ3_QUANT_NAMES      },
-  buun:     { bpe: BUUN_FORK_BPE,          names: BUUN_QUANT_NAMES     },
-  'prism-ml': { bpe: PRISM_ML_FORK_BPE,    names: PRISM_ML_QUANT_NAMES },
-  ik_llama: { bpe: IK_LLAMA_FORK_BPE,      names: IK_LLAMA_QUANT_NAMES },
+  tq3:        { bpe: TQ3_FORK_BPE,           names: TQ3_QUANT_NAMES      },
+  buun:       { bpe: BUUN_FORK_BPE,          names: BUUN_QUANT_NAMES     },
+  'prism-ml': { bpe: PRISM_ML_FORK_BPE,      names: PRISM_ML_QUANT_NAMES },
+  ik_llama:   { bpe: IK_LLAMA_FORK_BPE,      names: IK_LLAMA_QUANT_NAMES },
+  beellama:   { bpe: BEELLAMA_FORK_BPE,      names: BEELLAMA_QUANT_NAMES },
 };
 
 // ── Tensor size helpers ──
