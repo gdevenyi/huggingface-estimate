@@ -76,10 +76,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 10796056576,
-      "vramBytesFormatted": "10.05 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 10173726720,
+      "vramBytesFormatted": "9.48 GiB",
+      "ramBytes": 622329856,
+      "ramBytesFormatted": "593.5 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -164,10 +164,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 3757453824,
-      "vramBytesFormatted": "3.50 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 3153474048,
+      "vramBytesFormatted": "2.94 GiB",
+      "ramBytes": 603979776,
+      "ramBytesFormatted": "576.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -270,10 +270,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 64713711616,
-      "vramBytesFormatted": "60.27 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 64091381760,
+      "vramBytesFormatted": "59.69 GiB",
+      "ramBytes": 622329856,
+      "ramBytesFormatted": "593.5 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -375,10 +375,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 466320328704,
-      "vramBytesFormatted": "434.29 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 465091135488,
+      "vramBytesFormatted": "433.15 GiB",
+      "ramBytes": 1229193216,
+      "ramBytesFormatted": "1.14 GiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -478,10 +478,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 1497709568,
-      "vramBytesFormatted": "1.39 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 1363491840,
+      "vramBytesFormatted": "1.27 GiB",
+      "ramBytes": 134217728,
+      "ramBytesFormatted": "128.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -564,10 +564,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 2054174848,
-      "vramBytesFormatted": "1.91 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 1987033216,
+      "vramBytesFormatted": "1.85 GiB",
+      "ramBytes": 67141632,
+      "ramBytesFormatted": "64.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -673,10 +673,10 @@
         "totalBytes": 199701504,
         "totalBytesFormatted": "190.5 MiB"
       },
-      "vramBytes": 2108850944,
-      "vramBytesFormatted": "1.96 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 2014233344,
+      "vramBytesFormatted": "1.88 GiB",
+      "ramBytes": 94617600,
+      "ramBytesFormatted": "90.2 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -759,10 +759,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 704547840,
-      "vramBytesFormatted": "671.9 MiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 490638336,
+      "vramBytesFormatted": "467.9 MiB",
+      "ramBytes": 213909504,
+      "ramBytesFormatted": "204.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -845,10 +845,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 1401049088,
-      "vramBytesFormatted": "1.30 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 1189236736,
+      "vramBytesFormatted": "1.11 GiB",
+      "ramBytes": 211812352,
+      "ramBytesFormatted": "202.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -951,10 +951,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 168856756224,
-      "vramBytesFormatted": "157.26 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 167806812160,
+      "vramBytesFormatted": "156.28 GiB",
+      "ramBytes": 1049944064,
+      "ramBytesFormatted": "1001.3 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -1082,10 +1082,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 18545735424,
-      "vramBytesFormatted": "17.27 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 18277299968,
+      "vramBytesFormatted": "17.02 GiB",
+      "ramBytes": 268435456,
+      "ramBytesFormatted": "256.0 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -1168,10 +1168,10 @@
         "elements": 0
       },
       "mmproj": null,
-      "vramBytes": 6588522112,
-      "vramBytesFormatted": "6.14 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 6501160768,
+      "vramBytesFormatted": "6.05 GiB",
+      "ramBytes": 87361344,
+      "ramBytesFormatted": "83.3 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null
@@ -1318,10 +1318,10 @@
         "totalBytes": 907520960,
         "totalBytesFormatted": "865.5 MiB"
       },
-      "vramBytes": 16526194112,
-      "vramBytesFormatted": "15.39 GiB",
-      "ramBytes": 0,
-      "ramBytesFormatted": "0.0 KiB",
+      "vramBytes": 16109016512,
+      "vramBytesFormatted": "15.00 GiB",
+      "ramBytes": 417177600,
+      "ramBytesFormatted": "397.9 MiB",
       "vramFit": null,
       "ramFit": null,
       "performance": null

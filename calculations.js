@@ -1284,6 +1284,19 @@ function layerIndexFromTensorName(name) {
   return m ? parseInt(m[1], 10) : -1;
 }
 
+// Bucket a non-expert tensor name into the dense-FFN fractions llama.cpp uses
+// for partial-layer offload (common/fit.cpp LAYER_FRACTION_ATTN/UP/GATE).
+// Overflow patterns there are ffn_(gate|up|gate_up|down).*, so gate/gate_up/
+// gate_inp share the 'gate' group, ffn_up -> 'up', ffn_down -> 'down', and
+// everything else (attention weights, norms) -> 'attn'. Lets a single boundary
+// layer place attn (+ up/gate) in VRAM while the rest spills to CPU.
+function ffnBucket(name) {
+  if (/ffn_gate/.test(name)) return 'gate';
+  if (/ffn_up/.test(name))   return 'up';
+  if (/ffn_down/.test(name)) return 'down';
+  return 'attn';
+}
+
 // Compute per-layer byte/element footprint and global (non-block) output
 // tensors. For MoE layers, expert tensors are split into full (all experts,
 // used for storage fit) vs active (expertUsedCount / expertCount, used for
@@ -1313,12 +1326,18 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
   const newLayer = () => ({
     bytes: 0, elems: 0,
     nonExpertBytes: 0, nonExpertElems: 0,
+    // Non-expert sub-buckets mirroring llama.cpp layer fractions:
+    attnBytes: 0, attnElems: 0,     // attention + norms (always VRAM in any fraction)
+    upBytes: 0, upElems: 0,         // ffn_up (+ shexp)
+    gateBytes: 0, gateElems: 0,     // ffn_gate/gate_up/gate_inp (+ shexp)
+    downBytes: 0, downElems: 0,     // ffn_down (+ shexp); never VRAM in a boundary fraction
     expertBytesFull: 0, expertElemsFull: 0,
     expertBytesActive: 0, expertElemsActive: 0,
     activeBytes: 0, activeElems: 0,
   });
   const layers = Array.from({ length: nLayers }, newLayer);
   let outputBytes = 0, outputElems = 0;
+  let inputEmbBytes = 0, inputEmbElems = 0;
   let mtpBytes = 0, mtpElems = 0;
 
   for (const t of tensorInfos) {
@@ -1326,9 +1345,17 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
     const elems = tensorElems(t);
     const bytes = elems * tensorBpe(t);
     if (idx < 0) {
-      // Global / output-pool tensors (token_embd, output, output_norm, ...).
-      outputBytes += bytes;
-      outputElems += elems;
+      // llama.cpp unconditionally keeps the token-embedding input layer on the
+      // CPU (src/llama-model.cpp: dev_input = cpu_dev); the output layer and
+      // output_norm follow normal layer offload. Split token_embd out so it is
+      // accounted as RAM, not VRAM.
+      if (/^token_embd\b/.test(t.name)) {
+        inputEmbBytes += bytes;
+        inputEmbElems += elems;
+      } else {
+        outputBytes += bytes;
+        outputElems += elems;
+      }
       continue;
     }
     if (idx >= nLayers) {
@@ -1350,6 +1377,11 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
     } else {
       L.nonExpertBytes += bytes;
       L.nonExpertElems += elems;
+      const b = ffnBucket(t.name);
+      if (b === 'gate')      { L.gateBytes += bytes; L.gateElems += elems; }
+      else if (b === 'up')   { L.upBytes += bytes;   L.upElems += elems; }
+      else if (b === 'down') { L.downBytes += bytes; L.downElems += elems; }
+      else                   { L.attnBytes += bytes; L.attnElems += elems; }
     }
   }
 
@@ -1368,6 +1400,7 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
     layers,
     kvBytesPerLayer, recurrentBytesPerLayer,
     outputBytes, outputElems,
+    inputEmbBytes, inputEmbElems,
     mtpBytes, mtpElems,
     hasExperts: expertCount > 0,
   };
@@ -1388,27 +1421,43 @@ export function calcPerLayerFootprint(metadata, tensorInfos, kv, moe) {
 // nCpuMoe:   if > 0, MoE expert tensors for layers 0..N-1 go to CPU RAM
 //            (llama.cpp `--n-cpu-moe N` / `-ncmoe N`).
 //
-// Auto-fit (`--fit on`, the llama.cpp default) for MoE models always runs a
-// two-pass algorithm — `--cpu-moe` / `--n-cpu-moe` only restrict pass 2:
-//   Pass 1: Fill all layers as dense-only back-to-front (experts on CPU,
-//           non-expert + KV in VRAM). Stops at the first layer that doesn't
-//           fit; earlier layers spill to CPU entirely.
-//   Pass 2: Convert dense-only layers to full (move experts back to VRAM)
-//           front-to-back, skipping layers forced hybrid by --cpu-moe /
-//           --n-cpu-moe.
-// Build the standard return shape from a modes array + flags. The counts
-// are derived from modes (no caller-side bookkeeping). Eliminates the 5×
-// repeated 7-field object construction in computeOffloadSplit.
+// IMPORTANT: `--cpu-moe` / `--n-cpu-moe` set `tensor_buft_overrides`, which
+// makes llama.cpp's `--fit` abort ("tensor_buft_overrides already set by
+// user", common/fit.cpp). With `--fit on` (the default) the fit is skipped and
+// n_gpu_layers stays at -1 = ALL layers. So with these flags every layer is
+// placed on the GPU (non-expert + KV in VRAM, experts in RAM); there is NO
+// budget-constrained partial fill — if the dense part doesn't fit, the model
+// OOMs at load. We mirror that exactly: cpuMoe/nCpuMoe + auto => ngl=-1.
+//
+// Without those flags, auto-fit for MoE models runs llama.cpp's two-pass
+// `--fit on` algorithm plus a single partial boundary layer (step 4
+// "fit part of one more layer"):
+//   Pass 1: Fill layers dense-only back-to-front (experts on CPU, non-expert
+//           + KV in VRAM). Whole layers; stops at the first that doesn't fit.
+//   Pass 2: Convert dense-only layers to full (experts back to VRAM)
+//           front-to-back, contiguous, while budget remains.
+//   Pass 3: Try to offload ONE more boundary layer at a sub-layer fraction
+//           (GATE > UP > ATTN, largest that fits) so a single straddling layer
+//           can put just attention (+ up/gate) in VRAM. Mode 'partial-<frac>'.
+//
+// A layer mode is one of: 'gpu' | 'hybrid' | 'cpu' | 'partial-gate' |
+// 'partial-up' | 'partial-attn'. Build the standard return shape from a modes
+// array + flags; counts are derived from modes (no caller-side bookkeeping).
+const isPartialMode = (m) => typeof m === 'string' && m.startsWith('partial');
+const partialFracOf = (m) => m.slice('partial-'.length); // 'gate' | 'up' | 'attn'
+
 function makeSplitResult(modes, { auto, cpuMoe, nCpuMoe }) {
-  let nGpu = 0, nHyb = 0;
+  let nGpu = 0, nHyb = 0, nPartial = 0;
   for (const m of modes) {
     if (m === 'gpu') nGpu++;
     else if (m === 'hybrid') nHyb++;
+    else if (isPartialMode(m)) nPartial++;
   }
   return {
     nGpuLayers: nGpu,
     nHybridLayers: nHyb,
-    nCpuLayers: modes.length - nGpu - nHyb,
+    nPartialLayers: nPartial,
+    nCpuLayers: modes.length - nGpu - nHyb - nPartial,
     auto, modes, cpuMoe, nCpuMoe,
   };
 }
@@ -1418,7 +1467,8 @@ export function computeOffloadSplit({
   cpuMoe = false, nCpuMoe = 0, unifiedMemory = false,
 }) {
   const {
-    nLayers, layers, kvBytesPerLayer, recurrentBytesPerLayer, outputBytes, mtpBytes = 0,
+    nLayers, layers, kvBytesPerLayer, recurrentBytesPerLayer, outputBytes,
+    inputEmbBytes = 0, mtpBytes = 0,
   } = footprint;
 
   const modes = new Array(nLayers).fill('cpu');
@@ -1458,12 +1508,27 @@ export function computeOffloadSplit({
     return makeSplitResult(modes, { auto: false, cpuMoe, nCpuMoe });
   }
 
+  // cpu-moe / n-cpu-moe + auto: llama.cpp's --fit aborts because these flags
+  // pre-populate tensor_buft_overrides, so n_gpu_layers stays -1 (ALL layers).
+  // Every layer goes to the GPU (non-expert + KV in VRAM), with experts of the
+  // flagged layers forced to RAM. No budget-constrained fill — if the dense
+  // part exceeds VRAM the model OOMs at load (the caller reports that via
+  // actualVram > budget). Matches common/fit.cpp + arg.cpp --cpu-moe/--n-cpu-moe.
+  if (cpuMoe || nCpuMoe > 0) {
+    for (let i = 0; i < nLayers; i++) {
+      modes[i] = shouldHybridize(i) ? 'hybrid' : 'gpu';
+    }
+    return makeSplitResult(modes, { auto: true, cpuMoe, nCpuMoe });
+  }
+
   if (!vramBytes || vramBytes <= 0) {
     return makeSplitResult(modes, { auto: true, cpuMoe, nCpuMoe });
   }
 
   // MTP weights (when present) are loaded into VRAM by llama.cpp alongside the
   // output pool — reserve their bytes before offloading per-layer weights.
+  // token_embd (inputEmbBytes) is always on the CPU in llama.cpp, so it is NOT
+  // reserved against VRAM; it is accounted as RAM by the caller.
   const reserved = outputBytes + mtpBytes + activationBytes;
   const hasExperts = footprint.hasExperts;
 
@@ -1482,11 +1547,10 @@ export function computeOffloadSplit({
     return makeSplitResult(modes, { auto: true, cpuMoe, nCpuMoe });
   }
 
-  // MoE model — always run llama.cpp's two-pass `--fit on` algorithm:
-  //   Pass 1: dense-only fill back-to-front.
-  //   Pass 2: upgrade non-forced layers to full gpu front-to-back.
-  // --cpu-moe / --n-cpu-moe only restrict which layers pass 2 may upgrade;
-  // the same algorithm runs whether or not those flags are set.
+  // MoE model (no cpu-moe/n-cpu-moe): run llama.cpp's `--fit on` algorithm.
+  //   Pass 1: dense-only fill back-to-front (whole layers).
+  //   Pass 2: upgrade hybrid -> full gpu front-to-back (contiguous).
+  //   Pass 3: fit ONE more boundary layer at a sub-layer fraction.
   let remaining = vramBytes - reserved;
 
   // Pass 1: dense-only fill back-to-front. Dense layers use gpuNeed,
@@ -1502,14 +1566,45 @@ export function computeOffloadSplit({
   }
 
   // Pass 2: upgrade hybrid layers to full gpu (add experts back to VRAM)
-  // front-to-back, but only for layers NOT forced by --cpu-moe / --n-cpu-moe.
+  // front-to-back, contiguous (stop at the first layer that won't upgrade),
+  // matching llama.cpp step 4's contiguous dense->full conversion.
   for (let i = 0; i < nLayers; i++) {
     if (modes[i] !== 'hybrid') continue;
-    if (shouldHybridize(i)) continue;
     const expertBytes = layers[i].expertBytesFull;
     if (remaining >= expertBytes) {
       remaining -= expertBytes;
       modes[i] = 'gpu';
+    } else {
+      break;
+    }
+  }
+
+  // Pass 3: try to fit ONE more boundary layer at a sub-layer fraction
+  // (llama.cpp step-4 "fit part of one more layer"). The boundary layer is the
+  // first CPU layer below the offloaded region. Fractions, largest VRAM first:
+  //   GATE = attn+up+gate+kv   UP = attn+up+kv   ATTN = attn+kv
+  // Pick the largest that fits; the remainder of that layer (down + experts)
+  // stays in RAM. Skipped when nothing fit even dense-only (no offloaded
+  // region above the boundary), mirroring llama.cpp's surplus gate.
+  let gpuStart = nLayers; // offloaded region is [gpuStart, nLayers)
+  for (let i = 0; i < nLayers; i++) {
+    if (modes[i] !== 'cpu') { gpuStart = i; break; }
+  }
+  const boundary = gpuStart - 1;
+  if (gpuStart < nLayers && boundary >= 0) {
+    const Lb = layers[boundary];
+    const kv = kvBytesPerLayer + rB;
+    const fracCost = {
+      gate: Lb.attnBytes + Lb.upBytes + Lb.gateBytes + kv,
+      up:   Lb.attnBytes + Lb.upBytes + kv,
+      attn: Lb.attnBytes + kv,
+    };
+    for (const f of ['gate', 'up', 'attn']) {
+      if (remaining >= fracCost[f]) {
+        modes[boundary] = `partial-${f}`;
+        remaining -= fracCost[f];
+        break;
+      }
     }
   }
 
@@ -1519,14 +1614,17 @@ export function computeOffloadSplit({
 // Top-level VRAM/RAM memory breakdown for display, matching llama.cpp's
 // default behaviour: ALL weights (including all experts) go to VRAM for a
 // fully-offloaded model. The cpuMoe / nCpuMoe flags shift expert weights
-// to RAM, mirroring llama.cpp's --cpu-moe / --n-cpu-moe flags.
+// to RAM, mirroring llama.cpp's --cpu-moe / --n-cpu-moe flags. The token
+// embedding (token_embd) is always on the CPU in llama.cpp (dev_input),
+// so it is kept out of VRAM and reported as RAM regardless of offload.
 export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, cpuMoe = false, nCpuMoe = 0 }) {
   let vramWeightBytes, ramExpertBytes = 0;
+  const inputEmb = footprint ? (footprint.inputEmbBytes || 0) : 0;
 
   if (!moe) {
-    vramWeightBytes = weights.total;
+    vramWeightBytes = weights.total - inputEmb;
   } else if (cpuMoe) {
-    vramWeightBytes = weights.total - moe.expertWeightBytes;
+    vramWeightBytes = weights.total - moe.expertWeightBytes - inputEmb;
     ramExpertBytes = moe.expertWeightBytes;
   } else if (nCpuMoe > 0 && footprint) {
     const expertPerLayer = footprint.layers.map(L => L.expertBytesFull || 0);
@@ -1534,9 +1632,9 @@ export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, 
     for (let i = 0; i < cpuExpertLayers; i++) {
       ramExpertBytes += expertPerLayer[i];
     }
-    vramWeightBytes = weights.total - ramExpertBytes;
+    vramWeightBytes = weights.total - ramExpertBytes - inputEmb;
   } else {
-    vramWeightBytes = weights.total;
+    vramWeightBytes = weights.total - inputEmb;
     ramExpertBytes = 0;
   }
 
@@ -1544,9 +1642,10 @@ export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, 
 
   return {
     vramBytes,
-    ramBytes: ramExpertBytes,
+    ramBytes: ramExpertBytes + inputEmb,
     vramWeightBytes,
     ramExpertBytes,
+    ramInputEmbBytes: inputEmb,
   };
 }
 
@@ -1557,7 +1656,7 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
   const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe, unifiedMemory });
 
   let actualVram = footprint.outputBytes + (footprint.mtpBytes || 0) + activationBytes;
-  let actualRam = 0;
+  let actualRam = footprint.inputEmbBytes || 0; // token_embd always on CPU
 
   const rB = footprint.recurrentBytesPerLayer || 0;
   for (let i = 0; i < split.modes.length; i++) {
@@ -1568,6 +1667,20 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
     } else if (mode === 'hybrid') {
       actualVram += L.nonExpertBytes + footprint.kvBytesPerLayer + rB;
       actualRam += L.expertBytesFull;
+    } else if (isPartialMode(mode)) {
+      // Sub-layer fraction: attn (+up/gate) + KV in VRAM; down + experts +
+      // any non-included FFN group in RAM. See computeOffloadSplit pass 3.
+      const f = partialFracOf(mode);
+      const upIn   = (f === 'up' || f === 'gate');
+      const gateIn = (f === 'gate');
+      actualVram += L.attnBytes
+        + (upIn ? L.upBytes : 0)
+        + (gateIn ? L.gateBytes : 0)
+        + footprint.kvBytesPerLayer + rB;
+      actualRam += L.downBytes
+        + (upIn ? 0 : L.upBytes)
+        + (gateIn ? 0 : L.gateBytes)
+        + L.expertBytesFull;
     } else {
       actualRam += L.nonExpertBytes + L.expertBytesFull + footprint.kvBytesPerLayer + rB;
     }
@@ -1614,12 +1727,16 @@ const HYBRID_HOPS_PER_LAYER = 2;         // GPU->CPU + CPU->GPU round trip per h
 
 export function classifyBottleneck({
   nGpuLayers, nHybridLayers, nCpuLayers,
-  cpuAvailable, tDecodeCpu, tDecodeHybridCpu, tDecode,
+  nPartialLayers = 0,
+  cpuAvailable, tDecodeCpu, tDecodeHybridCpu, tDecodePartialCpu = 0, tDecode,
   gpuBottleneck,
 }) {
-  if ((nCpuLayers > 0 || nHybridLayers > 0) && !cpuAvailable) return 'cpu-layers-unrun';
+  // Split layers (hybrid or partial-sub-fraction) both need a CPU backend.
+  const splitLayers = nHybridLayers + nPartialLayers;
+  if ((nCpuLayers > 0 || splitLayers > 0) && !cpuAvailable) return 'cpu-layers-unrun';
   if (nCpuLayers > 0 && cpuAvailable && tDecodeCpu > CPU_DOMINANCE_THRESHOLD * tDecode) return 'cpu-dram-spill';
-  if (nHybridLayers > 0 && cpuAvailable && tDecodeHybridCpu > CPU_DOMINANCE_THRESHOLD * tDecode) return 'cpu-experts';
+  const tSplitCpu = tDecodeHybridCpu + tDecodePartialCpu;
+  if (splitLayers > 0 && cpuAvailable && tSplitCpu > CPU_DOMINANCE_THRESHOLD * tDecode) return 'cpu-experts';
   return gpuBottleneck || 'n/a';
 }
 
@@ -1648,7 +1765,7 @@ export function estimatePerformance({
     nCpuMoe: device.nCpuMoe || 0,
     unifiedMemory,
   });
-  const { nGpuLayers, nHybridLayers, nCpuLayers, auto, modes } = split;
+  const { nGpuLayers, nHybridLayers, nPartialLayers, nCpuLayers, auto, modes } = split;
 
   const {
     nLayers, layers,
@@ -1656,7 +1773,9 @@ export function estimatePerformance({
   } = footprint;
 
   let tDecodeGpu = 0, tDecodeCpu = 0, tDecodeHybridGpu = 0, tDecodeHybridCpu = 0;
+  let tDecodePartialGpu = 0, tDecodePartialCpu = 0;
   let tPrefillGpu = 0, tPrefillCpu = 0, tPrefillHybridGpu = 0, tPrefillHybridCpu = 0;
+  let tPrefillPartialGpu = 0, tPrefillPartialCpu = 0;
   let gpuFlopsTime = 0, gpuBwTime = 0, cpuFlopsTime = 0, cpuBwTime = 0;
 
   const cpuAvailable = cpu && cpuFlops > 0 && cpuBw > 0;
@@ -1688,57 +1807,84 @@ export function estimatePerformance({
       tPrefillCpu += t.tPrefill;
       cpuFlopsTime += t.flopsTime;
       cpuBwTime += t.bwTime;
+    } else if (isPartialMode(mode) && cpuAvailable) {
+      // Sub-layer fraction: the included groups (attn + up/gate) run on GPU,
+      // the rest (down + excluded FFN groups + experts) run on CPU. Same split
+      // shape as a hybrid layer, just with a smaller GPU resident portion.
+      const f = partialFracOf(mode);
+      const upIn   = (f === 'up' || f === 'gate');
+      const gateIn = (f === 'gate');
+      const gpuElems = L.attnElems + (upIn ? L.upElems : 0) + (gateIn ? L.gateElems : 0);
+      const gpuBytes = L.attnBytes + (upIn ? L.upBytes : 0) + (gateIn ? L.gateBytes : 0);
+      const g = layerTiming(gpuElems, gpuBytes, kvB, ctx, gpuFlops, gpuBw);
+      tDecodePartialGpu += g.tDecode;
+      tPrefillPartialGpu += g.tPrefill;
+      gpuFlopsTime += g.flopsTime;
+      gpuBwTime += g.bwTime;
+      const cpuElems = L.downElems + (upIn ? 0 : L.upElems) + (gateIn ? 0 : L.gateElems) + L.expertElemsActive;
+      const cpuBytes = L.downBytes + (upIn ? 0 : L.upBytes) + (gateIn ? 0 : L.gateBytes) + L.expertBytesActive;
+      const c = layerTiming(cpuElems, cpuBytes, 0, ctx, cpuFlops, cpuBw);
+      tDecodePartialCpu += c.tDecode;
+      tPrefillPartialCpu += c.tPrefill;
+      cpuFlopsTime += c.flopsTime;
+      cpuBwTime += c.bwTime;
     }
   }
 
-  const hasGpuOffload = nGpuLayers + nHybridLayers > 0;
+  const hasGpuOffload = nGpuLayers + nHybridLayers + nPartialLayers > 0;
   const outFlops = hasGpuOffload ? gpuFlops : (cpuAvailable ? cpuFlops : gpuFlops);
   const outBw = hasGpuOffload ? gpuBw : (cpuAvailable ? cpuBw : gpuBw);
   const tOutDec = Math.max((FLOPS_PER_PARAM * outputElems) / outFlops, outputBytes / outBw);
   const tOutPre = Math.max((FLOPS_PER_PARAM * outputElems * ctx) / outFlops, outputBytes / outBw);
 
   // Boundary bytes: F16 activation crossing GPU<->CPU at each hop (2 B/element).
-  // Hybrid hops: 2 per layer (one GPU->CPU for expert input, one CPU->GPU for output).
+  // Split layers (hybrid + partial) each cost 2 hops (GPU->CPU in, CPU->GPU out).
   const n_embd = getMeta(metadata, `${getModelArch(metadata)}.embedding_length`) || 0;
   const boundaryBytes = n_embd * ACTIVATION_BYTES_PER_ELEMENT;
   const boundaryBw = Math.min(PCIE_BOUNDARY_BW_BYTES, cpuBw || PCIE_BOUNDARY_BW_BYTES);
-  const spillBoundaryHops = (nGpuLayers + nHybridLayers > 0 && nCpuLayers > 0) ? 1 : 0;
-  const hybridHops = HYBRID_HOPS_PER_LAYER * nHybridLayers;
-  const totalHops = spillBoundaryHops + hybridHops;
+  const spillBoundaryHops = (hasGpuOffload && nCpuLayers > 0) ? 1 : 0;
+  const splitHops = HYBRID_HOPS_PER_LAYER * (nHybridLayers + nPartialLayers);
+  const totalHops = spillBoundaryHops + splitHops;
   const tBoundaryDec = totalHops > 0 ? (totalHops * boundaryBytes) / boundaryBw : 0;
   const tBoundaryPre = tBoundaryDec * ctx;
 
-  const tDecode = tDecodeGpu + tDecodeCpu + tDecodeHybridGpu + tDecodeHybridCpu + tOutDec + tBoundaryDec;
-  const tPrefill = tPrefillGpu + tPrefillCpu + tPrefillHybridGpu + tPrefillHybridCpu + tOutPre + tBoundaryPre;
+  const tDecode = tDecodeGpu + tDecodeCpu + tDecodeHybridGpu + tDecodeHybridCpu
+    + tDecodePartialGpu + tDecodePartialCpu + tOutDec + tBoundaryDec;
+  const tPrefill = tPrefillGpu + tPrefillCpu + tPrefillHybridGpu + tPrefillHybridCpu
+    + tPrefillPartialGpu + tPrefillPartialCpu + tOutPre + tBoundaryPre;
 
-  const gpuBottleneck = (nGpuLayers + nHybridLayers) > 0
+  const gpuBottleneck = hasGpuOffload
     ? (gpuFlopsTime > gpuBwTime ? 'compute' : 'bandwidth')
     : null;
-  const cpuBottleneck = (nCpuLayers > 0 || nHybridLayers > 0) && cpuAvailable
+  const cpuBottleneck = (nCpuLayers > 0 || nHybridLayers > 0 || nPartialLayers > 0) && cpuAvailable
     ? (cpuFlopsTime > cpuBwTime ? 'compute' : 'bandwidth')
     : null;
   const overall = classifyBottleneck({
-    nGpuLayers, nHybridLayers, nCpuLayers,
-    cpuAvailable, tDecodeCpu, tDecodeHybridCpu, tDecode,
+    nGpuLayers, nHybridLayers, nCpuLayers, nPartialLayers,
+    cpuAvailable, tDecodeCpu, tDecodeHybridCpu, tDecodePartialCpu, tDecode,
     gpuBottleneck,
   });
 
   const tHybridTotal = tDecodeHybridGpu + tDecodeHybridCpu;
+  const tPartialTotal = tDecodePartialGpu + tDecodePartialCpu;
 
   return {
     decodeTPS: tDecode > 0 ? 1 / tDecode : 0,
     prefillTPS: tPrefill > 0 ? ctx / tPrefill : 0,
     ttftSec: tPrefill,
-    nGpuLayers, nHybridLayers, nCpuLayers, autoSplit: auto, cpuMoe: split.cpuMoe, nCpuMoe: split.nCpuMoe,
+    nGpuLayers, nHybridLayers, nPartialLayers, nCpuLayers,
+    autoSplit: auto, cpuMoe: split.cpuMoe, nCpuMoe: split.nCpuMoe,
     perLayerMs: {
       gpu: nGpuLayers > 0 ? (tDecodeGpu / nGpuLayers) * 1000 : 0,
       hybrid: nHybridLayers > 0 ? (tHybridTotal / nHybridLayers) * 1000 : 0,
+      partial: nPartialLayers > 0 ? (tPartialTotal / nPartialLayers) * 1000 : 0,
       cpu: nCpuLayers > 0 ? (tDecodeCpu / nCpuLayers) * 1000 : 0,
     },
     bottleneck: { gpu: gpuBottleneck, cpu: cpuBottleneck, overall },
     timing: {
       decodeGpu: tDecodeGpu, decodeCpu: tDecodeCpu,
       decodeHybridGpu: tDecodeHybridGpu, decodeHybridCpu: tDecodeHybridCpu,
+      decodePartialGpu: tDecodePartialGpu, decodePartialCpu: tDecodePartialCpu,
       output: tOutDec, boundary: tBoundaryDec,
       decodeTotal: tDecode, prefillTotal: tPrefill,
     },

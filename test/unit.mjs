@@ -24,6 +24,8 @@ import {
   ARCH_ALIASES,
   calcRecurrentState,
   classifyBottleneck,
+  computeOffloadSplit,
+  calcActualMemory,
 } from '../calculations.js';
 import {
   KV_VALID_QUANTS,
@@ -330,5 +332,147 @@ describe('classifyBottleneck (Phase 7 extraction)', () => {
 
   test('CPU present but not dominant falls back to gpuBottleneck', () => {
     assert.equal(classifyBottleneck({ ...base, nCpuLayers: 2, cpuAvailable: true, tDecodeCpu: 0.1, tDecode: 1, gpuBottleneck: 'compute' }), 'compute');
+  });
+});
+
+// Build a synthetic per-layer footprint for computeOffloadSplit / calcActualMemory
+// tests. nonExpert is split into equal attn/up/gate/down quarters unless given.
+function makeFootprint({
+  nLayers, nonExpert = 100, expert = 0, kv = 10, inputEmb = 0, output = 50, recurrent = 0,
+  attn, up, gate, down,
+}) {
+  const layers = [];
+  for (let i = 0; i < nLayers; i++) {
+    const a = attn ?? nonExpert / 4;
+    const u = up ?? nonExpert / 4;
+    const g = gate ?? nonExpert / 4;
+    const d = down ?? nonExpert / 4;
+    layers.push({
+      bytes: nonExpert + expert, elems: nonExpert + expert,
+      nonExpertBytes: nonExpert, nonExpertElems: nonExpert,
+      attnBytes: a, attnElems: a,
+      upBytes: u, upElems: u,
+      gateBytes: g, gateElems: g,
+      downBytes: d, downElems: d,
+      expertBytesFull: expert, expertElemsFull: expert,
+      expertBytesActive: expert, expertElemsActive: expert,
+      activeBytes: nonExpert + expert, activeElems: nonExpert + expert,
+    });
+  }
+  return {
+    nLayers, layers,
+    kvBytesPerLayer: kv, recurrentBytesPerLayer: recurrent,
+    outputBytes: output, outputElems: output,
+    inputEmbBytes: inputEmb, inputEmbElems: inputEmb,
+    mtpBytes: 0, mtpElems: 0,
+    hasExperts: expert > 0,
+  };
+}
+
+describe('computeOffloadSplit (llama.cpp --fit algorithm)', () => {
+  test('dense model: full back-to-back fill when VRAM is sufficient', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, kv: 10, output: 50 });
+    // reserved = output(50); 4 layers * (100+10) = 440; 50+440 = 490 fits.
+    const s = computeOffloadSplit({ vramBytes: 500, footprint: fp });
+    assert.equal(s.nGpuLayers, 4);
+    assert.equal(s.nCpuLayers, 0);
+    assert.equal(s.nPartialLayers, 0);
+  });
+
+  test('dense model: partial fill leaves low-index layers on CPU', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, kv: 10, output: 50 });
+    const s = computeOffloadSplit({ vramBytes: 300, footprint: fp });
+    assert.equal(s.nGpuLayers, 2); // layers 2,3
+    assert.equal(s.nCpuLayers, 2); // layers 0,1
+  });
+
+  test('MoE: two-pass fill (hybrid back-to-front, no upgrade when no budget)', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    // reserved=50; pass1 hybridNeed=110 each. vram=400 -> remaining 350 -> 3 layers fit (330), 4th no.
+    const s = computeOffloadSplit({ vramBytes: 400, footprint: fp });
+    assert.equal(s.nHybridLayers, 3);
+    assert.equal(s.nCpuLayers, 1);
+    assert.equal(s.nPartialLayers, 0);
+  });
+
+  test('MoE: pass 2 upgrades hybrid->gpu contiguously when budget allows', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    // enough for all dense-only (440) + 1 full expert (200) = 690 -> use 700
+    const s = computeOffloadSplit({ vramBytes: 700, footprint: fp });
+    // pass1: all 4 hybrid (440), remaining 210; pass2: layer0 expert 200 fits -> gpu, layer1 200 > 10 break
+    assert.equal(s.nGpuLayers, 1);
+    assert.equal(s.nHybridLayers, 3);
+  });
+
+  test('MoE: pass 3 fits one boundary layer at ATTN fraction', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    // pass1 3 hybrid (330), remaining 40; attn fraction = 25+10 = 35 fits on layer 0.
+    const s = computeOffloadSplit({ vramBytes: 420, footprint: fp });
+    assert.equal(s.nPartialLayers, 1);
+    assert.equal(s.nCpuLayers, 0);
+    assert.ok(s.modes[0].startsWith('partial-'));
+  });
+
+  test('cpuMoe forces ngl=-1: all expert layers hybrid, ignores VRAM budget', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    // tiny VRAM but cpu-moe must still assign all layers (ngl=-1), no partial fill.
+    const s = computeOffloadSplit({ vramBytes: 10, footprint: fp, cpuMoe: true });
+    assert.equal(s.nHybridLayers, 4);
+    assert.equal(s.nCpuLayers, 0);
+    assert.equal(s.nPartialLayers, 0);
+  });
+
+  test('nCpuMoe forces ngl=-1: first N layers hybrid, rest full gpu', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    const s = computeOffloadSplit({ vramBytes: 10, footprint: fp, nCpuMoe: 2 });
+    assert.equal(s.nHybridLayers, 2); // layers 0,1
+    assert.equal(s.nGpuLayers, 2);    // layers 2,3
+    assert.equal(s.nCpuLayers, 0);
+  });
+
+  test('manual ngl: last N layers offloaded back-to-front', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    const s = computeOffloadSplit({ vramBytes: 1000, footprint: fp, nLayerOverride: 2 });
+    assert.equal(s.nGpuLayers, 2);
+    assert.equal(s.nCpuLayers, 2);
+    assert.equal(s.auto, false);
+  });
+
+  test('token_embd (inputEmb) is excluded from VRAM reserved budget', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, kv: 10, output: 50, inputEmb: 20 });
+    // If inputEmb were reserved, 50+20+440 = 510 > 500 wouldn't fit all.
+    // Excluded: 50 + 440 = 490 <= 500 -> all GPU.
+    const s = computeOffloadSplit({ vramBytes: 500, footprint: fp });
+    assert.equal(s.nGpuLayers, 4);
+  });
+});
+
+describe('calcActualMemory (VRAM/RAM accounting)', () => {
+  test('token_embd counted as RAM, not VRAM', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, kv: 10, output: 50, inputEmb: 20 });
+    const m = calcActualMemory({ vramBytes: 1000, footprint: fp });
+    // 4 gpu layers = 4*(100+10)=440 VRAM + output 50 = 490; inputEmb 20 in RAM.
+    assert.equal(m.actualVram, 490);
+    assert.equal(m.actualRam, 20);
+  });
+
+  test('cpuMoe ngl=-1: non-expert VRAM, experts RAM, OOM flaggable by caller', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50, inputEmb: 20 });
+    const m = calcActualMemory({ vramBytes: 10, footprint: fp, cpuMoe: true });
+    // all 4 hybrid: VRAM = 4*(100+10) + 50 = 490; RAM = 4*200 + 20 = 820.
+    assert.equal(m.actualVram, 490);
+    assert.equal(m.actualRam, 820);
+    assert.ok(m.actualVram > 10, 'caller can detect OOM via actualVram > budget');
+  });
+
+  test('partial layer: attn fraction in VRAM, down+experts in RAM', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    const m = calcActualMemory({ vramBytes: 420, footprint: fp });
+    // layers 1,2,3 hybrid; layer 0 partial-attn (attn=25, kv=10 -> 35 VRAM).
+    // VRAM = 3*(100+10) hybrid + 25 attn + 10 kv + 50 output = 330+35+50 = 415
+    assert.equal(m.actualVram, 415);
+    // RAM = 3*200 (experts) + (up+gate+down=75) layer0 + 200 expert layer0 = 600+75+200 = 875
+    assert.equal(m.actualRam, 875);
+    assert.equal(m.nPartialLayers, 1);
   });
 });

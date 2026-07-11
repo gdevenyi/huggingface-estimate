@@ -644,14 +644,17 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   const totalBytes = vramBytes + ramBytes;
   const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
   const mtpBytes = (footprint && footprint.mtpBytes) || 0;
+  // token_embd is always on the CPU in llama.cpp; keep it out of the VRAM
+  // weights figure so the bar sums correctly, and show it in the RAM panel.
+  const inputEmb = (footprint && footprint.inputEmbBytes) || 0;
 
   let nonMoEWeightBytes, vramExpertBytes = 0, vramRouterSharedBytes = 0;
   if (moe) {
-    nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes - mtpBytes;
+    nonMoEWeightBytes = weights.total - moe.expertWeightBytes - moe.routerBytes - moe.sharedBytes - mtpBytes - inputEmb;
     vramExpertBytes = memBreakdown.vramWeightBytes - (nonMoEWeightBytes + mtpBytes) - moe.routerBytes - moe.sharedBytes;
     vramRouterSharedBytes = moe.routerBytes + moe.sharedBytes;
   } else {
-    nonMoEWeightBytes = weights.total - mtpBytes;
+    nonMoEWeightBytes = weights.total - mtpBytes - inputEmb;
   }
 
   $('#vramSize').textContent = formatBytes(vramBytes);
@@ -697,7 +700,7 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   }
 
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
-  if (moe && ramBytes > 0) {
+  if (moe && memBreakdown.ramExpertBytes > 0) {
     show($('#ramInactiveRow'));
     const expertInRam = memBreakdown.ramExpertBytes;
     if (cpuMoe) {
@@ -710,6 +713,13 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
     $('#ramInactiveSize').textContent = `${formatBytes(expertInRam)} (${ramBytes > 0 ? (expertInRam / ramBytes * 100).toFixed(1) : '0'}%)`;
   } else {
     hide($('#ramInactiveRow'));
+  }
+  if (inputEmb > 0) {
+    show($('#ramInputEmbRow'));
+    const pct = ramBytes > 0 ? (inputEmb / ramBytes * 100).toFixed(1) : '0';
+    $('#ramInputEmbSize').textContent = `${formatBytes(inputEmb)} (${pct}%)`;
+  } else {
+    hide($('#ramInputEmbRow'));
   }
   if (currentMmProjInfo && mmProjDevice === 'ram') {
     show($('#ramMmProjRow'));
@@ -789,17 +799,19 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
 
   vramBar.style.width = `${clampedVramPct}%`;
 
-  const layerSplitStr = actual.nHybridLayers > 0
-    ? `${actual.nGpuLayers} GPU / ${actual.nHybridLayers} hybrid / ${actual.nCpuLayers} CPU`
-    : actual.nCpuLayers > 0
-      ? `${actual.nGpuLayers} GPU / ${actual.nCpuLayers} CPU`
-      : `${actual.nGpuLayers} GPU (full offload)`;
+  const np = actual.nPartialLayers || 0;
+  const parts = [`${actual.nGpuLayers} GPU`];
+  if (np > 0) parts.push(`${np} partial`);
+  if (actual.nHybridLayers > 0) parts.push(`${actual.nHybridLayers} hybrid`);
+  if (actual.nCpuLayers > 0) parts.push(`${actual.nCpuLayers} CPU`);
+  const fullOffload = actual.nGpuLayers > 0 && np === 0 && actual.nHybridLayers === 0 && actual.nCpuLayers === 0;
+  const layerSplitStr = fullOffload ? `${actual.nGpuLayers} GPU (full offload)` : parts.join(' / ');
 
   if (vramUsagePct > 100) {
     vramBar.className = 'usage-bar red';
     vramStatus.className = 'usage-status red';
     vramStatus.textContent = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
-  } else if (actual.nCpuLayers === 0 && (actual.nHybridLayers === 0 || cpuMoe || nCpuMoe > 0)) {
+  } else if (actual.nCpuLayers === 0 && np === 0 && (actual.nHybridLayers === 0 || cpuMoe || nCpuMoe > 0)) {
     vramBar.className = 'usage-bar green';
     vramStatus.className = 'usage-status green';
     vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
@@ -895,19 +907,29 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
     ? `${(perf.ttftSec * 1000).toFixed(0)} ms`
     : `${perf.ttftSec.toFixed(2)} s`;
   const nHybrid = perf.nHybridLayers || 0;
-  $('#perfSplit').textContent = nHybrid > 0
-    ? `${perf.nGpuLayers} / ${nHybrid} / ${perf.nCpuLayers}${perf.autoSplit ? ' (auto)' : ''}`
+  const nPartial = perf.nPartialLayers || 0;
+  const nSplit = nHybrid + nPartial;
+  $('#perfSplit').textContent = nSplit > 0
+    ? `${perf.nGpuLayers} / ${nSplit} / ${perf.nCpuLayers}${perf.autoSplit ? ' (auto)' : ''}`
     : `${perf.nGpuLayers} / ${perf.nCpuLayers}${perf.autoSplit ? ' (auto)' : ''}`;
   $('#perfGpuLayer').textContent = perf.nGpuLayers > 0
     ? `${perf.perLayerMs.gpu.toFixed(3)} ms (${perf.bottleneck.gpu || '-'})`
     : '\u2014';
   const hybridRow = $('#perfHybridRow');
-  if (nHybrid > 0) {
+  if (nSplit > 0) {
     hybridRow.classList.remove('hidden');
+    // When both hybrid and partial layers exist, show their weighted-average
+    // per-layer ms so the displayed value reflects all split layers.
+    const hMs = perf.perLayerMs.hybrid || 0;
+    const pMs = perf.perLayerMs.partial || 0;
+    const splitMs = (nHybrid > 0 && nPartial > 0)
+      ? (hMs * nHybrid + pMs * nPartial) / nSplit
+      : (nHybrid > 0 ? hMs : pMs);
+    const splitLabel = nHybrid > 0 && nPartial > 0 ? 'hybrid+partial' : (nPartial > 0 ? 'partial' : 'hybrid');
     $('#perfHybridLayer').textContent = hasCpuPerf && !cpuFallback
-      ? `${perf.perLayerMs.hybrid.toFixed(2)} ms (${perf.bottleneck.cpu || '-'})`
+      ? `${splitMs.toFixed(2)} ms (${perf.bottleneck.cpu || '-'}) \u00B7 ${splitLabel}`
       : cpuFallback
-        ? `${perf.perLayerMs.hybrid.toFixed(2)} ms (${perf.bottleneck.cpu || '-'}, est. from ${cpuFallback.name})`
+        ? `${splitMs.toFixed(2)} ms (${perf.bottleneck.cpu || '-'}, est. from ${cpuFallback.name}) \u00B7 ${splitLabel}`
         : '\u2014 (CPU not set \u2014 expert cost unaccounted)';
   } else {
     hybridRow.classList.add('hidden');

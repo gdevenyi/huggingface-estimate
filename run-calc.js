@@ -661,6 +661,7 @@ function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache
     ttftSec: +perf.ttftSec.toFixed(4),
     nGpuLayers: perf.nGpuLayers,
     nHybridLayers: perf.nHybridLayers || 0,
+    nPartialLayers: perf.nPartialLayers || 0,
     nCpuLayers: perf.nCpuLayers,
     autoSplit: perf.autoSplit,
     cpuMoe: perf.cpuMoe,
@@ -668,6 +669,7 @@ function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache
     perLayerMs: {
       gpu: +perf.perLayerMs.gpu.toFixed(3),
       hybrid: +(perf.perLayerMs.hybrid || 0).toFixed(3),
+      partial: +(perf.perLayerMs.partial || 0).toFixed(3),
       cpu: +perf.perLayerMs.cpu.toFixed(3),
     },
     bottleneck: perf.bottleneck,
@@ -725,6 +727,7 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
       usagePct: +usagePct.toFixed(1),
       nGpuLayers: actual.nGpuLayers,
       nHybridLayers: actual.nHybridLayers,
+      nPartialLayers: actual.nPartialLayers || 0,
       nCpuLayers: actual.nCpuLayers,
     };
   }

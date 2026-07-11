@@ -67,13 +67,16 @@ Two views, both matching llama.cpp:
    - MoE default (no flags): all expert weights in VRAM
    - `--cpu-moe`: all expert weights → RAM, rest → VRAM
    - `--n-cpu-moe N`: expert weights for layers 0..N-1 → RAM
-2. **`computeOffloadSplit` / `calcActualMemory` (fit check, perf)** — actual placement given a finite VRAM budget. Mirrors llama.cpp's `--fit on` algorithm in `src/llama.cpp` (`llama_params_fit_impl`):
-   - Layer modes: `gpu` (full layer in VRAM, including all experts), `hybrid` (non-expert + KV in VRAM, experts in RAM, expert matmul on CPU — llama.cpp's "dense-only" layer), `cpu` (everything on CPU).
+   - `token_embd` (input embedding) is always on the CPU (`llama-model.cpp` hardcodes `dev_input = cpu_dev`), so it is reported as RAM regardless of offload. Exposed as `footprint.inputEmbBytes` / `ramInputEmbBytes`.
+2. **`computeOffloadSplit` / `calcActualMemory` (fit check, perf)** — actual placement given a finite VRAM budget. Mirrors llama.cpp's `--fit on` algorithm in `common/fit.cpp` (`common_params_fit_impl`):
+   - Layer modes: `gpu` (full layer in VRAM, including all experts), `hybrid` (non-expert + KV in VRAM, experts in RAM, expert matmul on CPU — llama.cpp's "dense-only" layer), `partial-<frac>` (a single boundary layer with only a sub-layer fraction in VRAM — see below), `cpu` (everything on CPU).
    - Layers offloaded back-to-front (`i_gpu_start = max(n_layer + 1 - n_gpu_layers, 0)`).
-   - **Two-pass auto-fit always runs for MoE models** (regardless of `--cpu-moe` / `--n-cpu-moe`):
-     - Pass 1: fill all layers dense-only back-to-front (matches llama.cpp step 3).
-     - Pass 2: convert dense-only layers to full front-to-back, skipping layers forced hybrid by `--cpu-moe` (all expert layers) or `--n-cpu-moe N` (layers 0..N-1) (matches llama.cpp step 4).
-   - With a manual `--ngl N`: last N layers placed back-to-front, then expert-placement overrides applied. No auto-fit.
+   - **`--cpu-moe` / `--n-cpu-moe` + auto → `ngl=-1`**: these flags pre-populate `tensor_buft_overrides`, which makes llama.cpp's `--fit` abort ("tensor_buft_overrides already set by user", `fit.cpp`). With `--fit on` (the default) fit is skipped and `n_gpu_layers` stays `-1` = ALL layers. So every layer goes to VRAM (non-expert + KV), with experts of the flagged layers forced to RAM; there is NO budget-constrained partial fill — if the dense part exceeds VRAM the model OOMs at load (the UI/CLI reports this via `actualVram > budget`). `--n-cpu-moe N` forces layers 0..N-1 hybrid, the rest full `gpu`.
+   - **No `--cpu-moe`/`--n-cpu-moe` + auto → three-pass `--fit on` for MoE models**:
+     - Pass 1: fill layers dense-only back-to-front (matches llama.cpp step 3). Whole layers.
+     - Pass 2: convert dense-only layers to full front-to-back, contiguous (stop at the first that won't upgrade) (matches llama.cpp step 4's dense→full conversion).
+     - Pass 3: try to offload ONE more boundary layer at a sub-layer fraction (matches llama.cpp step 4 "fit part of one more layer"). Fractions, largest VRAM content first: `partial-gate` (attn+up+gate+KV) > `partial-up` (attn+up+KV) > `partial-attn` (attn+KV); the rest of that layer (down + experts) stays in RAM. `calcPerLayerFootprint` buckets each non-expert tensor into `attn/up/gate/down` groups (regex on `ffn_gate|ffn_up|ffn_down`) to compute the fraction sizes.
+   - With a manual `--ngl N`: last N layers placed back-to-front, then expert-placement overrides applied (`hybrid` for flagged layers). No auto-fit; `--ngl` itself also aborts `--fit`.
 - KV cache always per-layer (lives wherever the layer lives).
 - Performance: `activeExpertWeightBytes` (active fraction = `expertUsedCount / expertCount`) drives per-token bandwidth/compute regardless of where experts are stored — sparse MoE only reads active experts each step.
 
