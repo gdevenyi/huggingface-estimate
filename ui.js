@@ -96,6 +96,8 @@ const vramEl = $('#vram');
 const ramEl = $('#ram');
 const kvTypeKEl = $('#kvTypeK');
 const kvTypeVEl = $('#kvTypeV');
+const swaFullEl = $('#swaFull');
+const swaFullWrap = $('#swaFullWrap');
 const gpuPresetEl = $('#gpuPreset');
 const gpuFlopsEl = $('#gpuFlops');
 const gpuBwEl = $('#gpuBw');
@@ -291,6 +293,7 @@ function saveConfig() {
       nglOverride: nglOverrideEl.value,
       cpuMoe: cpuMoeEl.checked,
       nCpuMoe: nCpuMoeEl.value,
+      swaFull: swaFullEl.checked,
       hfPath: hfPathEl.value,
     };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
@@ -310,6 +313,7 @@ function applyConfigValues(cfg) {
   if (cfg.nglOverride != null) nglOverrideEl.value = cfg.nglOverride;
   if (cfg.nCpuMoe != null) nCpuMoeEl.value = cfg.nCpuMoe;
   if (cfg.cpuMoe != null) cpuMoeEl.checked = cfg.cpuMoe;
+  if (cfg.swaFull != null) swaFullEl.checked = cfg.swaFull;
   if (cfg.mmProjDevice != null) mmProjDeviceEl.value = cfg.mmProjDevice;
   if (cfg.kvTypeK != null) applySelectValue(kvTypeKEl, null, cfg.kvTypeK);
   if (cfg.kvTypeV != null) applySelectValue(kvTypeVEl, null, cfg.kvTypeV);
@@ -1002,7 +1006,7 @@ function renderResults() {
     : (Number.isFinite(parseInt(nglRaw, 10)) ? parseInt(nglRaw, 10) : 'auto');
 
   const weights = calcWeightSize(currentTensorInfos);
-  const kv = calcKVCache(currentMetadata, ctxSize, kvTypeK, kvTypeV);
+  const kv = calcKVCache(currentMetadata, ctxSize, kvTypeK, kvTypeV, 1, swaFullEl.checked);
   const acts = calcActivations(currentMetadata, batchSize);
   const moe = calcMoEInfo(currentMetadata, currentTensorInfos);
   const cpuMoe = cpuMoeEl.checked;
@@ -1024,7 +1028,10 @@ function renderResults() {
 
   const isMoe = (moe !== null);
   const isMla = handler.categories.includes('mla');
+  const isIswa = handler.categories.includes('iswa');
   const vocab = getMeta(currentMetadata, `${arch}.vocab_size`);
+
+  swaFullWrap.classList.toggle('hidden', !isIswa);
 
   renderModelInfo(arch, handler, isMoe, isMla, moe, modelCtxLen, vocab);
   renderMoeSection(moe, cpuMoe, nCpuMoe);
@@ -1064,6 +1071,10 @@ calcBtn.addEventListener('click', async () => {
   });
 });
 cpuMoeEl.addEventListener('change', () => {
+  saveConfig();
+  if (currentMetadata && currentTensorInfos) renderResults();
+});
+swaFullEl.addEventListener('change', () => {
   saveConfig();
   if (currentMetadata && currentTensorInfos) renderResults();
 });

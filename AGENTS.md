@@ -72,7 +72,7 @@ Two views, both matching llama.cpp:
      - Pass 2: convert dense-only layers to full front-to-back, contiguous (stop at the first that won't upgrade) (matches llama.cpp step 4's dense→full conversion).
      - Pass 3: try to offload ONE more boundary layer at a sub-layer fraction (matches llama.cpp step 4 "fit part of one more layer"). Fractions, largest VRAM content first: `partial-gate` (attn+up+gate+KV) > `partial-up` (attn+up+KV) > `partial-attn` (attn+KV); the rest of that layer (down + experts) stays in RAM. `calcPerLayerFootprint` buckets each non-expert tensor into `attn/up/gate/down` groups (regex on `ffn_gate|ffn_up|ffn_down`) to compute the fraction sizes.
    - With a manual `--ngl N`: last N layers placed back-to-front, then expert-placement overrides applied (`hybrid` for flagged layers). No auto-fit; `--ngl` itself also aborts `--fit`.
-- KV cache always per-layer (lives wherever the layer lives).
+- KV cache always per-layer (lives wherever the layer lives). `calcKVCache` pads `n_ctx` to 256 (`GGML_PAD(n_ctx / n_seq_max, 256)`) matching llama.cpp's `llama-context.cpp:252,257-258`. The `swaFull` parameter (default `true`) controls whether SWA layers use full or reduced context.
 - Performance: `activeExpertWeightBytes` (active fraction = `expertUsedCount / expertCount`) drives per-token bandwidth/compute regardless of where experts are stored — sparse MoE only reads active experts each step.
 
 ## Bytes-per-element hardcoded
@@ -220,7 +220,7 @@ The available builders:
 | `noKvCache` | Encoder-only architectures with no KV cache (gemma-embedding, t5encoder, modern-bert, bert, nomic-bert, neo-bert, jina-bert-v2/v3, eurobert) |
 | `llamaKvCache` | Standard (and GQA) KV cache |
 | `buildKvCache(meta, ctx, kK, kV, opts)` | ISWA, per-layer filter, effective-layer override, etc. |
-| `mlaKvCache` | DeepSeek2 / GLM-DSA latent attention |
+| `mlaKvCache` | DeepSeek2 / Mistral4 latent attention (K-only, V absorbed). `glm-dsa` / `deepseek32` has a bespoke handler that adds the DSA lightning indexer K cache (`indexer.key_length` head dim, MQA) on top of the MLA component (see `llama-kv-cache-dsa.cpp:32-52`). |
 | `buildActivations` | Standard transformer activations (incl. MoE-gated) |
 | `sharedExpertActivations` | MoE with shared experts that have a separate FFN dim (`expert_shared_feed_forward_length`); residual + shared FFN + routed experts (qwen35moe, qwen3next) |
 | `leadingDenseActivations` | MoE with `leading_dense_block_count` |
@@ -246,6 +246,7 @@ All fields optional. Compose them in the handler: `kvCache: (m, c, kK, kV) => bu
 | Option | Use for |
 |--------|---------|
 | `iswa: true` | Read `sliding_window` / `sliding_window_pattern`, shrink SWA layer contexts |
+| `swaFull: boolean` | Controls SWA cache cell count (default `true`). When `true`, SWA layers use full context matching llama.cpp's `swa_full=true` default (`llama-context.cpp:3451`). When `false`, SWA layers use the reduced ring-buffer size `GGML_PAD(min(ctx, n_swa + n_ubatch), 256)` (`llama-kv-cache-iswa.cpp:69-81`). Threading: `calcKVCache(..., swaFull)` → `handler.kvCache(meta, ctx, kK, kV, swaFull)` → `(m,c,kK,kV,sf) => buildKvCache(..., { swaFull: sf !== false })` |
 | `denseFirst: true` | With ISWA, first layer in each period is dense (smallthinker pattern; matches llama.cpp `set_swa_pattern(N, true)`) |
 | `swaPeriodDefault: N` | Fallback SWA period when metadata doesn't supply one (gpt-oss: 2, llama4: 4, gemma3n: 5) |
 | `swaDefault: N` | Fallback `sliding_window` value (llama4: 8192) |

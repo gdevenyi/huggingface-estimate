@@ -92,6 +92,7 @@ Calculation parameters:
   --n-seq <N>         Max concurrent sequences for recurrent state (default: 1)
   --kvTypeK <T>       KV cache K quantization type (default: F16)
   --kvTypeV <T>       KV cache V quantization type (default: F16)
+  --swa-full <0|1>    Full-size SWA cache: 1=full (llama.cpp default), 0=memory-saving (default: 1)
 
 Multimodal (mmproj):
   --mmproj <file>     Specific mmproj GGUF filename (otherwise auto-detected)
@@ -165,6 +166,7 @@ function parseArgs(argv) {
     nSeq: 1,
     kvTypeK: GGMLQuantizationType.F16,
     kvTypeV: GGMLQuantizationType.F16,
+    swaFull: true,
     vram: 0,
     ram: 0,
     mmproj: null,
@@ -227,6 +229,8 @@ function parseArgs(argv) {
       args.kvTypeK = parseKvType(needValue(arg), '--kvTypeK');
     } else if (arg === '--kvTypeV') {
       args.kvTypeV = parseKvType(needValue(arg), '--kvTypeV');
+    } else if (arg === '--swa-full') {
+      args.swaFull = parseInt(needValue(arg), 10) !== 0;
     } else if (arg === '--vram') {
       args.vram = Math.max(0, parseFloat(needValue(arg)) || 0);
     } else if (arg === '--ram') {
@@ -434,7 +438,7 @@ async function calcSingleFile(repo, fileInfo, args, resolved) {
     if (info.bytes > maxBytes) { maxBytes = info.bytes; primaryQuant = name; }
   }
 
-  const kvCache = calcKVCache(metadata, ctxSize, args.kvTypeK, args.kvTypeV, args.nSeq);
+  const kvCache = calcKVCache(metadata, ctxSize, args.kvTypeK, args.kvTypeV, args.nSeq, args.swaFull);
   const activations = calcActivations(metadata, args.batchSize);
   const moeInfo = calcMoEInfo(metadata, tensorInfos);
   const layerFootprint = calcPerLayerFootprint(metadata, tensorInfos, kvCache, moeInfo);

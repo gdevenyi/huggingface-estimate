@@ -63,9 +63,12 @@ function buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, opts = {}) {
   const swa_arr = Array.isArray(swa_pattern_raw) ? swa_pattern_raw.map(v => Number(v) !== 0) : null;
   const swa_period = swa_arr ? 0 : (swa_pattern_raw != null ? Number(swa_pattern_raw) : (opts.swaPeriodDefault || 0));
 
-  // SWA cache cells = GGML_PAD(min(ctx, n_swa + n_ubatch), 256). See
-  // llama-kv-cache-iswa.cpp:46–50. Default n_ubatch in llama.cpp is 512.
-  // n_seq_max=1 + unified=false (the typical inference case) is assumed.
+  // swa_full defaults to true, matching llama.cpp's default at
+  // llama-context.cpp:3451. When true, SWA layers use the same full context
+  // as non-SWA layers (no memory saving). When false, SWA layers use the
+  // reduced ring-buffer size: GGML_PAD(min(ctx, n_swa + n_ubatch), 256).
+  // See llama-kv-cache-iswa.cpp:69–81.
+  const swaFull = opts.swaFull !== false;
   const N_UBATCH_DEFAULT = 512;
   const KV_CELL_PAD = 256;
   const swa_cells = n_swa > 0
@@ -78,7 +81,7 @@ function buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, opts = {}) {
     const heads = n_head_kv_arr[i] || 0;
     if (heads <= 0) continue;
     const isSwa = isSwaLayer(opts, swa_arr, swa_period, i);
-    const layerCtx = isSwa ? swa_cells : ctxSize;
+    const layerCtx = isSwa ? (swaFull ? ctxSize : swa_cells) : ctxSize;
     const hK = isSwa ? headDimK_swa : headDimK;
     const hV = isSwa ? headDimV_swa : headDimV;
     totalElemsK += hK * heads * layerCtx;
@@ -117,13 +120,12 @@ function mlaKvCache(meta, ctxSize, kvTypeK, kvTypeV) {
 }
 
 // ── T5 encoder-decoder KV cache ──
-// The decoder has two KV stores per layer: self-attention (grows with generated
-// tokens) and cross-attention over the encoder output (fixed once the prompt is
-// encoded). The encoder itself is bidirectional and has no KV cache. We assume
-// the encoder output length equals ctxSize (the estimator treats ctx as the full
-// sequence budget), so cross-attn doubles the per-layer decoder KV. decoder layer
-// count comes from `decoder_block_count` (defaults to `block_count` when absent,
-// matching t5.cpp:12). See resources/llama.cpp/src/models/t5.cpp:55-57.
+// Only the decoder self-attention has a persistent KV cache. The encoder is
+// bidirectional (no cache). Cross-attention K/V are recomputed from the encoder
+// output each step via build_attn_inp_cross() — no persistent storage
+// (llama-graph.cpp:2954–2967 allocates only a mask, not K/V tensors).
+// decoder layer count comes from `decoder_block_count` (defaults to `block_count`
+// when absent, matching t5.cpp:12-13).
 function t5KvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   const arch = meta['general.architecture'];
   const n_head_kv = getMeta(meta, `${arch}.attention.head_count_kv`);
@@ -131,16 +133,15 @@ function t5KvCache(meta, ctxSize, kvTypeK, kvTypeV) {
   const headDimV = getMeta(meta, `${arch}.attention.value_length`) || headDimK;
   const n_block = getMeta(meta, `${arch}.block_count`);
   const dec_n_layer = getMeta(meta, `${arch}.decoder_block_count`) || n_block;
-  // self-attn KV + cross-attn KV (both scale with ctxSize under our assumption)
-  const totalElemsK = 2 * dec_n_layer * n_head_kv * headDimK * ctxSize;
-  const totalElemsV = 2 * dec_n_layer * n_head_kv * headDimV * ctxSize;
+  const totalElemsK = dec_n_layer * n_head_kv * headDimK * ctxSize;
+  const totalElemsV = dec_n_layer * n_head_kv * headDimV * ctxSize;
   return {
     bytesK: totalElemsK * (BPE[kvTypeK] || 0),
     bytesV: totalElemsV * (BPE[kvTypeV] || 0),
     layers: n_block,
     headDimK, headDimV,
-    totalHeadsKV: 2 * dec_n_layer * n_head_kv,
-    avgHeadsKV: 2 * n_head_kv,
+    totalHeadsKV: dec_n_layer * n_head_kv,
+    avgHeadsKV: n_head_kv,
   };
 }
 
@@ -347,13 +348,13 @@ const mtpEffectiveLayers = (m, n_block) =>
 // and qwen3next (qwen3next without MTP — its block_count doesn't carry nextn).
 // Previously inlined as the same 4-line body 3×.
 const QWEN35_FULL_ATTN_INTERVAL_DEFAULT = 4;
-function qwen35KvCache(meta, ctxSize, kvTypeK, kvTypeV, opts = {}) {
+function qwen35KvCache(meta, ctxSize, kvTypeK, kvTypeV, swaFull) {
   const arch = meta['general.architecture'];
   const interval = getMeta(meta, `${arch}.full_attention_interval`) || QWEN35_FULL_ATTN_INTERVAL_DEFAULT;
   return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, {
     layerFilter: (i) => ((i + 1) % interval === 0),
     effectiveLayers: mtpEffectiveLayers,
-    ...opts,
+    swaFull: swaFull !== false,
   });
 }
 
@@ -453,8 +454,9 @@ export const ARCHITECTURES = {
   // ── Gemma4: ISWA + MoE ──
   gemma4: {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, {
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, {
       iswa: true,
+      swaFull: sf !== false,
       effectiveLayers: (meta, n_block) => {
         const arch = meta['general.architecture'];
         const n_kv_shared = getMeta(meta, `${arch}.attention.shared_kv_layers`);
@@ -469,7 +471,7 @@ export const ARCHITECTURES = {
   // ── GPT-OSS: ISWA + MoE (no shared experts) ──
   'gpt-oss': {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2 }),
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2, swaFull: sf !== false }),
     activations: buildActivations,
     moe: moeNoShared,
     tensorGroups: STANDARD_MOE_TENSOR_GROUPS,
@@ -478,7 +480,7 @@ export const ARCHITECTURES = {
   // ── Llama4: ISWA + MoE with shared experts ──
   llama4: {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 8192 }),
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 8192, swaFull: sf !== false }),
     activations: buildActivations,
     moe: moeShexpOnly,
     tensorGroups: LLAMA_TENSOR_GROUPS,
@@ -515,9 +517,9 @@ export const ARCHITECTURES = {
   qwen3next:      {      categories: ['transformer', 'moe'],kvCache: (meta, ctxSize, kvTypeK, kvTypeV) => { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.full_attention_interval`) || QWEN35_FULL_ATTN_INTERVAL_DEFAULT; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: sharedExpertActivations, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: SHEXP_MOE_TENSOR_GROUPS },
   qwen2vl:        {        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3vl:        {        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  gemma3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 6 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  gemma2:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2, swaDefault: 4096 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  olmo2:          {          categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gemma3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 6, swaFull: sf !== false }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  gemma2:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 2, swaDefault: 4096, swaFull: sf !== false }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  olmo2:          {          categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaFull: sf !== false }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   phi3:           {           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   granite:        {        categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   granitehybrid:  {  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -526,7 +528,7 @@ export const ARCHITECTURES = {
   glm4:           {           categories: ['transformer'],      kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: mtpEffectiveLayers }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'falcon-h1':    {      categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   deci:           {           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  cohere2:        {        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  cohere2:        {        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaFull: sf !== false }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   smollm3:        {        categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   ernie4_5:       {       categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   grok:           {           categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -544,19 +546,19 @@ export const ARCHITECTURES = {
   wan:            {            categories: ['diffusion'],        kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'acestep-lm':   {    categories: ['audio'],            kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   t5encoder:      {      categories: ['transformer'],      kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  mimo2:          {          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  mimo2:          {          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf !== false }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'hunyuan-dense':{  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   // exaone4: only the 64-layer (32B) variant has SWA; smaller variants are dense.
   // llama-model.cpp:2287–2299 — the SWA branch is gated on n_layer==64.
-  exaone4:        {        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => {
+  exaone4:        {        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => {
     const arch = m['general.architecture'];
     const n_layer = getMeta(m, `${arch}.block_count`);
-    if (n_layer === 64) return buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096 });
+    if (n_layer === 64) return buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, swaFull: sf !== false });
     return buildKvCache(m, c, kK, kV);
   }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  plamo3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 8 }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  plamo3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 8, swaFull: sf !== false }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   // smallthinker: llama-model.cpp:2697–2704 forces n_swa = 4096 when the SWA key is present.
-  smallthinker:   {   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, denseFirst: true }), activations: buildActivations, moe: moeNoShared, tensorGroups: STANDARD_MOE_TENSOR_GROUPS },
+  smallthinker:   {   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, denseFirst: true, swaFull: sf !== false }), activations: buildActivations, moe: moeNoShared, tensorGroups: STANDARD_MOE_TENSOR_GROUPS },
   qwen2moe:       {       categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeShexpOnly, tensorGroups: SHEXP_MOE_TENSOR_GROUPS },
   'modern-bert':  {    categories: ['embedding'],        kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   // ── BERT-family encoders: llama-model.cpp:8430–8443 returns res = nullptr (no KV cache) ──
@@ -604,15 +606,15 @@ export const ARCHITECTURES = {
   ernie4_5_moe: { categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: (m, ti) => buildMoe(m, ti, { isShared: (t) => t.name.includes('_shexp.') }), tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'] } },
   hunyuan_moe:  {  categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   lfm2_moe:     {      categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeNoShared,   tensorGroups: STANDARD_MOE_TENSOR_GROUPS },
-  afmoe:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4 }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  afmoe:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaFull: sf !== false }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   deepseek:     {     categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   'deepseek2-ocr': { categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
   bailingmoe:   {   categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── ISWA + MoE architectures ──
   // exaone-moe: llama-model.cpp:2310–2314 hardcodes n_swa = 128.
-  'exaone-moe': {   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 128, effectiveLayers: mtpEffectiveLayers }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
-  step35:       {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  'exaone-moe': {   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 128, effectiveLayers: mtpEffectiveLayers, swaFull: sf !== false }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  step35:       {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf !== false }), activations: buildActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── GLM4 MoE: gate_up_exps fused pattern ──
   glm4moe: {
@@ -629,7 +631,30 @@ export const ARCHITECTURES = {
   // ── DSA (DeepSeek Sparse Attention) — MLA + MoE (GLM-5 family) ──
   'glm-dsa': {
     categories: ['transformer', 'moe', 'mla'],
-    kvCache: mlaKvCache,
+    kvCache(meta, ctxSize, kvTypeK, kvTypeV) {
+      // MLA K-only component (same formula as mlaKvCache) + DSA lightning
+      // indexer K cache (MQA, 1 head, indexer_head_size dim per layer).
+      // See llama-kv-cache-dsa.cpp:32-52 — creates both kv_mla and kv_lid.
+      const arch = meta['general.architecture'];
+      const kv_lora_rank = getMeta(meta, `${arch}.attention.kv_lora_rank`);
+      const n_rot = getMeta(meta, `${arch}.rope.dimension_count`);
+      const n_layer = getMeta(meta, `${arch}.block_count`);
+      const nextn = getMeta(meta, `${arch}.nextn_predict_layers`);
+      const n_layer_kv = Math.max(0, n_layer - nextn);
+      const indexerHeadSize = getMeta(meta, `${arch}.attention.indexer.key_length`);
+      const mlaElemsK = n_layer_kv * (kv_lora_rank + n_rot) * ctxSize;
+      const indexerElemsK = indexerHeadSize > 0 ? n_layer_kv * indexerHeadSize * ctxSize : 0;
+      const totalElemsK = mlaElemsK + indexerElemsK;
+      return {
+        bytesK: totalElemsK * (BPE[kvTypeK] || 0),
+        bytesV: 0,
+        layers: n_layer,
+        headDimK: kv_lora_rank + n_rot,
+        headDimV: 0,
+        totalHeadsKV: totalElemsK / ctxSize,
+        avgHeadsKV: (kv_lora_rank + n_rot) + (indexerHeadSize > 0 ? indexerHeadSize : 0),
+      };
+    },
     activations(meta, batchSize) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
@@ -668,9 +693,10 @@ export const ARCHITECTURES = {
   // ── Gemma3N: ISWA + altup mechanism + per-layer tensors ──
   gemma3n: {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, {
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, {
       iswa: true,
       swaPeriodDefault: 5,
+      swaFull: sf !== false,
       effectiveLayers: (meta, n_block) => {
         // llama-model.cpp:1616 hardcodes n_layer_kv_from_start = 20 for gemma3n.
         // The convert script does not emit this key, so fall back to 20 when absent.
@@ -709,8 +735,8 @@ export const ARCHITECTURES = {
   // in cohere2moe.cpp:33 makes the first layer of each SWA period dense.
   cohere2moe: {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, {
-      iswa: true, swaPeriodDefault: 4, denseFirst: true,
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, {
+      iswa: true, swaPeriodDefault: 4, denseFirst: true, swaFull: sf !== false,
       effectiveLayers: mtpEffectiveLayers,
     }),
     activations: leadingDenseActivations,
@@ -780,7 +806,7 @@ export const ARCHITECTURES = {
   // Mellum: optional SWA (reads sliding_window; swa_type only set when present).
   // Register with iswa so SWA layers are shrunk correctly when metadata is set;
   // harmless (no-op) when SWA metadata is absent.
-  mellum:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  mellum:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf !== false }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── Standard MoE (no shared experts): moeNoShared + buildActivations ──
   olmoe:         {         categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared, tensorGroups: STANDARD_MOE_TENSOR_GROUPS },
@@ -818,8 +844,8 @@ export const ARCHITECTURES = {
   // approximates the raw SWA component, which is an upper bound.
   // Verified against resources/llama.cpp/src/models/deepseek4.cpp.
   deepseek4: {
-    categories: ['transformer', 'moe', 'mla'],
-    kvCache(meta, ctxSize, kvTypeK, kvTypeV) {
+    categories: ['transformer', 'moe', 'mla', 'iswa'],
+    kvCache(meta, ctxSize, kvTypeK, kvTypeV, swaFull) {
       const arch = meta['general.architecture'];
       const n_embd = getMeta(meta, `${arch}.embedding_length`);
       const n_head = getMeta(meta, `${arch}.attention.head_count`);
@@ -831,11 +857,11 @@ export const ARCHITECTURES = {
       const n_layer = getMeta(meta, `${arch}.block_count`);
       const n_swa = getMeta(meta, `${arch}.attention.sliding_window`) || 0;
       // DSV4 set_swa_pattern(0) makes ALL layers SWA. K-only cache
-      // (dsv4_make_k_only sets V size to 0). SWA cell padding matches
-      // buildKvCache's GGML_PAD(min(ctx, n_swa + n_ubatch), 256).
+      // (dsv4_make_k_only sets V size to 0). When swaFull is true (default),
+      // SWA layers use full context matching llama.cpp's swa_full=true default.
       const N_UBATCH_DEFAULT = 512;
       const KV_CELL_PAD = 256;
-      const layerCtx = n_swa > 0
+      const layerCtx = swaFull === false && n_swa > 0
         ? Math.min(ctxSize, Math.ceil((n_swa + N_UBATCH_DEFAULT) / KV_CELL_PAD) * KV_CELL_PAD)
         : ctxSize;
       const totalElemsK = n_layer * n_head_kv * headDimK * layerCtx;
@@ -907,7 +933,7 @@ export const ARCHITECTURES = {
   // >0, the leadingDenseActivations split would be needed instead.
   laguna: {
     categories: ['transformer', 'moe', 'iswa'],
-    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { iswa: true }),
+    kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf !== false }),
     activations: sharedExpertActivations,
     moe: moeShexpOnly,
     tensorGroups: LLAMA_TENSOR_GROUPS,
@@ -1109,10 +1135,11 @@ export function calcRecurrentState(metadata, nSeqMax = 1) {
   };
 }
 
-export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV, nSeqMax = 1) {
+export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV, nSeqMax = 1, swaFull = true) {
   const arch = getModelArch(metadata);
   const handler = getArchHandler(arch);
-  const result = handler.kvCache(metadata, ctxSize, kvTypeK, kvTypeV);
+  const paddedCtx = Math.max(256, Math.ceil(Math.floor(ctxSize / nSeqMax) / 256) * 256);
+  const result = handler.kvCache(metadata, paddedCtx, kvTypeK, kvTypeV, swaFull);
   const recurrent = calcRecurrentState(metadata, nSeqMax);
   result.bytesRecurrent = recurrent ? recurrent.totalBytes : 0;
   result.recurrentLayers = recurrent ? recurrent.recurrentLayers : 0;
