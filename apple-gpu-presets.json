@@ -10,7 +10,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-48gb",
@@ -23,7 +24,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-40c-gpu-64gb",
@@ -36,7 +38,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-128gb",
@@ -49,7 +52,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-48gb",
@@ -62,7 +66,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-40c-gpu-64gb",
@@ -75,7 +80,8 @@
     "fp32Tflops": 16.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-128gb",
@@ -88,7 +94,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-36gb",
@@ -101,7 +108,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-48gb",
@@ -114,7 +122,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-max-2026-18c-cpu-32c-gpu-64gb",
@@ -127,7 +136,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-128gb",
@@ -140,7 +150,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-36gb",
@@ -153,7 +164,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-48gb",
@@ -166,7 +178,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m5-max-2026-18c-cpu-32c-gpu-64gb",
@@ -179,7 +192,8 @@
     "fp32Tflops": 13.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-24gb",
@@ -192,7 +206,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-48gb",
@@ -205,7 +220,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-18c-cpu-20c-gpu-64gb",
@@ -218,7 +234,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-24gb",
@@ -231,7 +248,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-48gb",
@@ -244,7 +262,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-18c-cpu-20c-gpu-64gb",
@@ -257,7 +276,8 @@
     "fp32Tflops": 8.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-24gb",
@@ -270,7 +290,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-48gb",
@@ -283,7 +304,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m5-pro-2026-15c-cpu-16c-gpu-64gb",
@@ -296,7 +318,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-24gb",
@@ -309,7 +332,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-48gb",
@@ -322,7 +346,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m5-pro-2026-15c-cpu-16c-gpu-64gb",
@@ -335,7 +360,8 @@
     "fp32Tflops": 6.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-16gb",
@@ -348,7 +374,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-24gb",
@@ -361,7 +388,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-10c-gpu-32gb",
@@ -374,7 +402,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-16gb",
@@ -387,7 +416,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-24gb",
@@ -400,7 +430,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-10c-gpu-32gb",
@@ -413,7 +444,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-16gb",
@@ -426,7 +458,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-24gb",
@@ -439,7 +472,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m5-2026-10c-cpu-8c-gpu-32gb",
@@ -452,7 +486,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-16gb",
@@ -465,7 +500,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-24gb",
@@ -478,7 +514,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m5-2026-10c-cpu-8c-gpu-32gb",
@@ -491,7 +528,8 @@
     "fp32Tflops": 3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-128gb",
@@ -504,7 +542,8 @@
     "fp32Tflops": 32.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-192gb",
@@ -517,7 +556,8 @@
     "fp32Tflops": 32.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-256gb",
@@ -530,7 +570,8 @@
     "fp32Tflops": 32.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-512gb",
@@ -543,7 +584,8 @@
     "fp32Tflops": 32.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-32c-cpu-80c-gpu-64gb",
@@ -556,7 +598,8 @@
     "fp32Tflops": 32.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-128gb",
@@ -569,7 +612,8 @@
     "fp32Tflops": 24.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-192gb",
@@ -582,7 +626,8 @@
     "fp32Tflops": 24.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-256gb",
@@ -595,7 +640,8 @@
     "fp32Tflops": 24.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m3-ultra-2025-28c-cpu-60c-gpu-64gb",
@@ -608,7 +654,8 @@
     "fp32Tflops": 24.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.72
   },
   {
     "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-128gb",
@@ -621,7 +668,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-48gb",
@@ -634,7 +682,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "mac-studio-m4-max-2025-16c-cpu-40c-gpu-64gb",
@@ -647,7 +696,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "mac-studio-m4-max-2025-14c-cpu-32c-gpu-36gb",
@@ -660,7 +710,8 @@
     "fp32Tflops": 14.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-16gb",
@@ -673,7 +724,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-24gb",
@@ -686,7 +738,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m4-2025-10c-cpu-10c-gpu-32gb",
@@ -699,7 +752,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-16gb",
@@ -712,7 +766,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-24gb",
@@ -725,7 +780,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-15-m4-2025-10c-cpu-10c-gpu-32gb",
@@ -738,7 +794,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-16gb",
@@ -751,7 +808,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-24gb",
@@ -764,7 +822,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m5-2025-10c-cpu-10c-gpu-32gb",
@@ -777,7 +836,8 @@
     "fp32Tflops": 3.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-128gb",
@@ -790,7 +850,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-48gb",
@@ -803,7 +864,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m4-max-2024-16c-cpu-40c-gpu-64gb",
@@ -816,7 +878,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-128gb",
@@ -829,7 +892,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-48gb",
@@ -842,7 +906,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m4-max-2024-16c-cpu-40c-gpu-64gb",
@@ -855,7 +920,8 @@
     "fp32Tflops": 18.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-14-m4-max-2024-14c-cpu-32c-gpu-36gb",
@@ -868,7 +934,8 @@
     "fp32Tflops": 14.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "macbook-pro-16-m4-max-2024-14c-cpu-32c-gpu-36gb",
@@ -881,7 +948,8 @@
     "fp32Tflops": 14.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.85
   },
   {
     "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-24gb",
@@ -894,7 +962,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-48gb",
@@ -907,7 +976,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "mac-mini-m4-pro-2024-14c-cpu-20c-gpu-64gb",
@@ -920,7 +990,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-24gb",
@@ -933,7 +1004,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-48gb",
@@ -946,7 +1018,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-14c-cpu-20c-gpu-64gb",
@@ -959,7 +1032,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-24gb",
@@ -972,7 +1046,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-48gb",
@@ -985,7 +1060,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-16-m4-pro-2024-14c-cpu-20c-gpu-64gb",
@@ -998,7 +1074,8 @@
     "fp32Tflops": 9.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-24gb",
@@ -1011,7 +1088,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-48gb",
@@ -1024,7 +1102,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "mac-mini-m4-pro-2024-12c-cpu-16c-gpu-64gb",
@@ -1037,7 +1116,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-24gb",
@@ -1050,7 +1130,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-48gb",
@@ -1063,7 +1144,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "macbook-pro-14-m4-pro-2024-12c-cpu-16c-gpu-64gb",
@@ -1076,7 +1158,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.75
   },
   {
     "id": "imac-24-m4-2024-10c-cpu-10c-gpu-16gb",
@@ -1089,7 +1172,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "imac-24-m4-2024-10c-cpu-10c-gpu-24gb",
@@ -1102,7 +1186,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "imac-24-m4-2024-10c-cpu-10c-gpu-32gb",
@@ -1115,7 +1200,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-16gb",
@@ -1128,7 +1214,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-24gb",
@@ -1141,7 +1228,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-mini-m4-2024-10c-cpu-10c-gpu-32gb",
@@ -1154,7 +1242,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-16gb",
@@ -1167,7 +1256,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-24gb",
@@ -1180,7 +1270,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-10c-gpu-8gb",
@@ -1193,7 +1284,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-16gb",
@@ -1206,7 +1298,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-24gb",
@@ -1219,7 +1312,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-10c-gpu-8gb",
@@ -1232,7 +1326,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-16gb",
@@ -1245,7 +1340,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-24gb",
@@ -1258,7 +1354,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m4-2024-10c-cpu-10c-gpu-32gb",
@@ -1271,7 +1368,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "imac-24-m4-2024-8c-cpu-8c-gpu-16gb",
@@ -1284,7 +1382,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "imac-24-m4-2024-8c-cpu-8c-gpu-24gb",
@@ -1297,7 +1396,8 @@
     "fp32Tflops": 4.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-16gb",
@@ -1310,7 +1410,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-24gb",
@@ -1323,7 +1424,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-13-m3-2024-8c-cpu-8c-gpu-8gb",
@@ -1336,7 +1438,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-16gb",
@@ -1349,7 +1452,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-24gb",
@@ -1362,7 +1466,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m3-2024-8c-cpu-8c-gpu-8gb",
@@ -1375,7 +1480,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
@@ -1388,7 +1494,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
@@ -1401,7 +1508,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
@@ -1414,7 +1522,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-128gb",
@@ -1427,7 +1536,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-192gb",
@@ -1440,7 +1550,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-76c-gpu-64gb",
@@ -1453,7 +1564,8 @@
     "fp32Tflops": 27.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
@@ -1466,7 +1578,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
@@ -1479,7 +1592,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-pro-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
@@ -1492,7 +1606,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-128gb",
@@ -1505,7 +1620,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-192gb",
@@ -1518,7 +1634,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-studio-m2-ultra-2023-24c-cpu-60c-gpu-64gb",
@@ -1531,7 +1648,8 @@
     "fp32Tflops": 21.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-128gb",
@@ -1544,7 +1662,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-48gb",
@@ -1557,7 +1676,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-14-m3-max-2023-16c-cpu-40c-gpu-64gb",
@@ -1570,7 +1690,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-128gb",
@@ -1583,7 +1704,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-48gb",
@@ -1596,7 +1718,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-16-m3-max-2023-16c-cpu-40c-gpu-64gb",
@@ -1609,7 +1732,8 @@
     "fp32Tflops": 16.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-32gb",
@@ -1622,7 +1746,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-64gb",
@@ -1635,7 +1760,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-38c-gpu-96gb",
@@ -1648,7 +1774,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-32gb",
@@ -1661,7 +1788,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-64gb",
@@ -1674,7 +1802,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-38c-gpu-96gb",
@@ -1687,7 +1816,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-32gb",
@@ -1700,7 +1830,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-64gb",
@@ -1713,7 +1844,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-38c-gpu-96gb",
@@ -1726,7 +1858,8 @@
     "fp32Tflops": 13.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-32gb",
@@ -1739,7 +1872,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-64gb",
@@ -1752,7 +1886,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "mac-studio-m2-max-2023-12c-cpu-30c-gpu-96gb",
@@ -1765,7 +1900,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-32gb",
@@ -1778,7 +1914,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-64gb",
@@ -1791,7 +1928,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m2-max-2023-12c-cpu-30c-gpu-96gb",
@@ -1804,7 +1942,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-36gb",
@@ -1817,7 +1956,8 @@
     "fp32Tflops": 12.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-14-m3-max-2023-14c-cpu-30c-gpu-96gb",
@@ -1830,7 +1970,8 @@
     "fp32Tflops": 12.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-32gb",
@@ -1843,7 +1984,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-64gb",
@@ -1856,7 +1998,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m2-max-2023-12c-cpu-30c-gpu-96gb",
@@ -1869,7 +2012,8 @@
     "fp32Tflops": 10.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.58
   },
   {
     "id": "macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-36gb",
@@ -1882,7 +2026,8 @@
     "fp32Tflops": 12.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "macbook-pro-16-m3-max-2023-14c-cpu-30c-gpu-96gb",
@@ -1895,7 +2040,8 @@
     "fp32Tflops": 12.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.76
   },
   {
     "id": "mac-mini-m2-pro-2023-12c-cpu-19c-gpu-16gb",
@@ -1908,7 +2054,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-mini-m2-pro-2023-12c-cpu-19c-gpu-32gb",
@@ -1921,7 +2068,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-16gb",
@@ -1934,7 +2082,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m2-pro-2023-12c-cpu-19c-gpu-32gb",
@@ -1947,7 +2096,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-16gb",
@@ -1960,7 +2110,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-16-m2-pro-2023-12c-cpu-19c-gpu-32gb",
@@ -1973,7 +2124,8 @@
     "fp32Tflops": 6.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-18gb",
@@ -1986,7 +2138,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m3-pro-2023-12c-cpu-18c-gpu-36gb",
@@ -1999,7 +2152,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-18gb",
@@ -2012,7 +2166,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-16-m3-pro-2023-12c-cpu-18c-gpu-36gb",
@@ -2025,7 +2180,8 @@
     "fp32Tflops": 7.4,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "mac-mini-m2-pro-2023-10c-cpu-16c-gpu-16gb",
@@ -2038,7 +2194,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-mini-m2-pro-2023-10c-cpu-16c-gpu-32gb",
@@ -2051,7 +2208,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-16gb",
@@ -2064,7 +2222,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m2-pro-2023-10c-cpu-16c-gpu-32gb",
@@ -2077,7 +2236,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-18gb",
@@ -2090,7 +2250,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "macbook-pro-14-m3-pro-2023-11c-cpu-14c-gpu-36gb",
@@ -2103,7 +2264,8 @@
     "fp32Tflops": 5.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.65
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-10c-gpu-16gb",
@@ -2116,7 +2278,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-10c-gpu-24gb",
@@ -2129,7 +2292,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-10c-gpu-8gb",
@@ -2142,7 +2306,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-16gb",
@@ -2155,7 +2320,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-24gb",
@@ -2168,7 +2334,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-mini-m2-2023-8c-cpu-10c-gpu-8gb",
@@ -2181,7 +2348,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-16gb",
@@ -2194,7 +2362,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-24gb",
@@ -2207,7 +2376,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-10c-gpu-8gb",
@@ -2220,7 +2390,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-16gb",
@@ -2233,7 +2404,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-24gb",
@@ -2246,7 +2418,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-pro-14-m3-2023-8c-cpu-10c-gpu-8gb",
@@ -2259,7 +2432,8 @@
     "fp32Tflops": 3.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-8c-gpu-16gb",
@@ -2272,7 +2446,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-8c-gpu-24gb",
@@ -2285,7 +2460,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "imac-24-m3-2023-8c-cpu-8c-gpu-8gb",
@@ -2298,7 +2474,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.6
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-16gb",
@@ -2311,7 +2488,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-24gb",
@@ -2324,7 +2502,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-15-m2-2023-8c-cpu-8c-gpu-8gb",
@@ -2337,7 +2516,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-128gb",
@@ -2350,7 +2530,8 @@
     "fp32Tflops": 21,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-studio-m1-ultra-2022-20c-cpu-64c-gpu-64gb",
@@ -2363,7 +2544,8 @@
     "fp32Tflops": 21,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-128gb",
@@ -2376,7 +2558,8 @@
     "fp32Tflops": 15.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-studio-m1-ultra-2022-20c-cpu-48c-gpu-64gb",
@@ -2389,7 +2572,8 @@
     "fp32Tflops": 15.7,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "mac-studio-m1-max-2022-10c-cpu-32c-gpu-32gb",
@@ -2402,7 +2586,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "mac-studio-m1-max-2022-10c-cpu-32c-gpu-64gb",
@@ -2415,7 +2600,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "mac-studio-m1-max-2022-10c-cpu-24c-gpu-32gb",
@@ -2428,7 +2614,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "mac-studio-m1-max-2022-10c-cpu-24c-gpu-64gb",
@@ -2441,7 +2628,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-16gb",
@@ -2454,7 +2642,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-24gb",
@@ -2467,7 +2656,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-10c-gpu-8gb",
@@ -2480,7 +2670,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-16gb",
@@ -2493,7 +2684,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-24gb",
@@ -2506,7 +2698,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-13-m2-2022-8c-cpu-10c-gpu-8gb",
@@ -2519,7 +2712,8 @@
     "fp32Tflops": 3.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-16gb",
@@ -2532,7 +2726,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-24gb",
@@ -2545,7 +2740,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-air-13-m2-2022-8c-cpu-8c-gpu-8gb",
@@ -2558,7 +2754,8 @@
     "fp32Tflops": 2.8,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.55
   },
   {
     "id": "macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-32gb",
@@ -2571,7 +2768,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-14-m1-max-2021-10c-cpu-32c-gpu-64gb",
@@ -2584,7 +2782,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-32gb",
@@ -2597,7 +2796,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-16-m1-max-2021-10c-cpu-32c-gpu-64gb",
@@ -2610,7 +2810,8 @@
     "fp32Tflops": 10.5,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-32gb",
@@ -2623,7 +2824,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-14-m1-max-2021-10c-cpu-24c-gpu-64gb",
@@ -2636,7 +2838,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-32gb",
@@ -2649,7 +2852,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-16-m1-max-2021-10c-cpu-24c-gpu-64gb",
@@ -2662,7 +2866,8 @@
     "fp32Tflops": 7.9,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.49
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-16gb",
@@ -2675,7 +2880,8 @@
     "fp32Tflops": 5.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-10c-cpu-16c-gpu-32gb",
@@ -2688,7 +2894,8 @@
     "fp32Tflops": 5.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-16gb",
@@ -2701,7 +2908,8 @@
     "fp32Tflops": 5.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-16-m1-pro-2021-10c-cpu-16c-gpu-32gb",
@@ -2714,7 +2922,8 @@
     "fp32Tflops": 5.2,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-16gb",
@@ -2727,7 +2936,8 @@
     "fp32Tflops": 4.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-10c-cpu-14c-gpu-32gb",
@@ -2740,7 +2950,8 @@
     "fp32Tflops": 4.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-16gb",
@@ -2753,7 +2964,8 @@
     "fp32Tflops": 4.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-14-m1-pro-2021-8c-cpu-14c-gpu-32gb",
@@ -2766,7 +2978,8 @@
     "fp32Tflops": 4.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "imac-24-m1-2021-8c-cpu-8c-gpu-16gb",
@@ -2779,7 +2992,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "imac-24-m1-2021-8c-cpu-8c-gpu-8gb",
@@ -2792,7 +3006,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "imac-24-m1-2021-8c-cpu-7c-gpu-16gb",
@@ -2805,7 +3020,8 @@
     "fp32Tflops": 2.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "imac-24-m1-2021-8c-cpu-7c-gpu-8gb",
@@ -2818,7 +3034,8 @@
     "fp32Tflops": 2.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "mac-mini-m1-2020-8c-cpu-8c-gpu-16gb",
@@ -2831,7 +3048,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "mac-mini-m1-2020-8c-cpu-8c-gpu-8gb",
@@ -2844,7 +3062,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "desktop": true
+    "desktop": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-air-13-m1-2020-8c-cpu-8c-gpu-16gb",
@@ -2857,7 +3076,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-air-13-m1-2020-8c-cpu-8c-gpu-8gb",
@@ -2870,7 +3090,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-13-m1-2020-8c-cpu-8c-gpu-16gb",
@@ -2883,7 +3104,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-pro-13-m1-2020-8c-cpu-8c-gpu-8gb",
@@ -2896,7 +3118,8 @@
     "fp32Tflops": 2.6,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-air-13-m1-2020-8c-cpu-7c-gpu-16gb",
@@ -2909,7 +3132,8 @@
     "fp32Tflops": 2.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   },
   {
     "id": "macbook-air-13-m1-2020-8c-cpu-7c-gpu-8gb",
@@ -2922,6 +3146,7 @@
     "fp32Tflops": 2.3,
     "memType": "Unified",
     "unifiedMemory": true,
-    "mobile": true
+    "mobile": true,
+    "decodeBwScale": 0.5
   }
 ]

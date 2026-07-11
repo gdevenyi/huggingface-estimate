@@ -16,6 +16,10 @@ import {
   formatBytes,
   formatElements,
   QUANT_NAMES,
+  DEFAULT_BW_UTILIZATION,
+  DEFAULT_COMPUTE_UTILIZATION,
+  DEFAULT_PREFILL_MFU,
+  DEFAULT_WEIGHT_READ_RATIO,
 } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
@@ -113,6 +117,19 @@ Performance estimation (supply --gpu or --gpu-flops + --gpu-bw to enable):
   --ngl <n|auto>      GPU layer count override (default: auto, sized from --vram)
   --cpu-moe           Keep all MoE expert weights in CPU RAM (llama.cpp --cpu-moe)
   --n-cpu-moe <N>     Keep MoE expert weights of first N layers in CPU (llama.cpp --n-cpu-moe)
+
+Efficiency / calibration (all default to conservative values, set to 1.0 for pure SoL):
+  --bw-util <0-1>         Bandwidth utilization (default: 0.85)
+  --compute-util <0-1>    Decode compute utilization (default: 0.50)
+  --prefill-mfu <0-1>     Prefill MFU / model FLOPs utilization (default: 0.15)
+  --weight-read-ratio <0-1>  Fraction of weight bytes read per token (default: 1.0)
+  --gpu-count <N>         Tensor parallel degree (default: 1)
+  --interconnect-bw <GB/s>  Inter-GPU bandwidth for TP all-reduce (e.g. 900 for NVLink)
+  --flash-attention       Enable flash attention prefill boost
+  --spec-decode           Enable speculative decoding
+  --acceptance-rate <0-1> Speculative decoding acceptance rate (default: 0.5)
+  --draft-len <N>         Speculative decoding draft length (default: 4)
+  --decode-batch <N>    Concurrent decode sequences for batch scheduling (default: 1)
 
 Other:
   --help, -h          Show this help message
@@ -278,6 +295,33 @@ function parseArgs(argv) {
         process.exit(1);
       }
       args.nCpuMoe = v;
+    } else if (arg === '--bw-util') {
+      args.bwUtil = parseFloat(needValue(arg));
+    } else if (arg === '--compute-util') {
+      args.computeUtil = parseFloat(needValue(arg));
+    } else if (arg === '--prefill-mfu') {
+      args.prefillMfu = parseFloat(needValue(arg));
+    } else if (arg === '--weight-read-ratio') {
+      args.weightReadRatio = parseFloat(needValue(arg));
+    } else if (arg === '--gpu-count') {
+      const v = parseInt(needValue(arg), 10);
+      if (Number.isNaN(v) || v < 1) {
+        console.error('Error: --gpu-count requires a positive integer');
+        process.exit(1);
+      }
+      args.gpuCount = v;
+    } else if (arg === '--interconnect-bw') {
+      args.interconnectBw = parseFloat(needValue(arg));
+    } else if (arg === '--flash-attention') {
+      args.flashAttention = true;
+    } else if (arg === '--spec-decode') {
+      args.specDecode = true;
+    } else if (arg === '--acceptance-rate') {
+      args.acceptanceRate = parseFloat(needValue(arg));
+    } else if (arg === '--draft-len') {
+      args.draftLen = parseInt(needValue(arg), 10);
+    } else if (arg === '--decode-batch') {
+      args.decodeBatch = parseInt(needValue(arg), 10);
     } else if (arg === '--concurrency') {
       const v = parseInt(needValue(arg), 10);
       if (Number.isNaN(v) || v < 1) {
@@ -352,6 +396,19 @@ function resolveDevice(args) {
     cpuMoe: args.cpuMoe,
     nCpuMoe: args.nCpuMoe,
     unifiedMemory,
+    efficiency: {
+      bwUtilization: args.bwUtil ?? DEFAULT_BW_UTILIZATION,
+      computeUtilization: args.computeUtil ?? DEFAULT_COMPUTE_UTILIZATION,
+      prefillMfu: args.prefillMfu ?? DEFAULT_PREFILL_MFU,
+      weightReadRatio: args.weightReadRatio ?? DEFAULT_WEIGHT_READ_RATIO,
+    },
+    gpuCount: args.gpuCount || 1,
+    interconnectBwGBps: args.interconnectBw || 0,
+    flashAttention: !!args.flashAttention,
+    speculativeDecoding: args.specDecode ? {
+      acceptanceRate: args.acceptanceRate ?? 0.5,
+      draftLen: args.draftLen ?? 4,
+    } : null,
   };
 }
 
@@ -655,6 +712,7 @@ function formatMmProj(mmProjInfo, args, resolved, mmProjUrl, mmProjBytes) {
 function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache, moeInfo, activations, mmProjInfo) {
   const perf = estimatePerformance({
     metadata, tensorInfos, ctx: ctxSize, batchSize: args.batchSize,
+    decodeBatch: args.decodeBatch || 1,
     kv: kvCache, moe: moeInfo, activations, mmproj: mmProjInfo,
     device,
   });
@@ -677,6 +735,7 @@ function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache
     },
     bottleneck: perf.bottleneck,
     timing: perf.timing,
+    calibration: perf.calibration || undefined,
     footprint: {
       nLayers: perf.footprint.nLayers,
       outputBytes: perf.footprint.outputBytes,
@@ -694,6 +753,8 @@ function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache
       fp16Tflops: device.gpu.flopsFp16Tflops,
       memBwGBps: device.gpu.bwGBps,
       vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / GIB).toFixed(2) : 0,
+      count: device.gpuCount || 1,
+      interconnectBwGBps: device.interconnectBwGBps || 0,
     },
     cpu: device.cpu ? {
       name: device.cpu.preset ? (device.cpu.fallback ? `${device.cpu.preset.name} (fallback)` : device.cpu.preset.name) : 'Custom',

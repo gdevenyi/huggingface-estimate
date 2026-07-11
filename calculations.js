@@ -1738,14 +1738,19 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
 //   cpuMoe: boolean   (llama.cpp --cpu-moe: all experts to CPU)
 //   nCpuMoe: number   (llama.cpp --n-cpu-moe N: first N layers' experts to CPU)
 // }
-function layerTiming(params, wBytes, kvB, ctx, flopsRate, bwRate) {
+function layerTiming(params, wBytes, kvB, ctx, flopsRate, bwRate, opts = {}) {
+  const flopsRatePre = opts.flopsRatePrefill ?? flopsRate;
+  const bwRatePre = opts.bwRatePrefill ?? bwRate;
+  const wrr = opts.weightReadRatio ?? 1.0;
+  const attnFlops = opts.attnFlopsPerLayer ?? 0;
+
   const flopsDec = FLOPS_PER_PARAM * params;
-  const bytesDec = wBytes + kvB;
-  const flopsPre = FLOPS_PER_PARAM * params * ctx;
+  const bytesDec = wBytes * wrr + kvB;
+  const flopsPre = FLOPS_PER_PARAM * params * ctx + attnFlops;
   const bytesPre = wBytes + kvB;
   return {
     tDecode: Math.max(flopsDec / flopsRate, bytesDec / bwRate),
-    tPrefill: Math.max(flopsPre / flopsRate, bytesPre / bwRate),
+    tPrefill: Math.max(flopsPre / flopsRatePre, bytesPre / bwRatePre),
     flopsTime: flopsDec / flopsRate,
     bwTime: bytesDec / bwRate,
   };
@@ -1760,6 +1765,80 @@ const PCIE_BOUNDARY_BW_BYTES = 32e9;  // ~PCIe Gen4 x16 fallback when CPU BW unk
 const FLOPS_PER_PARAM = 2;            // 1× params = MACs, 2× = FLOPs (multiply + add)
 const ACTIVATION_BYTES_PER_ELEMENT = 2;  // F16 activations crossing GPU<->CPU boundary
 const HYBRID_HOPS_PER_LAYER = 2;         // GPU->CPU + CPU->GPU round trip per hybrid layer
+
+// ── Efficiency / calibration defaults ──
+// Conservative defaults that bring pure speed-of-light estimates closer to
+// achievable performance. Real implementations achieve 50–90% of theoretical
+// peak (zeux.io: calm ~90%, llama.cpp 58–82%). All user-adjustable.
+// Set all to 1.0 to recover the pure speed-of-light ceiling.
+export const DEFAULT_BW_UTILIZATION = 0.85;
+export const DEFAULT_COMPUTE_UTILIZATION = 0.50;
+export const DEFAULT_PREFILL_MFU = 0.15;
+export const DEFAULT_WEIGHT_READ_RATIO = 1.0;
+// LogP all-reduce startup latency (seconds per hop). ~1μs NVLink, ~6μs PCIe.
+const TP_ALLREDUCE_ALPHA_S = 2e-6;
+
+// ── Performance helper functions ──
+
+// Batch scheduling efficiency: diminishing returns for large batches.
+// Below batch 8, efficiency is 1.0; above, it decays ~5% per additional slot.
+export function batchSchedulingEfficiency(batch) {
+  if (batch <= 8) return 1.0;
+  return 1 / (1 + (batch - 8) * 0.048);
+}
+
+// Compute per-layer attention FLOPs coefficient for prefill (causal attention).
+// Returns the coefficient C such that total attention FLOPs per layer = C × ctx².
+// QK^T + softmax×V ≈ 2 × n_heads × head_dim × ctx² (causal halving from 4×).
+// For MLA architectures, uses compressed latent dimensions.
+function calcAttnFlopsCoeff(metadata, arch) {
+  const n_head = getMeta(metadata, `${arch}.attention.head_count`);
+  const head_dim = getMeta(metadata, `${arch}.attention.key_length`)
+    || (n_head ? getMeta(metadata, `${arch}.attention.embedding_length`) / n_head : 0);
+  if (!n_head || !head_dim) return 0;
+  // MLA: attention uses compressed latent, but QK^T still operates on full
+  // query heads × latent dim. Approximate with n_head × kv_lora_rank.
+  const kvLoraRank = getMeta(metadata, `${arch}.attention.kv_lora_rank`);
+  if (kvLoraRank) {
+    // MLA attention FLOPs ≈ 2 × n_head × (kvLoraRank + head_dim_mla) × ctx²
+    const headDimMla = getMeta(metadata, `${arch}.attention.key_length_mla`) || head_dim;
+    return 2 * n_head * (kvLoraRank + headDimMla);
+  }
+  return 2 * n_head * head_dim;
+}
+
+// Speculative decoding speedup factor.
+// With acceptance rate r and draft length d, each draft round verifies d tokens
+// and accepts ~(d-1)×r of them on average, producing 1+(d-1)×r verified tokens
+// per round. Each round costs ~1 decode step of the target model. Speedup =
+// (1 + (d-1)×r) / 1, but accounting for the draft model's own compute cost and
+// verification overhead, the effective speedup is lower. This formula models
+// the net speedup as d / (1 + (d-1)×(1-r)), which interpolates between 1 (r=0)
+// and d (r=1) and accounts for wasted draft computation on rejected tokens.
+function speculativeSpeedup(acceptanceRate, draftLen) {
+  if (!acceptanceRate || !draftLen || draftLen <= 1) return 1.0;
+  const r = Math.min(1, Math.max(0, acceptanceRate));
+  const d = Math.max(2, draftLen);
+  return d / (1 + (d - 1) * (1 - r));
+}
+
+// Flash attention prefill boost factor.
+// FA reduces attention memory traffic, allowing higher prefill throughput.
+// Boost scales with context length (larger ctx → more benefit from tiling).
+function flashAttentionBoost(ctx) {
+  if (!ctx || ctx <= 0) return 1.0;
+  return Math.min(2.45, 1.08 + Math.log2(Math.max(2, ctx)) / 14);
+}
+
+// MoE expert dispatch latency (per token, in seconds).
+// Models the overhead of routing tokens to experts and gathering results.
+// Proportional to expert count (router matmul + dispatch indexing).
+function calcMoeDispatchLatency(moe) {
+  if (!moe || !moe.expertCount || moe.expertCount <= 1) return 0;
+  // Router computation is tiny (n_embd × expertCount matmul), but dispatch
+  // involves gathering/scattering activations. ~5ns per expert per token.
+  return moe.expertCount * 5e-9;
+}
 
 export function classifyBottleneck({
   nGpuLayers, nHybridLayers, nCpuLayers,
@@ -1777,20 +1856,45 @@ export function classifyBottleneck({
 }
 
 export function estimatePerformance({
-  metadata, tensorInfos, ctx, batchSize = 1,
+  metadata, tensorInfos, ctx, batchSize = 1, decodeBatch = 1,
   kv, moe, activations, mmproj, device,
 }) {
   const footprint = calcPerLayerFootprint(metadata, tensorInfos, kv, moe);
   const actBytes = activations ? activations.totalBytes : 0;
   const mmprojBytes = mmproj ? (mmproj.weightBytes + (mmproj.perImageActBytes || 0)) : 0;
 
-  const gpuFlops = device.gpu.flopsFp16Tflops * 1e12;
-  const gpuBw = device.gpu.bwGBps * 1e9;
-  const cpu = device.cpu;
-  const cpuFlops = cpu ? cpu.flopsFp16Tflops * 1e12 : 0;
-  const cpuBw = cpu ? cpu.bwGBps * 1e9 : 0;
+  // ── Efficiency / calibration config ──
+  const eff = device.efficiency || {};
+  const bwUtil = eff.bwUtilization ?? DEFAULT_BW_UTILIZATION;
+  const computeUtil = eff.computeUtilization ?? DEFAULT_COMPUTE_UTILIZATION;
+  const prefillMfu = eff.prefillMfu ?? DEFAULT_PREFILL_MFU;
+  const wrr = eff.weightReadRatio ?? DEFAULT_WEIGHT_READ_RATIO;
+  const gpuCount = Math.max(1, device.gpuCount || 1);
+  const interconnectBw = (device.interconnectBwGBps || 0) * 1e9;
+  const flashAttn = !!device.flashAttention;
+  const specDecoding = device.speculativeDecoding || null;
 
-  const vramBytes = device.gpu.vramBytes || 0;
+  // Apple Silicon per-SKU bandwidth scaling (decodeBwScale in GPU preset).
+  const appleBwScale = device.gpu.preset?.decodeBwScale || 1.0;
+
+  // Effective per-GPU hardware rates (raw × utilization). TP divides the
+  // per-layer work across GPUs (see tpDiv below) and adds all-reduce overhead
+  // — we don't multiply rates by gpuCount here to avoid double-counting.
+  // Decode uses computeUtil; prefill uses prefillMfu (MFU).
+  const gpuFlopsRaw = device.gpu.flopsFp16Tflops * 1e12;
+  const gpuBwRaw = device.gpu.bwGBps * 1e9 * appleBwScale;
+  const gpuFlops = gpuFlopsRaw * computeUtil;
+  const gpuFlopsPre = gpuFlopsRaw * prefillMfu * (flashAttn ? flashAttentionBoost(ctx) : 1);
+  const gpuBw = gpuBwRaw * bwUtil;
+  const gpuBwPre = gpuBwRaw * bwUtil;
+
+  const cpu = device.cpu;
+  const cpuFlops = cpu ? cpu.flopsFp16Tflops * 1e12 * computeUtil : 0;
+  const cpuBw = cpu ? cpu.bwGBps * 1e9 * bwUtil : 0;
+  const cpuFlopsPre = cpu ? cpu.flopsFp16Tflops * 1e12 * prefillMfu : 0;
+  const cpuBwPre = cpu ? cpu.bwGBps * 1e9 * bwUtil : 0;
+
+  const vramBytes = (device.gpu.vramBytes || 0) * (gpuCount > 1 ? gpuCount : 1);
   const reservedGpuBytes = actBytes + (device.mmprojOnGpu !== false ? mmprojBytes : 0);
   const unifiedMemory = !!device.unifiedMemory;
   const split = computeOffloadSplit({
@@ -1808,6 +1912,34 @@ export function estimatePerformance({
     kvBytesPerLayer, outputBytes, outputElems,
   } = footprint;
 
+  // Per-layer attention FLOPs coefficient (× ctx² applied in layerTiming).
+  const arch = getModelArch(metadata);
+  const attnFlopsCoeff = calcAttnFlopsCoeff(metadata, arch);
+  const n_embd = getMeta(metadata, `${arch}.embedding_length`) || 0;
+
+  // layerTiming opts for GPU calls. Attention heads are split across GPUs
+  // under TP, so per-GPU attention FLOPs = full / gpuCount.
+  const gpuOpts = {
+    flopsRatePrefill: gpuFlopsPre,
+    bwRatePrefill: gpuBwPre,
+    weightReadRatio: wrr,
+    attnFlopsPerLayer: (attnFlopsCoeff * ctx * ctx) / gpuCount,
+  };
+  // Full-layer CPU calls (mode === 'cpu'): attention runs on CPU.
+  const cpuOpts = {
+    flopsRatePrefill: cpuFlopsPre,
+    bwRatePrefill: cpuBwPre,
+    weightReadRatio: 1.0,
+    attnFlopsPerLayer: attnFlopsCoeff * ctx * ctx,
+  };
+  // Expert-only CPU calls (hybrid/partial): no attention computation.
+  const cpuExpertOpts = {
+    flopsRatePrefill: cpuFlopsPre,
+    bwRatePrefill: cpuBwPre,
+    weightReadRatio: 1.0,
+    attnFlopsPerLayer: 0,
+  };
+
   let tDecodeGpu = 0, tDecodeCpu = 0, tDecodeHybridGpu = 0, tDecodeHybridCpu = 0;
   let tDecodePartialGpu = 0, tDecodePartialCpu = 0;
   let tPrefillGpu = 0, tPrefillCpu = 0, tPrefillHybridGpu = 0, tPrefillHybridCpu = 0;
@@ -1816,50 +1948,48 @@ export function estimatePerformance({
 
   const cpuAvailable = cpu && cpuFlops > 0 && cpuBw > 0;
   const kvB = kvBytesPerLayer;
+  const tpDiv = gpuCount;  // TP divides per-layer work across GPUs
 
   for (let i = 0; i < nLayers; i++) {
     const mode = modes[i];
     const L = layers[i];
     if (mode === 'gpu') {
-      const t = layerTiming(L.activeElems, L.activeBytes, kvB, ctx, gpuFlops, gpuBw);
+      const t = layerTiming(L.activeElems / tpDiv, L.activeBytes / tpDiv, kvB / tpDiv, ctx, gpuFlops, gpuBw, gpuOpts);
       tDecodeGpu += t.tDecode;
       tPrefillGpu += t.tPrefill;
       gpuFlopsTime += t.flopsTime;
       gpuBwTime += t.bwTime;
     } else if (mode === 'hybrid' && cpuAvailable) {
-      const g = layerTiming(L.nonExpertElems, L.nonExpertBytes, kvB, ctx, gpuFlops, gpuBw);
+      const g = layerTiming(L.nonExpertElems / tpDiv, L.nonExpertBytes / tpDiv, kvB / tpDiv, ctx, gpuFlops, gpuBw, gpuOpts);
       tDecodeHybridGpu += g.tDecode;
       tPrefillHybridGpu += g.tPrefill;
       gpuFlopsTime += g.flopsTime;
       gpuBwTime += g.bwTime;
-      const c = layerTiming(L.expertElemsActive, L.expertBytesActive, 0, ctx, cpuFlops, cpuBw);
+      const c = layerTiming(L.expertElemsActive, L.expertBytesActive, 0, ctx, cpuFlops, cpuBw, cpuExpertOpts);
       tDecodeHybridCpu += c.tDecode;
       tPrefillHybridCpu += c.tPrefill;
       cpuFlopsTime += c.flopsTime;
       cpuBwTime += c.bwTime;
     } else if (mode === 'cpu' && cpuAvailable) {
-      const t = layerTiming(L.activeElems, L.activeBytes, kvB, ctx, cpuFlops, cpuBw);
+      const t = layerTiming(L.activeElems, L.activeBytes, kvB, ctx, cpuFlops, cpuBw, cpuOpts);
       tDecodeCpu += t.tDecode;
       tPrefillCpu += t.tPrefill;
       cpuFlopsTime += t.flopsTime;
       cpuBwTime += t.bwTime;
     } else if (isPartialMode(mode) && cpuAvailable) {
-      // Sub-layer fraction: the included groups (attn + up/gate) run on GPU,
-      // the rest (down + excluded FFN groups + experts) run on CPU. Same split
-      // shape as a hybrid layer, just with a smaller GPU resident portion.
       const f = partialFracOf(mode);
       const upIn   = (f === 'up' || f === 'gate');
       const gateIn = (f === 'gate');
       const gpuElems = L.attnElems + (upIn ? L.upElems : 0) + (gateIn ? L.gateElems : 0);
       const gpuBytes = L.attnBytes + (upIn ? L.upBytes : 0) + (gateIn ? L.gateBytes : 0);
-      const g = layerTiming(gpuElems, gpuBytes, kvB, ctx, gpuFlops, gpuBw);
+      const g = layerTiming(gpuElems / tpDiv, gpuBytes / tpDiv, kvB / tpDiv, ctx, gpuFlops, gpuBw, gpuOpts);
       tDecodePartialGpu += g.tDecode;
       tPrefillPartialGpu += g.tPrefill;
       gpuFlopsTime += g.flopsTime;
       gpuBwTime += g.bwTime;
       const cpuElems = L.downElems + (upIn ? 0 : L.upElems) + (gateIn ? 0 : L.gateElems) + L.expertElemsActive;
       const cpuBytes = L.downBytes + (upIn ? 0 : L.upBytes) + (gateIn ? 0 : L.gateBytes) + L.expertBytesActive;
-      const c = layerTiming(cpuElems, cpuBytes, 0, ctx, cpuFlops, cpuBw);
+      const c = layerTiming(cpuElems, cpuBytes, 0, ctx, cpuFlops, cpuBw, cpuExpertOpts);
       tDecodePartialCpu += c.tDecode;
       tPrefillPartialCpu += c.tPrefill;
       cpuFlopsTime += c.flopsTime;
@@ -1867,15 +1997,33 @@ export function estimatePerformance({
     }
   }
 
+  // ── Tensor parallel all-reduce overhead ──
+  // Ring all-reduce has two phases (scatter-reduce + all-gather), each sending
+  // (N-1)/N × data per GPU. Data = n_embd × batch × 2B (F16). The leading 2×
+  // accounts for both phases. Latency = bytes/BW + alpha × 2×(N-1) hops (LogP).
+  if (gpuCount > 1 && interconnectBw > 0) {
+    const nOffloadedLayers = nGpuLayers + nHybridLayers + nPartialLayers;
+    if (nOffloadedLayers > 0) {
+      const arBytesDec = 2 * n_embd * decodeBatch * 2 * (gpuCount - 1) / gpuCount;
+      const arLatencyDec = arBytesDec / interconnectBw + TP_ALLREDUCE_ALPHA_S * 2 * (gpuCount - 1);
+      const arBytesPre = 2 * n_embd * ctx * 2 * (gpuCount - 1) / gpuCount;
+      const arLatencyPre = arBytesPre / interconnectBw + TP_ALLREDUCE_ALPHA_S * 2 * (gpuCount - 1);
+      tDecodeGpu += arLatencyDec * nGpuLayers;
+      tPrefillGpu += arLatencyPre * nGpuLayers;
+      tDecodeHybridGpu += arLatencyDec * nHybridLayers;
+      tPrefillHybridGpu += arLatencyPre * nHybridLayers;
+      tDecodePartialGpu += arLatencyDec * nPartialLayers;
+      tPrefillPartialGpu += arLatencyPre * nPartialLayers;
+    }
+  }
+
   const hasGpuOffload = nGpuLayers + nHybridLayers + nPartialLayers > 0;
   const outFlops = hasGpuOffload ? gpuFlops : (cpuAvailable ? cpuFlops : gpuFlops);
   const outBw = hasGpuOffload ? gpuBw : (cpuAvailable ? cpuBw : gpuBw);
-  const tOutDec = Math.max((FLOPS_PER_PARAM * outputElems) / outFlops, outputBytes / outBw);
-  const tOutPre = Math.max((FLOPS_PER_PARAM * outputElems * ctx) / outFlops, outputBytes / outBw);
+  const tOutDec = Math.max((FLOPS_PER_PARAM * outputElems / tpDiv) / outFlops, (outputBytes / tpDiv) / outBw);
+  const tOutPre = Math.max((FLOPS_PER_PARAM * (outputElems / tpDiv) * ctx) / outFlops, (outputBytes / tpDiv) / outBw);
 
   // Boundary bytes: F16 activation crossing GPU<->CPU at each hop (2 B/element).
-  // Split layers (hybrid + partial) each cost 2 hops (GPU->CPU in, CPU->GPU out).
-  const n_embd = getMeta(metadata, `${getModelArch(metadata)}.embedding_length`) || 0;
   const boundaryBytes = n_embd * ACTIVATION_BYTES_PER_ELEMENT;
   const boundaryBw = Math.min(PCIE_BOUNDARY_BW_BYTES, cpuBw || PCIE_BOUNDARY_BW_BYTES);
   const spillBoundaryHops = (hasGpuOffload && nCpuLayers > 0) ? 1 : 0;
@@ -1884,10 +2032,23 @@ export function estimatePerformance({
   const tBoundaryDec = totalHops > 0 ? (totalHops * boundaryBytes) / boundaryBw : 0;
   const tBoundaryPre = tBoundaryDec * ctx;
 
-  const tDecode = tDecodeGpu + tDecodeCpu + tDecodeHybridGpu + tDecodeHybridCpu
-    + tDecodePartialGpu + tDecodePartialCpu + tOutDec + tBoundaryDec;
-  const tPrefill = tPrefillGpu + tPrefillCpu + tPrefillHybridGpu + tPrefillHybridCpu
+  // MoE expert dispatch latency (per token).
+  const moeDispatchLatency = calcMoeDispatchLatency(moe);
+
+  let tDecode = tDecodeGpu + tDecodeCpu + tDecodeHybridGpu + tDecodeHybridCpu
+    + tDecodePartialGpu + tDecodePartialCpu + tOutDec + tBoundaryDec + moeDispatchLatency;
+  let tPrefill = tPrefillGpu + tPrefillCpu + tPrefillHybridGpu + tPrefillHybridCpu
     + tPrefillPartialGpu + tPrefillPartialCpu + tOutPre + tBoundaryPre;
+
+  // ── Post-loop calibration factors ──
+  // Batch scheduling efficiency: diminishing returns for large concurrent
+  // decode batches. Physical batch (batchSize) is for prefill, not decode
+  // concurrency — only apply to decodeBatch (concurrent sequences, default 1).
+  const batchSchedEff = batchSchedulingEfficiency(decodeBatch);
+  // Speculative decoding speedup.
+  const specSpeedup = specDecoding
+    ? speculativeSpeedup(specDecoding.acceptanceRate, specDecoding.draftLen)
+    : 1.0;
 
   const gpuBottleneck = hasGpuOffload
     ? (gpuFlopsTime > gpuBwTime ? 'compute' : 'bandwidth')
@@ -1904,9 +2065,12 @@ export function estimatePerformance({
   const tHybridTotal = tDecodeHybridGpu + tDecodeHybridCpu;
   const tPartialTotal = tDecodePartialGpu + tDecodePartialCpu;
 
+  const decodeTPS = tDecode > 0 ? (decodeBatch / tDecode) * batchSchedEff * specSpeedup : 0;
+  const prefillTPS = tPrefill > 0 ? (ctx / tPrefill) : 0;
+
   return {
-    decodeTPS: tDecode > 0 ? 1 / tDecode : 0,
-    prefillTPS: tPrefill > 0 ? ctx / tPrefill : 0,
+    decodeTPS,
+    prefillTPS,
     ttftSec: tPrefill,
     nGpuLayers, nHybridLayers, nPartialLayers, nCpuLayers,
     autoSplit: auto, cpuMoe: split.cpuMoe, nCpuMoe: split.nCpuMoe,
@@ -1923,6 +2087,21 @@ export function estimatePerformance({
       decodePartialGpu: tDecodePartialGpu, decodePartialCpu: tDecodePartialCpu,
       output: tOutDec, boundary: tBoundaryDec,
       decodeTotal: tDecode, prefillTotal: tPrefill,
+    },
+    calibration: {
+      bwUtilization: bwUtil,
+      computeUtilization: computeUtil,
+      prefillMfu: prefillMfu,
+      weightReadRatio: wrr,
+      gpuCount,
+      interconnectBwGBps: interconnectBw / 1e9,
+      flashAttention: flashAttn,
+      flashAttentionBoost: flashAttn ? flashAttentionBoost(ctx) : 1.0,
+      batchSchedulingEff: batchSchedEff,
+      speculativeSpeedup: specSpeedup,
+      moeDispatchLatencyMs: moeDispatchLatency * 1000,
+      appleBwScale,
+      attnFlopsCoeff,
     },
     footprint: {
       nLayers, outputBytes,

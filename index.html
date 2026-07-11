@@ -163,6 +163,60 @@
           </div>
         </fieldset>
 
+        <details class="form-group" id="perfAdvanced" style="margin-top:4px">
+          <summary style="font-size:0.85rem;font-weight:600;cursor:pointer;color:var(--text2)">Performance calibration (advanced)</summary>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+            <div class="form-row">
+              <div class="form-group" style="margin:0">
+                <label for="bwUtil">BW utilization</label>
+                <input type="number" id="bwUtil" value="0.85" min="0.1" max="1" step="0.05" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label for="computeUtil">Decode compute util</label>
+                <input type="number" id="computeUtil" value="0.50" min="0.1" max="1" step="0.05" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="margin:0">
+                <label for="prefillMfu">Prefill MFU</label>
+                <input type="number" id="prefillMfu" value="0.15" min="0.01" max="1" step="0.01" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label for="weightReadRatio">Weight read ratio</label>
+                <input type="number" id="weightReadRatio" value="1.0" min="0.1" max="1" step="0.05" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group" style="margin:0">
+                <label for="gpuCount">GPU count (TP)</label>
+                <input type="number" id="gpuCount" value="1" min="1" max="16" step="1" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label for="interconnectBw">Interconnect BW (GB/s)</label>
+                <input type="number" id="interconnectBw" placeholder="e.g. 900" min="0" step="1" />
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+              <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
+                <input type="checkbox" id="flashAttention" /> Flash attention
+              </label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem">
+                <input type="checkbox" id="specDecode" /> Speculative decoding
+              </label>
+            </div>
+            <div id="specDecodeOpts" class="hidden" style="display:flex;gap:8px">
+              <div class="form-group" style="margin:0;flex:1">
+                <label for="acceptanceRate">Acceptance rate</label>
+                <input type="number" id="acceptanceRate" value="0.5" min="0" max="1" step="0.05" />
+              </div>
+              <div class="form-group" style="margin:0;flex:1">
+                <label for="draftLen">Draft length</label>
+                <input type="number" id="draftLen" value="4" min="2" max="32" step="1" />
+              </div>
+            </div>
+          </div>
+        </details>
+
         <hr class="divider">
 
         <div style="display:flex;gap:8px">
@@ -408,6 +462,9 @@
           </div>
           <div class="result-row" style="font-size:0.75rem;color:var(--text2);margin-top:6px">
             <span id="perfHardware">-</span>
+          </div>
+          <div class="result-row" style="font-size:0.75rem;color:var(--text2)" id="perfCalibrationRow">
+            <span id="perfCalibration">-</span>
           </div>
         </div>
       </div>

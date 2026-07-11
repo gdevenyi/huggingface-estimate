@@ -108,6 +108,17 @@ const nglOverrideEl = $('#nglOverride');
 const moeOffloadGroup = $('#moeOffloadGroup');
 const cpuMoeEl = $('#cpuMoe');
 const nCpuMoeEl = $('#nCpuMoe');
+const bwUtilEl = $('#bwUtil');
+const computeUtilEl = $('#computeUtil');
+const prefillMfuEl = $('#prefillMfu');
+const weightReadRatioEl = $('#weightReadRatio');
+const gpuCountEl = $('#gpuCount');
+const interconnectBwEl = $('#interconnectBw');
+const flashAttentionEl = $('#flashAttention');
+const specDecodeEl = $('#specDecode');
+const specDecodeOpts = $('#specDecodeOpts');
+const acceptanceRateEl = $('#acceptanceRate');
+const draftLenEl = $('#draftLen');
 const perfPanel = $('#perfPanel');
 
 const calcBtn = $('#calcBtn');
@@ -272,6 +283,16 @@ const CONFIG_DEFAULTS = {
   cpuMoe: false,
   nCpuMoe: '',
   hfPath: '',
+  bwUtil: '0.85',
+  computeUtil: '0.50',
+  prefillMfu: '0.15',
+  weightReadRatio: '1.0',
+  gpuCount: '1',
+  interconnectBw: '',
+  flashAttention: false,
+  specDecode: false,
+  acceptanceRate: '0.5',
+  draftLen: '4',
 };
 
 function saveConfig() {
@@ -295,6 +316,16 @@ function saveConfig() {
       nCpuMoe: nCpuMoeEl.value,
       swaFull: swaFullEl.checked,
       hfPath: hfPathEl.value,
+      bwUtil: bwUtilEl.value,
+      computeUtil: computeUtilEl.value,
+      prefillMfu: prefillMfuEl.value,
+      weightReadRatio: weightReadRatioEl.value,
+      gpuCount: gpuCountEl.value,
+      interconnectBw: interconnectBwEl.value,
+      flashAttention: flashAttentionEl.checked,
+      specDecode: specDecodeEl.checked,
+      acceptanceRate: acceptanceRateEl.value,
+      draftLen: draftLenEl.value,
     };
     localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
   } catch {}
@@ -319,6 +350,19 @@ function applyConfigValues(cfg) {
   if (cfg.kvTypeV != null) applySelectValue(kvTypeVEl, null, cfg.kvTypeV);
   if (cfg.gpuPreset != null) applySelectValue(gpuPresetEl, ssGpu, cfg.gpuPreset);
   if (cfg.cpuPreset != null) applySelectValue(cpuPresetEl, ssCpu, cfg.cpuPreset);
+  if (cfg.bwUtil != null) bwUtilEl.value = cfg.bwUtil;
+  if (cfg.computeUtil != null) computeUtilEl.value = cfg.computeUtil;
+  if (cfg.prefillMfu != null) prefillMfuEl.value = cfg.prefillMfu;
+  if (cfg.weightReadRatio != null) weightReadRatioEl.value = cfg.weightReadRatio;
+  if (cfg.gpuCount != null) gpuCountEl.value = cfg.gpuCount;
+  if (cfg.interconnectBw != null) interconnectBwEl.value = cfg.interconnectBw;
+  if (cfg.flashAttention != null) flashAttentionEl.checked = cfg.flashAttention;
+  if (cfg.specDecode != null) {
+    specDecodeEl.checked = cfg.specDecode;
+    if (cfg.specDecode) specDecodeOpts.classList.remove('hidden');
+  }
+  if (cfg.acceptanceRate != null) acceptanceRateEl.value = cfg.acceptanceRate;
+  if (cfg.draftLen != null) draftLenEl.value = cfg.draftLen;
 }
 
 function loadConfig() {
@@ -339,6 +383,7 @@ function resetConfig() {
   modelSelectWrap.classList.remove('visible');
   mmProjSelectWrap.classList.remove('visible');
   hide(mmProjDeviceWrap);
+  hide(specDecodeOpts);
   moeOffloadGroup.classList.add('hidden');
   errorMsg.classList.remove('visible');
   errorMsg.textContent = '';
@@ -391,6 +436,20 @@ for (const el of [gpuFlopsEl, gpuBwEl, vramEl]) {
 }
 for (const el of [cpuFlopsEl, ramBwEl]) {
   el.addEventListener('input', () => { if (ssCpu) ssCpu.setSelected('custom'); saveConfig(); });
+}
+for (const el of [bwUtilEl, computeUtilEl, prefillMfuEl, weightReadRatioEl, gpuCountEl, interconnectBwEl]) {
+  el.addEventListener('input', () => { saveConfig(); if (currentMetadata) renderResults(); });
+  el.addEventListener('change', () => { saveConfig(); if (currentMetadata) renderResults(); });
+}
+flashAttentionEl.addEventListener('change', () => { saveConfig(); if (currentMetadata) renderResults(); });
+specDecodeEl.addEventListener('change', () => {
+  if (specDecodeEl.checked) specDecodeOpts.classList.remove('hidden');
+  else specDecodeOpts.classList.add('hidden');
+  saveConfig();
+  if (currentMetadata) renderResults();
+});
+for (const el of [acceptanceRateEl, draftLenEl]) {
+  el.addEventListener('input', () => { saveConfig(); if (currentMetadata) renderResults(); });
 }
 
 let currentGGUFUrl = null;
@@ -900,6 +959,7 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
   }
 
   perfPanel.classList.remove('hidden');
+  const gpuCount = parseInt(gpuCountEl.value, 10) || 1;
   const perf = estimatePerformance({
     metadata: currentMetadata, tensorInfos: currentTensorInfos,
     ctx: ctxSize, batchSize,
@@ -909,6 +969,12 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
         flopsFp16Tflops: gpuFlopsV,
         bwGBps: gpuBwV,
         vramBytes: vramGB > 0 ? vramGB * GIB : 0,
+        preset: (() => {
+          const id = gpuPresetEl.value;
+          if (!id || id === 'custom') return null;
+          const p = getGpuPresets().find(g => g.id === id);
+          return p || null;
+        })(),
       },
       cpu: hasCpuPerf ? { flopsFp16Tflops: cpuFlopsV, bwGBps: ramBwV } : null,
       nGpuLayers: nglOverride,
@@ -916,6 +982,19 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
       cpuMoe,
       nCpuMoe,
       unifiedMemory: !!unifiedMemory,
+      efficiency: {
+        bwUtilization: parseFloat(bwUtilEl.value) || 0.85,
+        computeUtilization: parseFloat(computeUtilEl.value) || 0.50,
+        prefillMfu: parseFloat(prefillMfuEl.value) || 0.15,
+        weightReadRatio: parseFloat(weightReadRatioEl.value) || 1.0,
+      },
+      gpuCount,
+      interconnectBwGBps: parseFloat(interconnectBwEl.value) || 0,
+      flashAttention: flashAttentionEl.checked,
+      speculativeDecoding: specDecodeEl.checked ? {
+        acceptanceRate: parseFloat(acceptanceRateEl.value) || 0.5,
+        draftLen: parseInt(draftLenEl.value, 10) || 4,
+      } : null,
     },
   });
   $('#perfDecode').textContent = `${perf.decodeTPS.toFixed(1)} tok/s`;
@@ -963,7 +1042,22 @@ function renderPerformance({ ctxSize, batchSize, kv, moe, acts, vramGB, mmProjDe
     : hasCpuPerf
       ? (cpuPresetEl.options[cpuPresetEl.selectedIndex]?.textContent || 'Custom')
       : 'none';
-  $('#perfHardware').textContent = `GPU: ${gpuLabel.replace(/ \u2014.*$/, '')} \u00B7 CPU: ${cpuLabel.replace(/ \u2014.*$/, '')}`;
+  $('#perfHardware').textContent = `GPU: ${gpuLabel.replace(/ \u2014.*$/, '')}${gpuCount > 1 ? ` ×${gpuCount}` : ''} \u00B7 CPU: ${cpuLabel.replace(/ \u2014.*$/, '')}`;
+  const cal = perf.calibration;
+  if (cal) {
+    const parts = [
+      `bw ${cal.bwUtilization.toFixed(2)}`,
+      `cmp ${cal.computeUtilization.toFixed(2)}`,
+      `mfu ${cal.prefillMfu.toFixed(2)}`,
+      `wrr ${cal.weightReadRatio.toFixed(2)}`,
+    ];
+    if (cal.gpuCount > 1) parts.push(`TP×${cal.gpuCount}`);
+    if (cal.flashAttention) parts.push(`FA ${cal.flashAttentionBoost.toFixed(2)}×`);
+    if (cal.speculativeSpeedup > 1) parts.push(`spec ${cal.speculativeSpeedup.toFixed(2)}×`);
+    if (cal.moeDispatchLatencyMs > 0) parts.push(`MoE ${cal.moeDispatchLatencyMs.toFixed(3)}ms`);
+    if (cal.appleBwScale !== 1) parts.push(`apple ${cal.appleBwScale.toFixed(2)}×`);
+    $('#perfCalibration').textContent = parts.join(' \u00B7 ');
+  }
 }
 
 function renderResults() {
