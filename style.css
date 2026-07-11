@@ -192,6 +192,8 @@ button {
 button:hover { opacity: 0.85; }
 button:disabled { opacity: 0.4; cursor: not-allowed; }
 
+input[type="checkbox"]:disabled + label { opacity: 0.4; cursor: not-allowed; }
+
 button.resolve-btn {
   background: var(--bg3);
   border: 1px solid var(--border);

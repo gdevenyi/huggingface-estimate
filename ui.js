@@ -1031,7 +1031,7 @@ function renderResults() {
   const isIswa = handler.categories.includes('iswa');
   const vocab = getMeta(currentMetadata, `${arch}.vocab_size`);
 
-  swaFullWrap.classList.toggle('hidden', !isIswa);
+  swaFullEl.disabled = !isIswa;
 
   renderModelInfo(arch, handler, isMoe, isMla, moe, modelCtxLen, vocab);
   renderMoeSection(moe, cpuMoe, nCpuMoe);
