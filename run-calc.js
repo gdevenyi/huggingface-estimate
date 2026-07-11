@@ -125,7 +125,7 @@ Examples:
   node run-calc.js unsloth/Qwen3-8B-GGUF --all
   node run-calc.js unsloth/Qwen3-8B-GGUF --ctx 32768 --kvTypeK Q8_0
   node run-calc.js unsloth/Qwen3-8B-GGUF --gpu "RTX 4090" --vram 24
-  node run-calc.js --batch testModels.list --concurrency 4`;
+  node run-calc.js --batch test/baseline.list --concurrency 4`;
 
 // ── CLI argument parsing ──
 
@@ -440,7 +440,7 @@ async function calcSingleFile(repo, fileInfo, args, resolved) {
   const layerFootprint = calcPerLayerFootprint(metadata, tensorInfos, kvCache, moeInfo);
 
   const memBreakdown = calcMemoryBreakdown({
-    weights: weightInfo, moe: moeInfo, kv: kvCache, activations,
+    weights: weightInfo, kv: kvCache, activations,
     footprint: layerFootprint,
   });
   let vramBytes = memBreakdown.vramBytes;

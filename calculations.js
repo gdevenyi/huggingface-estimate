@@ -1617,7 +1617,7 @@ export function computeOffloadSplit({
 // token embedding (token_embd) is always on the CPU in llama.cpp (dev_input),
 // so it is kept out of VRAM and reported as RAM regardless of offload. Actual
 // placement given a finite VRAM budget is computed by calcActualMemory.
-export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint }) {
+export function calcMemoryBreakdown({ weights, kv, activations, footprint }) {
   const inputEmb = footprint ? (footprint.inputEmbBytes || 0) : 0;
   const vramWeightBytes = weights.total - inputEmb;
 

@@ -809,10 +809,6 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
     vramBar.className = 'usage-bar yellow';
     vramStatus.className = 'usage-status yellow';
     vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
-  } else if (actual.nHybridLayers > 0 || np > 0) {
-    vramBar.className = 'usage-bar green';
-    vramStatus.className = 'usage-status green';
-    vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   } else {
     vramBar.className = 'usage-bar green';
     vramStatus.className = 'usage-status green';
@@ -1013,7 +1009,7 @@ function renderResults() {
   const nCpuMoe = parseInt(nCpuMoeEl.value, 10) || 0;
   const layerFootprint = calcPerLayerFootprint(currentMetadata, currentTensorInfos, kv, moe);
   const memBreakdown = calcMemoryBreakdown({
-    weights, moe, kv, activations: acts,
+    weights, kv, activations: acts,
     footprint: layerFootprint,
   });
 
