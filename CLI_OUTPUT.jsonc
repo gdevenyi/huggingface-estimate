@@ -1,0 +1,440 @@
+// ════════════════════════════════════════════════════════════════════════════
+// run-calc.js — JSON OUTPUT SPECIFICATION
+// ════════════════════════════════════════════════════════════════════════════
+//
+// This file is BOTH:
+//   • a human-readable spec — every field below carries an inline // comment
+//     giving its type, unit, meaning, and any conditionality;
+//   • a machine-readable example — strip all // line comments and /* */ block
+//     comments and the remaining text is a single valid JSON object: a fully
+//     populated single-file result (MoE model, --vram + --gpu supplied).
+//
+// Field values are ILLUSTRATIVE (chosen to be internally consistent: every
+// `*Formatted` string matches its numeric sibling, and component sums add up).
+// They do not reproduce any specific model's real numbers.
+//
+// ── Conventions ─────────────────────────────────────────────────────────────
+//   • Byte values are base-2 (multiples of 1024). Every byte/param field has a
+//     `*Formatted` sibling string for display, e.g. 18_790_481_920 → "17.50 GiB",
+//     30_498_761_216 params → "30.50B".
+//   • GiB-typed fields (in vramFit / ramFit / performance.gpu) are the raw
+//     bytes ÷ 1024³, rounded to 2 decimals.
+//   • Numbers are exact; formatted strings are for humans only.
+//   • Quantization display names come from QUANT_NAMES; fork-specific types may
+//     carry a "(fork)" suffix in display, stripped for the `quant` field.
+//
+// ── Invocation shapes (what run-calc.js prints to stdout) ───────────────────
+//   1. Single repo, one file     →  this object, directly.
+//   2. Single repo, --all        →  { "repo": "...", "files": [ <this>, ... ] }
+//   3. --batch <file>            →  [ { "success": true,  "data": <repo-result> },
+//                                     { "success": false, "repo": "...",
+//                                       "error": "..." }, ... ]
+//      In --all + --batch, each envelope's `data` is the --all wrapper (2).
+//      Progress/status text goes to stderr; only the JSON goes to stdout.
+//      Fully-commented variants of (2) and (3) are at the bottom of this file.
+//
+// ════════════════════════════════════════════════════════════════════════════
+// CONDITIONAL FIELDS — present only in some results
+// ════════════════════════════════════════════════════════════════════════════
+/*
+   Field / block              Present when                                            Absent form
+   ─────────────────────────  ─────────────────────────────────────────────────────  ─────────────
+   fork                       a quant fork is detected (tq3/prism-ml/beellama/       null
+                              buun/turboquant/ik_llama)
+   modelInfo.kvLoraRank,      architecture category includes 'mla' (deepseek2,       key omitted
+     qLoraRank, keyLengthMla, mistral4, glm-dsa, ...)
+     valueLengthMla
+   modelInfo.slidingWindow    category includes 'iswa' (gpt-oss, llama4, ...)         key omitted
+   modelInfo.expertCount,     expert_count > 0 (MoE models)                          key omitted
+     expertUsedCount
+   moe                        expert_count > 0                                        null
+   mmproj                     a vision/audio projector GGUF is detected or --mmproj   null
+   vramFit                    --vram > 0 is supplied                                  null
+   ramFit                     --ram > 0 is supplied                                   null
+   performance                --gpu resolves a preset, OR both --gpu-flops AND        null
+                              --gpu-bw are supplied
+   performance.cpu            GPU is NOT unified memory (discrete NVIDIA/AMD/Intel); null
+                              auto-falls-back to slowest CPU preset if --cpu absent
+   mtp.weightBytes > 0        architecture declares nextn_predict_layers             block always
+                              (qwen35, glm4, bailingmoe2, ...)                        present, 0 here
+*/
+// ════════════════════════════════════════════════════════════════════════════
+// ENUMERATIONS
+// ════════════════════════════════════════════════════════════════════════════
+/*
+   fork (string|null)
+     null | "tq3" | "prism-ml" | "beellama" | "buun" | "turboquant" | "ik_llama"
+
+   modelInfo.categories[] (subset of)
+     "transformer" | "moe" | "mla" | "iswa" | "recurrent" | "audio" | "vl"
+       | "embedding" | "diffusion"
+
+   mmproj.placement
+     "vram" (default, mirrors llama.cpp mmproj_use_gpu=true)
+     "ram"  (--mmprojDevice ram, mirrors --no-mmproj-offload)
+
+   performance.bottleneck.gpu / .cpu
+     null            — no layers on that device
+     "compute"       — FLOPs-bound (t_layer dominated by FLOPs/FLOPS)
+     "bandwidth"     — memory-bandwidth-bound (bytes/BW dominates)
+
+   performance.bottleneck.overall (first-match-wins)
+     "cpu-layers-unrun" — CPU layers/partial/hybrid exist but no CPU backend
+     "cpu-dram-spill"   — full CPU layers dominate (>50% of decode time)
+     "cpu-experts"      — hybrid/partial CPU expert work dominates (>50%)
+     "compute"          — GPU/CPU compute-bound
+     "bandwidth"        — bandwidth-bound
+     "n/a"              — no bottleneck identified
+
+   Layer placement modes (internal; surfaced only as layer counts in vramFit
+   and performance, never as raw strings in the JSON):
+     "gpu"          — whole layer incl. all experts in VRAM
+     "hybrid"       — non-expert + KV in VRAM, experts in RAM (CPU expert matmul)
+     "cpu"          — whole layer on CPU
+     "partial-gate" — one boundary layer: attn+up+gate+KV in VRAM, rest in RAM
+     "partial-up"   — one boundary layer: attn+up+KV in VRAM, rest in RAM
+     "partial-attn" — one boundary layer: attn+KV in VRAM, rest in RAM
+*/
+{
+  // ────────────────────────────────────────────────────────────────────────
+  // IDENTITY
+  // ────────────────────────────────────────────────────────────────────────
+  "repo": "owner/model-GGUF",                 // string — HF repo slug or .gguf URL, verbatim as passed on the CLI
+  "filename": "model-Q4_K_M-00001-of-00002.gguf", // string — GGUF file resolved from the repo (shards auto-merged)
+  "url": "https://huggingface.co/owner/model-GGUF/resolve/main/model-Q4_K_M-00001-of-00002.gguf", // string — normalized HF /resolve/ URL (blob→resolve, fragment stripped)
+  "arch": "qwen3moe",                         // string — general.architecture from GGUF metadata; drives the handler registry
+  "fork": null,                               // string|null — quant fork id when non-standard types are detected, else null
+  "quant": "Q4_K_M",                          // string — primary quantization: the weight bucket with the most bytes; "unknown" if none
+
+  // ────────────────────────────────────────────────────────────────────────
+  // MODEL METADATA  (modelInfo) — selected GGUF hparams for the resolved arch
+  // ────────────────────────────────────────────────────────────────────────
+  "modelInfo": {
+    "name": "Qwen3-30B-A3B",                  // string — general.name | general.basename | arch
+    "architecture": "qwen3moe",               // string — echo of top-level `arch`
+    "categories": [                           // string[] — handler category flags (see ENUMERATIONS)
+      "transformer", "moe"
+    ],
+    "contextLength": 40960,                   // number — tokens; <arch>.context_length (model max)
+    "vocabSize": 151936,                      // number — <arch>.vocab_size
+    "layers": 48,                             // number — <arch>.block_count (raw; KV/activation layers may be MTP-adjusted internally)
+    "mtpLayers": 0,                           // number — <arch>.nextn_predict_layers (0 if absent); MTP weights are resident but excluded from KV/decode-latency math
+    "embeddingLength": 2048,                  // number — <arch>.embedding_length (hidden size)
+    "headCount": 16,                          // number — <arch>.attention.head_count
+    "headCountKv": 4,                         // number|number[] — KV heads (array for ISWA / per-layer hybrid archs)
+    "feedForwardLength": 768,                 // number|number[] — FFN dim (array for per-layer archs); for MoE this is the per-expert dim
+    "expertCount": 128,                       // number — MoE only; total routed experts (<arch>.expert_count)
+    "expertUsedCount": 8                      // number — MoE only; active experts per token (<arch>.expert_used_count)
+    // MLA-only keys (omitted here): kvLoraRank, qLoraRank, keyLengthMla, valueLengthMla
+    // ISWA-only key  (omitted here): slidingWindow (number | "off")
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // PARAMETERS
+  // ────────────────────────────────────────────────────────────────────────
+  "totalParams": 30498761216,                 // number — total parameter count = Σ (product of each tensor's shape)
+  "totalParamsFormatted": "30.50B",           // string — human-readable (K/M/B/T)
+
+  // ────────────────────────────────────────────────────────────────────────
+  // WEIGHTS — sum of all tensor sizes, exact bytes-per-element per quant type
+  // ────────────────────────────────────────────────────────────────────────
+  "weightBytes": 18790481920,                 // number — base-2 bytes, ALL tensors (non-expert + experts + embeddings + output)
+  "weightBytesFormatted": "17.50 GiB",        // string
+  "weightByQuant": {                          // object — map: quant display name → bucket breakdown
+    "Q4_K_M": {
+      "count": 997,                           // number — tensor count in this bucket
+      "elements": 30498761216,                // number — total elements across those tensors
+      "elementsFormatted": "30.50B",          // string
+      "bytes": 18790481920,                   // number — base-2 bytes in this bucket
+      "bytesFormatted": "17.50 GiB"           // string
+    }
+    // … one entry per distinct quant type present in the GGUF …
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // KV CACHE — per-token-at-context memory (lives wherever its layer lives)
+  // ────────────────────────────────────────────────────────────────────────
+  "kvCache": {
+    "bytesK": 402653184,                      // number — K cache bytes = layers × kvHeads × headDimK × ctx × bpe(K), summed over active layers
+    "bytesKFormatted": "384.00 MiB",          // string
+    "bytesV": 402653184,                      // number — V cache bytes (K and V may use different quants / dims)
+    "bytesVFormatted": "384.00 MiB",          // string
+    "bytesRecurrent": 0,                      // number — SSM/recurrent state bytes (F32) for recurrent/hybrid archs; 0 for pure attention
+    "bytesRecurrentFormatted": "0 B",         // string
+    "totalBytes": 805306368,                  // number — bytesK + bytesV + bytesRecurrent
+    "totalBytesFormatted": "768.00 MiB",      // string
+    "layers": 48,                             // number — raw block_count (NOT MTP-adjusted)
+    "headDimK": 128,                          // number — per-head K dimension
+    "headDimV": 128,                          // number — per-head V dimension
+    "totalHeadsKV": 192,                      // number — Σ active KV heads across active layers (for ISWA/hybrid, non-attention layers contribute 0)
+    "avgHeadsKV": 4,                          // number — average KV heads per active layer
+    "kvTypeK": "F16",                         // string — K quant display name (--kvTypeK, default F16)
+    "kvTypeV": "F16"                          // string — V quant display name (--kvTypeV, default F16)
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // ACTIVATIONS — prompt-processing scratch (batchSize × ctx slice, F32)
+  // ────────────────────────────────────────────────────────────────────────
+  "activations": {
+    "totalBytes": 536870912,                  // number — activation memory (F32, ×4) at the given batchSize
+    "totalBytesFormatted": "512.00 MiB",      // string
+    "perLayerBytes": 11184811,                // number — bytes/layer (0 for leading-dense / MLA bespoke handlers which compute total directly)
+    "perLayerBytesFormatted": "10.67 MiB",    // string
+    "isMoe": true,                            // boolean — whether the architecture is MoE
+    "expertCount": 128,                       // number — total experts (0 if not MoE)
+    "expertUsedCount": 8                      // number — active experts per token (0 if not MoE); MoE activations use expertUsedCount × expertFF
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // MoE BREAKDOWN — null for dense models; full object when expert_count > 0
+  // ────────────────────────────────────────────────────────────────────────
+  "moe": {
+    "expertCount": 128,                       // number — total routed experts
+    "expertUsedCount": 8,                     // number — active experts per token (sparse routing)
+    "expertWeightBytes": 17708850176,         // number — bytes of ALL expert tensors (_exps.)
+    "expertWeightBytesFormatted": "16.50 GiB", // string
+    "routerBytes": 6144,                      // number — bytes of router/gate tensors (ffn_gate_inp / attn_sinks / altup_router)
+    "routerBytesFormatted": "6.00 KiB",       // string
+    "sharedBytes": 0,                         // number — bytes of shared experts (_shexp. / _chexp.); 0 if none
+    "sharedBytesFormatted": "0 B",            // string
+    "totalWeightBytes": 17708856320,          // number — expert + router + shared
+    "totalWeightBytesFormatted": "16.50 GiB", // string
+    "totalParams": 30498761216,               // number — total model params (all tensors) — same as top-level totalParams
+    "totalParamsFormatted": "30.50B",         // string
+    "expertParams": 28900000000,              // number — params in expert tensors only
+    "expertParamsFormatted": "28.90B",        // string
+    "activeExpertWeightBytes": 1106803136,    // number — perExpertBytes × expertUsedCount; drives per-token BW/compute regardless of expert storage location
+    "activeExpertWeightBytesFormatted": "1.03 GiB" // string
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // MTP — Multi-Token-Prediction block weights. Block is ALWAYS present;
+  // weightBytes is 0 unless the arch declares nextn_predict_layers.
+  // ────────────────────────────────────────────────────────────────────────
+  "mtp": {
+    "weightBytes": 0,                         // number — bytes of MTP/nextn tail-block weights (resident in VRAM/RAM but skipped by the main decode graph)
+    "weightBytesFormatted": "0 B",            // string
+    "elements": 0                             // number — element count of MTP tensors
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // MULTIMODAL PROJECTOR — null when no mmproj detected. This text model has
+  // none; a fully-populated mmproj object is shown in the variant block below.
+  // ────────────────────────────────────────────────────────────────────────
+  "mmproj": null,                             // object|null — vision/audio projector (CLIP/mtmd). Folded into vramBytes or ramBytes per `placement`.
+
+  // ────────────────────────────────────────────────────────────────────────
+  // THEORETICAL FULL-OFFLOAD TOTALS (the "Theoretical Memory" card)
+  // Pure model property — NOT affected by hardware budget or placement flags.
+  // Assumes full offload: ALL weights + ALL experts + KV + activations → VRAM.
+  // token_embd (input embedding) is ALWAYS RAM (llama.cpp hardcodes it on CPU).
+  // ────────────────────────────────────────────────────────────────────────
+  "vramBytes": 20167262208,                   // number — weights + kv + activations + output (+mmproj if placement=="vram")
+  "vramBytesFormatted": "18.78 GiB",          // string
+  "ramBytes": 524288000,                      // number — token_embd (+mmproj if placement=="ram")
+  "ramBytesFormatted": "500.00 MiB",          // string
+
+  // ────────────────────────────────────────────────────────────────────────
+  // VRAM FIT CHECK — null unless --vram > 0. Actual placement given the budget,
+  // mirroring llama.cpp --fit on (three-pass auto for MoE, back-to-front dense).
+  // ────────────────────────────────────────────────────────────────────────
+  "vramFit": {
+    "availableGiB": 24,                       // number — GiB; the --vram budget × 1024³
+    "actualVramGiB": 18.78,                   // number — GiB actually placed in VRAM after the fit algorithm
+    "actualRamGiB": 0.5,                      // number — GiB actually placed in RAM (+mmproj if placement=="ram")
+    "fits": true,                             // boolean — actualVram ≤ budget
+    "usagePct": 78.3,                         // number — percent of VRAM budget used (1 decimal)
+    "nGpuLayers": 48,                         // number — layers fully in VRAM (mode "gpu")
+    "nHybridLayers": 0,                       // number — layers with experts in RAM, non-expert+KV in VRAM (mode "hybrid")
+    "nPartialLayers": 0,                      // number — boundary layers partially in VRAM (mode "partial-gate|up|attn")
+    "nCpuLayers": 0,                          // number — layers wholly on CPU (mode "cpu")
+    "vramBreakdownGiB": {                     // object — GiB per VRAM component (disjoint buckets)
+      "weights": 1.01,                        // number — non-expert layer weights + output tensor
+      "experts": 16.5,                        // number — expert weights placed in VRAM
+      "kv": 0.75,                             // number — KV cache of VRAM-resident layers
+      "activations": 0.5,                     // number — activation scratch reserved in VRAM
+      "output": 0.03                          // number — output norm + output tensor (subset of `weights`; listed for visibility)
+    },
+    "ramBreakdownGiB": {                      // object — GiB per RAM component (disjoint buckets)
+      "experts": 0,                           // number — expert weights spilled to RAM
+      "cpuLayerWeights": 0,                   // number — non-expert weights of CPU/hybrid/partial layers
+      "cpuLayerKv": 0,                        // number — KV cache of CPU-resident layers
+      "inputEmb": 0.5                         // number — token_embd (always RAM)
+    }
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // RAM FIT CHECK — null unless --ram > 0.
+  // ────────────────────────────────────────────────────────────────────────
+  "ramFit": {
+    "availableGiB": 64,                       // number — GiB; the --ram budget × 1024³
+    "requiredGiB": 0.5,                       // number — GiB the model needs in system RAM (matches vramFit.actualRamGiB when both present)
+    "fits": true,                             // boolean — required ≤ budget
+    "usagePct": 0.8                           // number — percent of RAM budget used (1 decimal)
+  },
+
+  // ────────────────────────────────────────────────────────────────────────
+  // PERFORMANCE ESTIMATE — null unless --gpu resolves OR (--gpu-flops AND
+  // --gpu-bw) are supplied. Speed-of-light upper bound; real llama.cpp runs
+  // typically hit 40–70% of these numbers.
+  // ────────────────────────────────────────────────────────────────────────
+  "performance": {
+    "decodeTPS": 144.93,                      // number — decode tokens/sec = 1 / timing.decodeTotal (2 decimals)
+    "prefillTPS": 4200.5,                     // number — prefill tokens/sec = ctx / timing.prefillTotal (2 decimals)
+    "ttftSec": 1.9503,                        // number — time-to-first-token in seconds = timing.prefillTotal (4 decimals)
+    "nGpuLayers": 48,                         // number — full-VRAM layer count actually placed
+    "nHybridLayers": 0,                       // number — hybrid layer count (experts on CPU)
+    "nPartialLayers": 0,                      // number — partial-fraction boundary layer count
+    "nCpuLayers": 0,                          // number — CPU-only layer count
+    "autoSplit": true,                        // boolean — split auto-computed from --vram (false when --ngl forces it)
+    "cpuMoe": false,                          // boolean — --cpu-moe active (all expert weights → RAM)
+    "nCpuMoe": 0,                             // number — --n-cpu-moe value (first N layers' experts forced to RAM)
+    "perLayerMs": {                           // object — ms per layer per placement mode (3 decimals)
+      "gpu": 0.097,                           // number — max(FLOPs/FLOPS, bytes/BW) for a full-VRAM layer
+      "hybrid": 0,                            // number — hybrid-layer time (0 if none placed)
+      "partial": 0,                           // number — partial-boundary-layer time (0 if none)
+      "cpu": 0                                // number — CPU-layer time (0 if none)
+    },
+    "bottleneck": {                           // object — what limits throughput (see ENUMERATIONS)
+      "gpu": "bandwidth",                     // string|null — GPU-side limiter
+      "cpu": null,                            // string|null — CPU-side limiter
+      "overall": "bandwidth"                  // string — dominant limiter + the upgrade lever
+    },
+    "timing": {                               // object — raw timing breakdown, all in SECONDS
+      "decodeGpu": 0.0047,                    // number — Σ gpu-layer decode times
+      "decodeCpu": 0,                         // number — Σ cpu-layer decode times
+      "decodeHybridGpu": 0,                   // number — GPU-side time of hybrid layers (non-expert matmul)
+      "decodeHybridCpu": 0,                   // number — CPU-side time of hybrid layers (expert matmul)
+      "decodePartialGpu": 0,                  // number — GPU-side time of the partial boundary layer
+      "decodePartialCpu": 0,                  // number — CPU-side time of the partial boundary layer
+      "output": 0.0022,                       // number — output-norm + output-tensor time
+      "boundary": 0,                          // number — GPU↔CPU activation transfer time across the split boundary
+      "decodeTotal": 0.0069,                  // number — total per-token decode time; decodeTPS = 1 / this
+      "prefillTotal": 1.9503                  // number — total prefill time; ttftSec = this, prefillTPS = ctx / this
+    },
+    "footprint": {                            // object — per-layer byte stats driving the timings
+      "nLayers": 48,                          // number — effective layers = block_count − nextn_predict_layers
+      "outputBytes": 34603008,                // number — output pool + MTP tensor bytes
+      "outputBytesFormatted": "33.00 MiB",    // string
+      "avgLayerActiveBytes": 46137344,        // number — avg per-layer bytes read per token (non-expert + active-expert fraction)
+      "avgLayerActiveBytesFormatted": "44.00 MiB", // string
+      "avgLayerFullBytes": 385875968,         // number — avg per-layer bytes if ALL experts were read
+      "avgLayerFullBytesFormatted": "368.00 MiB", // string
+      "kvBytesPerLayer": 16777216,            // number — KV (+recurrent) bytes per layer
+      "kvBytesPerLayerFormatted": "16.00 MiB" // string
+    },
+    "gpu": {                                  // object — the GPU the estimate ran against
+      "name": "NVIDIA GeForce RTX 4090",      // string — preset name; "Custom" when --gpu-flops/--gpu-bw supplied without a preset
+      "id": "nvidia-geforce-rtx-4090",        // string|null — preset id; null for fully-custom specs
+      "fp16Tflops": 330.3,                    // number — FP16 TFLOPS used (preset or --gpu-flops)
+      "memBwGBps": 1008,                      // number — memory bandwidth in GB/s (preset or --gpu-bw)
+      "vramGiB": 24                           // number — VRAM budget in GiB (0 if --vram not supplied)
+    },
+    "cpu": {                                  // object|null — null for unified-memory GPUs (Apple/AMD APU/Intel iGPU); here a discrete GPU with auto-fallback CPU
+      "name": "Intel Core i9-10900X (fallback)", // string — preset name; " (fallback)" appended when auto-selected as the slowest preset
+      "id": "intel-core-i9-10900x",           // string|null — preset id
+      "fp16Tflops": 1.38,                     // number — CPU FP16 TFLOPS
+      "ramBwGBps": 60                         // number — system RAM bandwidth in GB/s
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// VARIANT 1 — dense model, minimal output (no --vram/--ram/--gpu)
+// Same top-level shape; the conditional blocks are null. Shown as a skeleton.
+// ════════════════════════════════════════════════════════════════════════════
+/*
+{
+  "repo": "owner/Llama-B-GGUF",
+  "filename": "model-Q4_K_M.gguf",
+  "url": "https://huggingface.co/owner/Llama-B-GGUF/resolve/main/model-Q4_K_M.gguf",
+  "arch": "llama",
+  "fork": null,
+  "quant": "Q4_K_M",
+  "modelInfo": { "name": "Llama-B", "architecture": "llama", "categories": ["transformer"],
+                 "contextLength": 131072, "vocabSize": 128256, "layers": 32, "mtpLayers": 0,
+                 "embeddingLength": 4096, "headCount": 32, "headCountKv": 8,
+                 "feedForwardLength": 14336 },
+  "totalParams": 8030261248,
+  "totalParamsFormatted": "8.03B",
+  "weightBytes": 4889303639,
+  "weightBytesFormatted": "4.55 GiB",
+  "weightByQuant": { "Q4_K_M": { "count": 197, "elements": 8030261248, "elementsFormatted": "8.03B",
+                                 "bytes": 4889303639, "bytesFormatted": "4.55 GiB" } },
+  "kvCache":    { "bytesK": 536870912, "bytesKFormatted": "512.00 MiB",
+                  "bytesV": 536870912, "bytesVFormatted": "512.00 MiB",
+                  "bytesRecurrent": 0, "bytesRecurrentFormatted": "0 B",
+                  "totalBytes": 1073741824, "totalBytesFormatted": "1.00 GiB",
+                  "layers": 32, "headDimK": 128, "headDimV": 128, "totalHeadsKV": 256, "avgHeadsKV": 8,
+                  "kvTypeK": "F16", "kvTypeV": "F16" },
+  "activations": { "totalBytes": 805306368, "totalBytesFormatted": "768.00 MiB",
+                   "perLayerBytes": 25165824, "perLayerBytesFormatted": "24.00 MiB",
+                   "isMoe": false, "expertCount": 0, "expertUsedCount": 0 },
+  "moe": null,
+  "mtp":  { "weightBytes": 0, "weightBytesFormatted": "0 B", "elements": 0 },
+  "mmproj": null,
+  "vramBytes": 6420560384, "vramBytesFormatted": "5.98 GiB",
+  "ramBytes": 536870912,  "ramBytesFormatted": "512.00 MiB",
+  "vramFit": null,
+  "ramFit": null,
+  "performance": null
+}
+*/
+
+// ════════════════════════════════════════════════════════════════════════════
+// VARIANT 2 — fully-populated mmproj object (replaces a top-level "mmproj": null)
+// Vision projector example. Audio projectors report nOutputTokens=0 because
+// their patch count depends on runtime audio length.
+// ════════════════════════════════════════════════════════════════════════════
+/*
+"mmproj": {
+  "filename": "mmproj-fused-8B.gguf",         // string — projector GGUF filename
+  "autoDetected": true,                       // boolean — true if filename-matched (vs explicit --mmproj)
+  "url": "https://huggingface.co/owner/model-GGUF/resolve/main/mmproj-fused-8B.gguf", // string
+  "placement": "vram",                        // string — "vram" | "ram" (--mmprojDevice)
+  "hasVision": true,                          // boolean — clip.has_vision_encoder
+  "hasAudio": false,                          // boolean — clip.has_audio_encoder
+  "isAudioProj": false,                       // boolean — projector type is audio
+  "projType": "gemma3",                       // string|null — clip.projector_type
+  "projTypeKnown": true,                      // boolean — projType is in the recognized set
+  "imageSize": 896,                           // number — clip.vision.image_size
+  "patchSize": 14,                            // number — clip.vision.patch_size
+  "nLayerV": 27,                              // number — clip.vision.block_count
+  "nEmbdV": 1152,                             // number — clip.vision.embedding_length
+  "projDim": 2048,                            // number — clip.vision.projection_dim
+  "nMerge": 4,                               // number — clip.vision.spatial_merge_size
+  "nOutputTokens": 256,                       // number — est. tokens emitted per image (mirrors clip_n_output_tokens()); 0 for audio
+  "weightBytes": 805306368,                   // number — projector weights (same math as main-model weights)
+  "weightBytesFormatted": "768.00 MiB",       // string
+  "perImageActBytes": 2097152,                // number — per-image output activation (F32): nOutputTokens × projDim × 4
+  "perImageActBytesFormatted": "2.00 MiB",    // string
+  "totalBytes": 807403520,                    // number — weightBytes + perImageActBytes (folded into vram or ram per placement)
+  "totalBytesFormatted": "769.99 MiB"         // string
+}
+*/
+
+// ════════════════════════════════════════════════════════════════════════════
+// VARIANT 3 — --all wrapper (single repo, every GGUF file processed)
+// Printed directly to stdout. Each entry of `files` is a full single-file result
+// (the object documented above).
+// ════════════════════════════════════════════════════════════════════════════
+/*
+{
+  "repo": "owner/model-GGUF",
+  "files": [ <single-file-result>, <single-file-result>, ... ]
+}
+*/
+
+// ════════════════════════════════════════════════════════════════════════════
+// VARIANT 4 — --batch envelope (array printed to stdout)
+// One entry per repo in the batch file. `data` is a single-file result, or the
+// --all wrapper when --all is also set. A failed repo carries `repo` + `error`
+// instead of `data`.
+// ════════════════════════════════════════════════════════════════════════════
+/*
+[
+  { "success": true,  "data": { "repo": "owner/model-A-GGUF", "filename": "...", ... } },
+  { "success": true,  "data": { "repo": "owner/model-B-GGUF", "files": [ ... ] } },
+  { "success": false, "repo": "owner/model-C-GGUF", "error": "HTTP 404: repository not found" }
+]
+*/
