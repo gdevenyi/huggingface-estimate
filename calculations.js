@@ -1611,40 +1611,23 @@ export function computeOffloadSplit({
   return makeSplitResult(modes, { auto: true, cpuMoe, nCpuMoe });
 }
 
-// Top-level VRAM/RAM memory breakdown for display, matching llama.cpp's
-// default behaviour: ALL weights (including all experts) go to VRAM for a
-// fully-offloaded model. The cpuMoe / nCpuMoe flags shift expert weights
-// to RAM, mirroring llama.cpp's --cpu-moe / --n-cpu-moe flags. The token
-// embedding (token_embd) is always on the CPU in llama.cpp (dev_input),
-// so it is kept out of VRAM and reported as RAM regardless of offload.
-export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, cpuMoe = false, nCpuMoe = 0 }) {
-  let vramWeightBytes, ramExpertBytes = 0;
+// Theoretical VRAM/RAM memory breakdown — a pure model property, NOT affected
+// by hardware budget or placement flags (--cpu-moe / --n-cpu-moe). Always
+// assumes full offload: ALL weights (including all experts) go to VRAM. The
+// token embedding (token_embd) is always on the CPU in llama.cpp (dev_input),
+// so it is kept out of VRAM and reported as RAM regardless of offload. Actual
+// placement given a finite VRAM budget is computed by calcActualMemory.
+export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint }) {
   const inputEmb = footprint ? (footprint.inputEmbBytes || 0) : 0;
-
-  if (!moe) {
-    vramWeightBytes = weights.total - inputEmb;
-  } else if (cpuMoe) {
-    vramWeightBytes = weights.total - moe.expertWeightBytes - inputEmb;
-    ramExpertBytes = moe.expertWeightBytes;
-  } else if (nCpuMoe > 0 && footprint) {
-    const expertPerLayer = footprint.layers.map(L => L.expertBytesFull || 0);
-    const cpuExpertLayers = Math.min(nCpuMoe, footprint.nLayers);
-    for (let i = 0; i < cpuExpertLayers; i++) {
-      ramExpertBytes += expertPerLayer[i];
-    }
-    vramWeightBytes = weights.total - ramExpertBytes - inputEmb;
-  } else {
-    vramWeightBytes = weights.total - inputEmb;
-    ramExpertBytes = 0;
-  }
+  const vramWeightBytes = weights.total - inputEmb;
 
   const vramBytes = vramWeightBytes + kv.totalBytes + activations.totalBytes;
 
   return {
     vramBytes,
-    ramBytes: ramExpertBytes + inputEmb,
+    ramBytes: inputEmb,
     vramWeightBytes,
-    ramExpertBytes,
+    ramExpertBytes: 0,
     ramInputEmbBytes: inputEmb,
   };
 }
@@ -1655,17 +1638,29 @@ export function calcMemoryBreakdown({ weights, moe, kv, activations, footprint, 
 export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nLayerOverride, cpuMoe = false, nCpuMoe = 0, unifiedMemory = false }) {
   const split = computeOffloadSplit({ vramBytes, footprint, activationBytes, nLayerOverride, cpuMoe, nCpuMoe, unifiedMemory });
 
-  let actualVram = footprint.outputBytes + (footprint.mtpBytes || 0) + activationBytes;
+  const outputBytes = footprint.outputBytes + (footprint.mtpBytes || 0);
+  let actualVram = outputBytes + activationBytes;
   let actualRam = footprint.inputEmbBytes || 0; // token_embd always on CPU
 
+  // Per-component accumulators for the actual-distribution display.
+  let vramWeightsBytes = 0, vramExpertBytes = 0, vramKvBytes = 0;
+  let ramExpertBytes = 0, ramCpuLayerBytes = 0, ramCpuKvBytes = 0;
+
   const rB = footprint.recurrentBytesPerLayer || 0;
+  const kvLayer = footprint.kvBytesPerLayer + rB;
   for (let i = 0; i < split.modes.length; i++) {
     const mode = split.modes[i];
     const L = footprint.layers[i];
     if (mode === 'gpu') {
-      actualVram += L.nonExpertBytes + L.expertBytesFull + footprint.kvBytesPerLayer + rB;
+      vramWeightsBytes += L.nonExpertBytes;
+      vramExpertBytes += L.expertBytesFull;
+      vramKvBytes += kvLayer;
+      actualVram += L.nonExpertBytes + L.expertBytesFull + kvLayer;
     } else if (mode === 'hybrid') {
-      actualVram += L.nonExpertBytes + footprint.kvBytesPerLayer + rB;
+      vramWeightsBytes += L.nonExpertBytes;
+      vramKvBytes += kvLayer;
+      ramExpertBytes += L.expertBytesFull;
+      actualVram += L.nonExpertBytes + kvLayer;
       actualRam += L.expertBytesFull;
     } else if (isPartialMode(mode)) {
       // Sub-layer fraction: attn (+up/gate) + KV in VRAM; down + experts +
@@ -1673,16 +1668,22 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
       const f = partialFracOf(mode);
       const upIn   = (f === 'up' || f === 'gate');
       const gateIn = (f === 'gate');
-      actualVram += L.attnBytes
+      const vramPart = L.attnBytes
         + (upIn ? L.upBytes : 0)
-        + (gateIn ? L.gateBytes : 0)
-        + footprint.kvBytesPerLayer + rB;
-      actualRam += L.downBytes
+        + (gateIn ? L.gateBytes : 0);
+      vramWeightsBytes += vramPart;
+      vramKvBytes += kvLayer;
+      actualVram += vramPart + kvLayer;
+      const ramPart = L.downBytes
         + (upIn ? 0 : L.upBytes)
-        + (gateIn ? 0 : L.gateBytes)
-        + L.expertBytesFull;
+        + (gateIn ? 0 : L.gateBytes);
+      ramCpuLayerBytes += ramPart;
+      ramExpertBytes += L.expertBytesFull;
+      actualRam += ramPart + L.expertBytesFull;
     } else {
-      actualRam += L.nonExpertBytes + L.expertBytesFull + footprint.kvBytesPerLayer + rB;
+      ramCpuLayerBytes += L.nonExpertBytes + L.expertBytesFull;
+      ramCpuKvBytes += kvLayer;
+      actualRam += L.nonExpertBytes + L.expertBytesFull + kvLayer;
     }
   }
 
@@ -1690,6 +1691,15 @@ export function calcActualMemory({ vramBytes, footprint, activationBytes = 0, nL
     ...split,
     actualVram,
     actualRam,
+    vramWeightsBytes,
+    vramExpertBytes,
+    vramKvBytes,
+    vramOutputBytes: outputBytes,
+    vramActivationBytes: activationBytes,
+    ramExpertBytes,
+    ramCpuLayerBytes,
+    ramCpuKvBytes,
+    ramInputEmbBytes: footprint.inputEmbBytes || 0,
   };
 }
 

@@ -62,13 +62,8 @@ url = path.replace(/\/blob\//, '/resolve/').replace(/#.*$/, '');
 
 Two views, both matching llama.cpp:
 
-1. **`calcMemoryBreakdown` (top "VRAM/RAM" card)** — ideal placement assuming the model fully fits, used to compute the `vramBytes` displayed.
-   - Dense: all weights + KV + activations → VRAM
-   - MoE default (no flags): all expert weights in VRAM
-   - `--cpu-moe`: all expert weights → RAM, rest → VRAM
-   - `--n-cpu-moe N`: expert weights for layers 0..N-1 → RAM
-   - `token_embd` (input embedding) is always on the CPU (`llama-model.cpp` hardcodes `dev_input = cpu_dev`), so it is reported as RAM regardless of offload. Exposed as `footprint.inputEmbBytes` / `ramInputEmbBytes`.
-2. **`computeOffloadSplit` / `calcActualMemory` (fit check, perf)** — actual placement given a finite VRAM budget. Mirrors llama.cpp's `--fit on` algorithm in `common/fit.cpp` (`common_params_fit_impl`):
+1. **`calcMemoryBreakdown` (top "Theoretical Memory" card)** — a pure model property, NOT affected by hardware budget or placement flags. Always assumes full offload: ALL weights (including all experts) go to VRAM. The `token_embd` (input embedding) is always on the CPU (`llama-model.cpp` hardcodes `dev_input = cpu_dev`), so it is reported as RAM regardless. Does NOT accept `cpuMoe`/`nCpuMoe` — those only affect actual placement (below).
+2. **`computeOffloadSplit` / `calcActualMemory` (fit check, perf)** — actual placement given a finite VRAM budget. Mirrors llama.cpp's `--fit on` algorithm in `common/fit.cpp` (`common_params_fit_impl`). Returns both summary (`actualVram`, `actualRam`, layer counts) and per-component breakdown fields (`vramWeightsBytes`, `vramExpertBytes`, `vramKvBytes`, `vramOutputBytes`, `vramActivationBytes`, `ramExpertBytes`, `ramCpuLayerBytes`, `ramCpuKvBytes`, `ramInputEmbBytes`) for the UI's actual-distribution display.
    - Layer modes: `gpu` (full layer in VRAM, including all experts), `hybrid` (non-expert + KV in VRAM, experts in RAM, expert matmul on CPU — llama.cpp's "dense-only" layer), `partial-<frac>` (a single boundary layer with only a sub-layer fraction in VRAM — see below), `cpu` (everything on CPU).
    - Layers offloaded back-to-front (`i_gpu_start = max(n_layer + 1 - n_gpu_layers, 0)`).
    - **`--cpu-moe` / `--n-cpu-moe` + auto → `ngl=-1`**: these flags pre-populate `tensor_buft_overrides`, which makes llama.cpp's `--fit` abort ("tensor_buft_overrides already set by user", `fit.cpp`). With `--fit on` (the default) fit is skipped and `n_gpu_layers` stays `-1` = ALL layers. So every layer goes to VRAM (non-expert + KV), with experts of the flagged layers forced to RAM; there is NO budget-constrained partial fill — if the dense part exceeds VRAM the model OOMs at load (the UI/CLI reports this via `actualVram > budget`). `--n-cpu-moe N` forces layers 0..N-1 hybrid, the rest full `gpu`.

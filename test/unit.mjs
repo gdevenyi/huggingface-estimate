@@ -26,6 +26,7 @@ import {
   classifyBottleneck,
   computeOffloadSplit,
   calcActualMemory,
+  calcMemoryBreakdown,
 } from '../calculations.js';
 import {
   KV_VALID_QUANTS,
@@ -474,5 +475,71 @@ describe('calcActualMemory (VRAM/RAM accounting)', () => {
     // RAM = 3*200 (experts) + (up+gate+down=75) layer0 + 200 expert layer0 = 600+75+200 = 875
     assert.equal(m.actualRam, 875);
     assert.equal(m.nPartialLayers, 1);
+  });
+});
+
+describe('calcActualMemory (breakdown fields)', () => {
+  test('full GPU offload: all weights+experts in VRAM breakdown', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50, inputEmb: 20 });
+    // Need 50 + 4*(100+200+10) = 1290 for all-full-GPU. Give plenty.
+    const m = calcActualMemory({ vramBytes: 2000, footprint: fp });
+    assert.equal(m.vramWeightsBytes, 400);  // 4 * 100 non-expert
+    assert.equal(m.vramExpertBytes, 800);   // 4 * 200 experts (all GPU)
+    assert.equal(m.vramKvBytes, 40);        // 4 * 10
+    assert.equal(m.vramOutputBytes, 50);
+    assert.equal(m.ramExpertBytes, 0);
+    assert.equal(m.ramCpuLayerBytes, 0);
+    assert.equal(m.ramCpuKvBytes, 0);
+    assert.equal(m.ramInputEmbBytes, 20);
+  });
+
+  test('hybrid layers: experts split between VRAM and RAM', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    // VRAM=400 -> reserved 50; pass1: 3 hybrid (330), remaining 20; no upgrade.
+    const m = calcActualMemory({ vramBytes: 400, footprint: fp });
+    // 3 hybrid layers + 1 CPU layer
+    assert.equal(m.vramWeightsBytes, 300);  // 3 hybrid * 100
+    assert.equal(m.vramExpertBytes, 0);     // no full GPU layers
+    assert.equal(m.vramKvBytes, 30);        // 3 * 10
+    assert.equal(m.ramExpertBytes, 600);    // 3 * 200
+    assert.equal(m.ramCpuLayerBytes, 300);  // 1 CPU layer * (100+200)
+    assert.equal(m.ramCpuKvBytes, 10);      // 1 * 10
+  });
+
+  test('cpuMoe: all experts in RAM breakdown, non-expert in VRAM', () => {
+    const fp = makeFootprint({ nLayers: 4, nonExpert: 100, expert: 200, kv: 10, output: 50 });
+    const m = calcActualMemory({ vramBytes: 1000, footprint: fp, cpuMoe: true });
+    assert.equal(m.vramWeightsBytes, 400);  // 4 * 100 non-expert
+    assert.equal(m.vramExpertBytes, 0);     // no experts in VRAM
+    assert.equal(m.vramKvBytes, 40);        // 4 * 10
+    assert.equal(m.ramExpertBytes, 800);    // 4 * 200 all experts in RAM
+    assert.equal(m.ramCpuLayerBytes, 0);    // no CPU layers
+    assert.equal(m.ramCpuKvBytes, 0);
+  });
+});
+
+describe('calcMemoryBreakdown (always theoretical full offload)', () => {
+  test('MoE: all experts in VRAM regardless of cpuMoe flag', () => {
+    const moe = { expertWeightBytes: 1000 };
+    const kv = { totalBytes: 100 };
+    const acts = { totalBytes: 50 };
+    const fp = { inputEmbBytes: 20 };
+    const weights = { total: 2000 };
+    const r = calcMemoryBreakdown({ weights, moe, kv, activations: acts, footprint: fp });
+    assert.equal(r.vramBytes, 100 + 50 + (2000 - 20));  // kv + acts + all weights minus inputEmb
+    assert.equal(r.vramWeightBytes, 1980);
+    assert.equal(r.ramExpertBytes, 0);
+    assert.equal(r.ramBytes, 20);  // only inputEmb
+  });
+
+  test('dense model: all weights in VRAM', () => {
+    const kv = { totalBytes: 100 };
+    const acts = { totalBytes: 50 };
+    const fp = { inputEmbBytes: 20 };
+    const weights = { total: 2000 };
+    const r = calcMemoryBreakdown({ weights, moe: null, kv, activations: acts, footprint: fp });
+    assert.equal(r.vramBytes, 100 + 50 + (2000 - 20));
+    assert.equal(r.ramBytes, 20);
+    assert.equal(r.ramExpertBytes, 0);
   });
 });

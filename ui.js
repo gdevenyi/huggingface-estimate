@@ -640,7 +640,7 @@ function renderKvCache(kv, kvTypeK, kvTypeV, isMla, arch) {
   }
 }
 
-function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes }) {
+function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mmProjBytes, mmProjDevice, vramBytes, ramBytes }) {
   const totalBytes = vramBytes + ramBytes;
   const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
   const mtpBytes = (footprint && footprint.mtpBytes) || 0;
@@ -662,7 +662,7 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   if (moe) {
     $('#vramWeightsRow .label').textContent = 'Attention + embedding weights';
     show($('#vramActiveExpertRow'));
-    const expertLabel = cpuMoe ? 'Expert weights (in VRAM)' : (nCpuMoe > 0 ? `Experts in VRAM (layers ${nCpuMoe}+)` : `All experts (${moe.expertCount})`);
+    const expertLabel = `All experts (${moe.expertCount})`;
     $('#vramActiveExpertLabel').textContent = expertLabel;
     $('#vramActiveExpertSize').textContent = `${formatBytes(vramExpertBytes)} (${vramPct(vramExpertBytes)})`;
     if (vramRouterSharedBytes > 0) {
@@ -702,14 +702,8 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   $('#ramSize').textContent = ramBytes > 0 ? formatBytes(ramBytes) : 'None';
   if (moe && memBreakdown.ramExpertBytes > 0) {
     show($('#ramInactiveRow'));
+    $('#ramInactiveLabel').textContent = 'Inactive experts';
     const expertInRam = memBreakdown.ramExpertBytes;
-    if (cpuMoe) {
-      $('#ramInactiveLabel').textContent = `All experts (${moe.expertCount})`;
-    } else if (nCpuMoe > 0) {
-      $('#ramInactiveLabel').textContent = `Experts in RAM (layers 0\u2013${nCpuMoe - 1})`;
-    } else {
-      $('#ramInactiveLabel').textContent = 'Inactive experts';
-    }
     $('#ramInactiveSize').textContent = `${formatBytes(expertInRam)} (${ramBytes > 0 ? (expertInRam / ramBytes * 100).toFixed(1) : '0'}%)`;
   } else {
     hide($('#ramInactiveRow'));
@@ -811,18 +805,32 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
     vramBar.className = 'usage-bar red';
     vramStatus.className = 'usage-status red';
     vramStatus.textContent = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
-  } else if (actual.nCpuLayers === 0 && np === 0 && (actual.nHybridLayers === 0 || cpuMoe || nCpuMoe > 0)) {
+  } else if (actual.nCpuLayers > 0) {
+    vramBar.className = 'usage-bar yellow';
+    vramStatus.className = 'usage-status yellow';
+    vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
+  } else if (actual.nHybridLayers > 0 || np > 0) {
     vramBar.className = 'usage-bar green';
     vramStatus.className = 'usage-status green';
     vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   } else {
-    vramBar.className = 'usage-bar yellow';
-    vramStatus.className = 'usage-status yellow';
-    vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
+    vramBar.className = 'usage-bar green';
+    vramStatus.className = 'usage-status green';
+    vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   }
 
   vramBarText.textContent = `${vramUsagePct.toFixed(1)}%`;
   $('#vramFitLabel').textContent = `${formatBytes(actual.actualVram)} / ${vramGB} GiB`;
+
+  // Actual VRAM distribution breakdown
+  const vramBD = $('#vramBreakdown');
+  const vramParts = [];
+  if (actual.vramWeightsBytes > 0) vramParts.push(`Weights ${formatBytes(actual.vramWeightsBytes)}`);
+  if (actual.vramExpertBytes > 0) vramParts.push(`Experts ${formatBytes(actual.vramExpertBytes)}`);
+  if (actual.vramKvBytes > 0) vramParts.push(`KV ${formatBytes(actual.vramKvBytes)}`);
+  if (actual.vramActivationBytes > 0) vramParts.push(`Activations ${formatBytes(actual.vramActivationBytes)}`);
+  if (actual.vramOutputBytes > 0) vramParts.push(`Output ${formatBytes(actual.vramOutputBytes)}`);
+  vramBD.textContent = vramParts.length > 0 ? vramParts.join(' \u00B7 ') : '';
 
   const actualRamBytes = actual.actualRam + (mmProjDevice === 'ram' ? mmProjActBytes : 0);
   const showRamBar = ramGB > 0 && actualRamBytes > 0;
@@ -853,6 +861,15 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
 
     ramBarText.textContent = `${ramUsagePct.toFixed(1)}%`;
     $('#ramFitLabel').textContent = `${formatBytes(actualRamBytes)} / ${ramGB} GiB`;
+
+    // Actual RAM distribution breakdown
+    const ramBD = $('#ramBreakdown');
+    const ramParts = [];
+    if (actual.ramExpertBytes > 0) ramParts.push(`Expert weights ${formatBytes(actual.ramExpertBytes)}`);
+    if (actual.ramCpuLayerBytes > 0) ramParts.push(`CPU layer weights ${formatBytes(actual.ramCpuLayerBytes)}`);
+    if (actual.ramCpuKvBytes > 0) ramParts.push(`CPU layer KV ${formatBytes(actual.ramCpuKvBytes)}`);
+    if (actual.ramInputEmbBytes > 0) ramParts.push(`Input embedding ${formatBytes(actual.ramInputEmbBytes)}`);
+    ramBD.textContent = ramParts.length > 0 ? ramParts.join(' \u00B7 ') : '';
   } else {
     hide($('#ramFitSection'));
   }
@@ -998,7 +1015,6 @@ function renderResults() {
   const memBreakdown = calcMemoryBreakdown({
     weights, moe, kv, activations: acts,
     footprint: layerFootprint,
-    cpuMoe, nCpuMoe,
   });
 
   const mmProjDevice = mmProjDeviceEl.value;
@@ -1019,7 +1035,7 @@ function renderResults() {
   renderWeightsTable(weights);
   renderKvCache(kv, kvTypeK, kvTypeV, isMla, arch);
   $('#actSize').textContent = formatBytes(acts.totalBytes);
-  renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint: layerFootprint, mmProjBytes, mmProjDevice, cpuMoe, nCpuMoe, vramBytes, ramBytes });
+  renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint: layerFootprint, mmProjBytes, mmProjDevice, vramBytes, ramBytes });
   renderMmProjPanel(mmProjDevice);
   const um = isUnifiedMemory();
   renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory: um });

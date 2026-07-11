@@ -442,7 +442,6 @@ async function calcSingleFile(repo, fileInfo, args, resolved) {
   const memBreakdown = calcMemoryBreakdown({
     weights: weightInfo, moe: moeInfo, kv: kvCache, activations,
     footprint: layerFootprint,
-    cpuMoe: args.cpuMoe, nCpuMoe: args.nCpuMoe,
   });
   let vramBytes = memBreakdown.vramBytes;
   let ramBytes = memBreakdown.ramBytes;
@@ -729,6 +728,19 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
       nHybridLayers: actual.nHybridLayers,
       nPartialLayers: actual.nPartialLayers || 0,
       nCpuLayers: actual.nCpuLayers,
+      vramBreakdownGiB: {
+        weights: +(actual.vramWeightsBytes / GIB).toFixed(2),
+        experts: +(actual.vramExpertBytes / GIB).toFixed(2),
+        kv: +(actual.vramKvBytes / GIB).toFixed(2),
+        activations: +(actual.vramActivationBytes / GIB).toFixed(2),
+        output: +(actual.vramOutputBytes / GIB).toFixed(2),
+      },
+      ramBreakdownGiB: {
+        experts: +(actual.ramExpertBytes / GIB).toFixed(2),
+        cpuLayerWeights: +(actual.ramCpuLayerBytes / GIB).toFixed(2),
+        cpuLayerKv: +(actual.ramCpuKvBytes / GIB).toFixed(2),
+        inputEmb: +(actual.ramInputEmbBytes / GIB).toFixed(2),
+      },
     };
   }
   let ramFit = null;
