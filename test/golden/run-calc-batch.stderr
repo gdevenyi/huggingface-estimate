@@ -1,26 +1,119 @@
-[1/13] Qwen/Qwen2.5-3B-Instruct-GGUF... Multiple GGUF files found. Using first: qwen2.5-3b-instruct-fp16-00001-of-00002.gguf. Use --file <name> or --all for others.
-done (qwen2, 6.33 GiB)
-[2/13] unsloth/gemma-3-1b-it-GGUF... Multiple GGUF files found. Using first: gemma-3-1b-it-BF16.gguf. Use --file <name> or --all for others.
-done (gemma3, 1.86 GiB)
-[3/13] unsloth/Qwen3-30B-A3B-GGUF... Multiple GGUF files found. Using first: BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
-done (qwen3moe, 56.89 GiB)
-[4/13] unsloth/MiniMax-M2.5-GGUF... Multiple GGUF files found. Using first: BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf. Use --file <name> or --all for others.
-done (minimax-m2, 426.06 GiB)
-[5/13] unsloth/LFM2-350M-GGUF... Multiple GGUF files found. Using first: LFM2-350M-F16.gguf. Use --file <name> or --all for others.
-done (lfm2, 676.2 MiB)
-[6/13] unsloth/Falcon-H1-0.5B-Instruct-GGUF... Multiple GGUF files found. Using first: Falcon-H1-0.5B-Instruct-BF16.gguf. Use --file <name> or --all for others.
-done (falcon-h1, 995.3 MiB)
-[7/13] ggml-org/SmolVLM-500M-Instruct-GGUF... Multiple GGUF files found. Using first: SmolVLM-500M-Instruct-f16.gguf. Use --file <name> or --all for others.
-Auto-detected mmproj: mmproj-SmolVLM-500M-Instruct-f16.gguf. Use --no-mmproj to suppress.
-done (llama, 780.7 MiB)
-[8/13] ggml-org/embeddinggemma-300M-GGUF... done (gemma-embedding, 311.9 MiB)
-[9/13] unsloth/ERNIE-4.5-0.3B-PT-GGUF... Multiple GGUF files found. Using first: ERNIE-4.5-0.3B-PT-F16.gguf. Use --file <name> or --all for others.
+[1/55] unsloth/Llama-3.2-1B-Instruct-GGUF... Multiple GGUF files found. Using first: Llama-3.2-1B-Instruct-BF16.gguf. Use --file <name> or --all for others.
+done (llama, 2.30 GiB)
+[2/55] unsloth/Qwen2.5-Coder-0.5B-Instruct-GGUF... Multiple GGUF files found. Using first: Qwen2.5-Coder-0.5B-Instruct-F16.gguf. Use --file <name> or --all for others.
+done (qwen2, 942.4 MiB)
+[3/55] unsloth/Qwen3-0.6B-GGUF... Multiple GGUF files found. Using first: Qwen3-0.6B-BF16.gguf. Use --file <name> or --all for others.
+done (qwen3, 1.11 GiB)
+[4/55] unsloth/Qwen3.5-0.8B-GGUF... Multiple GGUF files found. Using first: Qwen3.5-0.8B-BF16.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (qwen35, 1.40 GiB)
+[5/55] unsloth/Phi-4-mini-instruct-GGUF... Multiple GGUF files found. Using first: Phi-4-mini-instruct-Q2_K_L.gguf. Use --file <name> or --all for others.
+done (phi3, 1.56 GiB)
+[6/55] unsloth/granite-4.0-350m-GGUF... Multiple GGUF files found. Using first: granite-4.0-350m-BF16.gguf. Use --file <name> or --all for others.
+done (granite, 672.2 MiB)
+[7/55] unsloth/granite-4.0-h-tiny-GGUF... Multiple GGUF files found. Using first: granite-4.0-h-tiny-BF16.gguf. Use --file <name> or --all for others.
+done (granitehybrid, 12.93 GiB)
+[8/55] unsloth/SmolLM3-3B-GGUF... Multiple GGUF files found. Using first: SmolLM3-3B-BF16.gguf. Use --file <name> or --all for others.
+done (smollm3, 5.73 GiB)
+[9/55] unsloth/ERNIE-4.5-0.3B-PT-GGUF... Multiple GGUF files found. Using first: ERNIE-4.5-0.3B-PT-F16.gguf. Use --file <name> or --all for others.
 done (ernie4_5, 688.1 MiB)
-[10/13] unsloth/Hunyuan-A13B-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf. Use --file <name> or --all for others.
+[10/55] unsloth/Apertus-8B-Instruct-2509-GGUF... Multiple GGUF files found. Using first: Apertus-8B-Instruct-2509-BF16.gguf. Use --file <name> or --all for others.
+done (apertus, 15.00 GiB)
+[11/55] unsloth/grok-2-GGUF... Multiple GGUF files found. Using first: BF16/grok-2-BF16-00001-of-00011.gguf. Use --file <name> or --all for others.
+done (grok, 502.02 GiB)
+[12/55] unsloth/Seed-OSS-36B-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Seed-OSS-36B-Instruct-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
+done (seed_oss, 67.34 GiB)
+[13/55] unsloth/Hy-MT2-7B-GGUF... Multiple GGUF files found. Using first: Hy-MT2-7B-BF16.gguf. Use --file <name> or --all for others.
+done (hunyuan-dense, 13.98 GiB)
+[14/55] unsloth/gemma-3-270m-it-GGUF... Multiple GGUF files found. Using first: gemma-3-270m-it-F16.gguf. Use --file <name> or --all for others.
+done (gemma3, 511.5 MiB)
+[15/55] unsloth/gemma-2-it-GGUF... Multiple GGUF files found. Using first: gemma-2-2b-it.F16.gguf. Use --file <name> or --all for others.
+done (gemma2, 4.87 GiB)
+[16/55] unsloth/OLMo-2-0425-1B-Instruct-GGUF... Multiple GGUF files found. Using first: OLMo-2-0425-1B-Instruct-BF16.gguf. Use --file <name> or --all for others.
+done (olmo2, 2.77 GiB)
+[17/55] unsloth/c4ai-command-a-03-2025-GGUF... Multiple GGUF files found. Using first: BF16/c4ai-command-a-03-2025-BF16-00001-of-00005.gguf. Use --file <name> or --all for others.
+done (cohere2, 206.86 GiB)
+[18/55] unsloth/Mistral-Medium-3.5-128B-GGUF... Multiple GGUF files found. Using first: BF16/Mistral-Medium-3.5-128B-BF16-00001-of-00006.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (mistral3, 232.88 GiB)
+[19/55] unsloth/Qwen3-30B-A3B-GGUF... Multiple GGUF files found. Using first: BF16/Qwen3-30B-A3B-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
+done (qwen3moe, 56.89 GiB)
+[20/55] unsloth/ERNIE-4.5-21B-A3B-PT-GGUF... Multiple GGUF files found. Using first: ERNIE-4.5-21B-A3B-PT-BF16.gguf. Use --file <name> or --all for others.
+done (ernie4_5-moe, 40.66 GiB)
+[21/55] unsloth/Hunyuan-A13B-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Hunyuan-A13B-Instruct-BF16-00001-of-00004.gguf. Use --file <name> or --all for others.
 done (hunyuan-moe, 149.76 GiB)
-[11/13] unsloth/LFM2-8B-A1B-GGUF... Multiple GGUF files found. Using first: LFM2-8B-A1B-BF16.gguf. Use --file <name> or --all for others.
+[22/55] unsloth/dots.llm1.inst-GGUF... Multiple GGUF files found. Using first: BF16/dots.llm1.inst-BF16-00001-of-00006.gguf. Use --file <name> or --all for others.
+done (dots1, 266.00 GiB)
+[23/55] unsloth/MiniMax-M3-GGUF... Multiple GGUF files found. Using first: BF16/MiniMax-M3-BF16-00001-of-00018.gguf. Use --file <name> or --all for others.
+done (minimax-m3, 793.48 GiB)
+[24/55] unsloth/LFM2-8B-A1B-GGUF... Multiple GGUF files found. Using first: LFM2-8B-A1B-BF16.gguf. Use --file <name> or --all for others.
 done (lfm2moe, 15.54 GiB)
-[12/13] prism-ml/Bonsai-8B-gguf... Multiple GGUF files found. Using first: Bonsai-8B-Q1_0.gguf. Use --file <name> or --all for others.
+[25/55] unsloth/MiniMax-M2.5-GGUF... Multiple GGUF files found. Using first: BF16/MiniMax-M2.5-BF16-00001-of-00010.gguf. Use --file <name> or --all for others.
+done (minimax-m2, 426.06 GiB)
+[26/55] unsloth/DeepSeek-R1-GGUF... Multiple GGUF files found. Using first: DeepSeek-R1-BF16/DeepSeek-R1.BF16-00001-of-00030.gguf. Use --file <name> or --all for others.
+done (deepseek2, 1.22 TiB)
+[27/55] unsloth/GLM-5-GGUF... Multiple GGUF files found. Using first: BF16/GLM-5-BF16-00001-of-00033.gguf. Use --file <name> or --all for others.
+done (glm-dsa, 1.37 TiB)
+[28/55] unsloth/DeepSeek-V4-Flash-GGUF... Multiple GGUF files found. Using first: UD-IQ1_M/DeepSeek-V4-Flash-UD-IQ1_M-00001-of-00003.gguf. Use --file <name> or --all for others.
+done (deepseek4, 80.93 GiB)
+[29/55] unsloth/Mistral-Small-4-119B-2603-GGUF... Multiple GGUF files found. Using first: BF16/Mistral-Small-4-119B-2603-BF16-00001-of-00006.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (mistral4, 221.64 GiB)
+[30/55] unsloth/gemma-4-E2B-it-GGUF... Multiple GGUF files found. Using first: gemma-4-E2B-it-BF16.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (gemma4, 8.66 GiB)
+[31/55] unsloth/gpt-oss-20b-GGUF... Multiple GGUF files found. Using first: gpt-oss-20b-F16.gguf. Use --file <name> or --all for others.
+done (gpt-oss, 12.83 GiB)
+[32/55] unsloth/Llama-4-Scout-17B-16E-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Llama-4-Scout-17B-16E-Instruct-BF16-00001-of-00005.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (llama4, 200.75 GiB)
+[33/55] unsloth/gemma-3n-E2B-it-GGUF... Multiple GGUF files found. Using first: gemma-3n-E2B-it-F16.gguf. Use --file <name> or --all for others.
+done (gemma3n, 8.30 GiB)
+[34/55] unsloth/MiMo-V2.5-GGUF... Multiple GGUF files found. Using first: BF16/MiMo-V2.5-BF16-00001-of-00014.gguf. Use --file <name> or --all for others.
+done (mimo2, 577.08 GiB)
+[35/55] unsloth/North-Mini-Code-1.0-GGUF... Multiple GGUF files found. Using first: BF16/North-Mini-Code-1.0-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
+done (cohere2moe, 56.81 GiB)
+[36/55] unsloth/Trinity-Large-Preview-GGUF... Multiple GGUF files found. Using first: BF16/Trinity-Large-Preview-BF16-00001-of-00017.gguf. Use --file <name> or --all for others.
+done (afmoe, 742.60 GiB)
+[37/55] unsloth/Step-3.7-Flash-GGUF... Multiple GGUF files found. Using first: BF16/Step-3.7-Flash-BF16-00001-of-00008.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (step35, 366.95 GiB)
+[38/55] unsloth/Qwen3.6-35B-A3B-GGUF... Multiple GGUF files found. Using first: BF16/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (qwen35moe, 64.60 GiB)
+[39/55] unsloth/Qwen3-Next-80B-A3B-Instruct-GGUF... Multiple GGUF files found. Using first: BF16/Qwen3-Next-80B-A3B-Instruct-BF16-00001-of-00004.gguf. Use --file <name> or --all for others.
+done (qwen3next, 148.50 GiB)
+[40/55] unsloth/GLM-4-9B-0414-GGUF... Multiple GGUF files found. Using first: GLM-4-9B-0414-BF16.gguf. Use --file <name> or --all for others.
+done (glm4, 17.51 GiB)
+[41/55] unsloth/GLM-4.7-GGUF... Multiple GGUF files found. Using first: BF16/GLM-4.7-BF16-00001-of-00015.gguf. Use --file <name> or --all for others.
+done (glm4moe, 667.60 GiB)
+[42/55] unsloth/Ling-1T-GGUF... Multiple GGUF files found. Using first: BF16/Ling-1T-BF16-00001-of-00046.gguf. Use --file <name> or --all for others.
+done (bailingmoe2, 1.82 TiB)
+[43/55] unsloth/Falcon-H1-0.5B-Instruct-GGUF... Multiple GGUF files found. Using first: Falcon-H1-0.5B-Instruct-BF16.gguf. Use --file <name> or --all for others.
+done (falcon-h1, 995.3 MiB)
+[44/55] unsloth/LFM2-350M-GGUF... Multiple GGUF files found. Using first: LFM2-350M-F16.gguf. Use --file <name> or --all for others.
+done (lfm2, 676.2 MiB)
+[45/55] unsloth/NVIDIA-Nemotron-3-Nano-4B-GGUF... Multiple GGUF files found. Using first: NVIDIA-Nemotron-3-Nano-4B-BF16.gguf. Use --file <name> or --all for others.
+done (nemotron_h, 7.40 GiB)
+[46/55] unsloth/Nemotron-3-Nano-30B-A3B-GGUF... Multiple GGUF files found. Using first: BF16/Nemotron-3-Nano-30B-A3B-BF16-00001-of-00002.gguf. Use --file <name> or --all for others.
+done (nemotron_h_moe, 58.84 GiB)
+[47/55] unsloth/embeddinggemma-300m-GGUF... Multiple GGUF files found. Using first: embeddinggemma-300M-BF16.gguf. Use --file <name> or --all for others.
+done (gemma-embedding, 577.8 MiB)
+[48/55] unsloth/FLUX.1-schnell-GGUF... Multiple GGUF files found. Using first: flux1-schnell-BF16.gguf. Use --file <name> or --all for others.
+done (flux, 22.15 GiB)
+[49/55] unsloth/LTX-2-GGUF... Multiple GGUF files found. Using first: ltx-2-19b-dev-BF16.gguf. Use --file <name> or --all for others.
+done (ltxv, 35.18 GiB)
+[50/55] unsloth/Qwen-Image-GGUF... Multiple GGUF files found. Using first: qwen-image-BF16.gguf. Use --file <name> or --all for others.
+done (qwen_image, 38.06 GiB)
+[51/55] unsloth/Z-Image-Turbo-GGUF... Multiple GGUF files found. Using first: z-image-turbo-BF16.gguf. Use --file <name> or --all for others.
+done (lumina2, 11.47 GiB)
+[52/55] unsloth/Qwen2.5-VL-7B-Instruct-GGUF... Multiple GGUF files found. Using first: Qwen2.5-VL-7B-Instruct-BF16.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (qwen2vl, 14.19 GiB)
+[53/55] unsloth/Qwen3-VL-8B-Instruct-GGUF... Multiple GGUF files found. Using first: Qwen3-VL-8B-Instruct-BF16.gguf. Use --file <name> or --all for others.
+Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+done (qwen3vl, 15.26 GiB)
+[54/55] prism-ml/Bonsai-8B-gguf... Multiple GGUF files found. Using first: Bonsai-8B-Q1_0.gguf. Use --file <name> or --all for others.
 done (qwen3, 1.07 GiB)
-[13/13] YTan2000/Qwen3.6-35B-A3B-TQ3_4S... Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
+[55/55] YTan2000/Qwen3.6-35B-A3B-TQ3_4S... Auto-detected mmproj: mmproj-BF16.gguf. Use --no-mmproj to suppress.
 done (qwen35moe, 12.38 GiB)

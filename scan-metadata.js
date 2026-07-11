@@ -521,7 +521,7 @@ async function main() {
 
   const analysis = analyzeResults(results);
   const hasGaps = args.json ? reportJson(analysis) : reportHuman(analysis);
-  process.exit(hasGaps ? 1 : 0);
+  process.exitCode = hasGaps ? 1 : 0;
 }
 
 main().catch(err => {

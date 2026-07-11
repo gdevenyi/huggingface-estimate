@@ -58,7 +58,7 @@ describe('snapshot: run-calc.js --batch baseline.list', { skip: SKIP && 'SKIP_SN
     const currOk = new Set(result.current.filter(r => r.success).map(r => r.data.repo));
     const goldOk = new Set(result.golden.filter(r => r.success).map(r => r.data.repo));
     const intersection = [...currOk].filter(r => goldOk.has(r));
-    assert.ok(intersection.length >= 10, `only ${intersection.length} repos succeeded in both runs (network flakiness?)`);
+    assert.ok(intersection.length >= 40, `only ${intersection.length} repos succeeded in both runs (network flakiness?)`);
     result.intersection = intersection;
   });
 
@@ -92,9 +92,9 @@ describe('snapshot: scan-metadata.js --json --batch baseline.list', { skip: SKIP
 
     const currArchs = Object.keys(current.architectures || {}).sort();
     const goldArchs = Object.keys(golden.architectures || {}).sort();
-    // Allow transient fetch failures (missing archs are tolerated if at least 10 match).
+    // Allow transient fetch failures (missing archs are tolerated if at least 30 match).
     const shared = currArchs.filter(a => goldArchs.includes(a));
-    assert.ok(shared.length >= 10, `only ${shared.length} archs in common (network flakiness?)`);
+    assert.ok(shared.length >= 30, `only ${shared.length} archs in common (network flakiness?)`);
 
     // For archs in both, known-flag and repo set must match.
     for (const arch of shared) {

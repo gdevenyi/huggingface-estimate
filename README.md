@@ -24,7 +24,7 @@ Open `http://localhost:8000`. Enter a HuggingFace path (e.g. `bartowski/Llama-3.
 ```bash
 node run-calc.js bartowski/Llama-3.1-8B-Instruct-GGUF --ctx 8192 --kvTypeK Q8_0
 node run-calc.js unsloth/Qwen3-30B-A3B-GGUF --ctx 8192 --vram 24 --ram 64
-node run-calc.js --batch testModels.list
+node run-calc.js --batch test/baseline.list
 ```
 
 Options: `--ctx N`, `--batchSize N`, `--kvTypeK TYPE`, `--kvTypeV TYPE`, `--vram GB`, `--ram GB`, `--mmproj FILE`, `--mmprojDevice vram|ram`. Passing `--vram` / `--ram` adds a fit check to the JSON output. Batch file has one HF repo per line (`#` for comments). KV cache types include F16, F32, BF16, Q8_0, Q4_0, Q4_1, IQ4_NL, Q5_0, Q5_1 (standard), Q6_0, Q8_KV (ik_llama.cpp), TURBO2_0/3_0/4_0 (turboquant), PLANAR3_0/4_0, ISO3_0/4_0 (rotorquant), and TQ3_0 (tq3).

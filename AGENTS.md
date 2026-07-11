@@ -36,7 +36,7 @@ Then visit `http://localhost:8000`.
 
 ```bash
 node run-calc.js bartowski/Llama-3.1-8B-Instruct-GGUF --ctx 8192 --kvTypeK Q8_0
-node run-calc.js --batch testModels.list
+node run-calc.js --batch test/baseline.list
 ```
 
 Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16), `--mmproj FILE`, `--mmprojDevice vram|ram` (default vram). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
