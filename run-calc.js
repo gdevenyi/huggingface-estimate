@@ -92,7 +92,7 @@ Calculation parameters:
   --n-seq <N>         Max concurrent sequences for recurrent state (default: 1)
   --kvTypeK <T>       KV cache K quantization type (default: F16)
   --kvTypeV <T>       KV cache V quantization type (default: F16)
-  --swa-full <0|1>    Full-size SWA cache: 1=full (llama.cpp default), 0=memory-saving (default: 1)
+  --swa-full <0|1>    Full-size SWA cache: 1=full, 0=memory-saving (llama.cpp default, default: 0)
 
 Multimodal (mmproj):
   --mmproj <file>     Specific mmproj GGUF filename (otherwise auto-detected)
@@ -166,7 +166,7 @@ function parseArgs(argv) {
     nSeq: 1,
     kvTypeK: GGMLQuantizationType.F16,
     kvTypeV: GGMLQuantizationType.F16,
-    swaFull: true,
+    swaFull: false,
     vram: 0,
     ram: 0,
     mmproj: null,
