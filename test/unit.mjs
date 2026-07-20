@@ -33,7 +33,9 @@ import {
   KV_FORK_GROUPS,
   detectFork,
   applyForkOverrides,
+  measureBpe,
 } from '../parsing.js';
+import { calcKVCache } from '../calculations.js';
 
 describe('BPE registry', () => {
   test('every standard BPE entry is a finite positive number', () => {
@@ -122,9 +124,40 @@ describe('detectFork', () => {
     assert.equal(detectFork(model(200, [202]).metadata, model(200, [202]).tensorInfos), 'tq3');
   });
 
-  test('prism-ml detected via ftype 28 or ftype 41 + dtype 42', () => {
+  test('prism-ml detected via ftype 28 + dtype 42', () => {
     assert.equal(detectFork(model(28, [42]).metadata, model(28, [42]).tensorInfos), 'prism-ml');
-    assert.equal(detectFork(model(41, [42]).metadata, model(41, [42]).tensorInfos), 'prism-ml');
+    // ftype 28 without any dtype-42 tensor is upstream MOSTLY_IQ2_S, not prism-ml
+    assert.equal(detectFork(model(28, [28]).metadata, model(28, [28]).tensorInfos), null);
+  });
+
+  // ftype 41 (LLAMA_FTYPE_MOSTLY_Q2_0) is written by both prism-ml and
+  // upstream llama.cpp; the Q2_0 block layouts differ (34/128 vs 18/64), so
+  // detection measures actual stored bytes from tensor offsets.
+  test('ftype 41 + dtype 42 disambiguated by measured tensor size', () => {
+    // prism-ml layout: 4096-elem Q2_0 tensor stored at 34/128 bpe = 1088 bytes
+    const prism = {
+      metadata: { 'general.file_type': 41 },
+      tensorInfos: [
+        { dtype: 42, shape: [64n, 64n], offset: 0n },
+        { dtype: 0, shape: [1n], offset: 1088n },
+      ],
+    };
+    assert.equal(detectFork(prism.metadata, prism.tensorInfos), 'prism-ml');
+    // upstream layout: same tensor at 18/64 bpe = 1152 bytes
+    const upstream = {
+      metadata: { 'general.file_type': 41 },
+      tensorInfos: [
+        { dtype: 42, shape: [64n, 64n], offset: 0n },
+        { dtype: 0, shape: [1n], offset: 1152n },
+      ],
+    };
+    assert.equal(detectFork(upstream.metadata, upstream.tensorInfos), null);
+    // unmeasurable (dtype-42 tensor is last) → assume upstream
+    assert.equal(detectFork(model(41, [42]).metadata, model(41, [42]).tensorInfos), null);
+  });
+
+  test('upstream MOSTLY_Q1_0 (ftype 40, dtype 41) with mixed Q2_0 does not trigger tq3', () => {
+    assert.equal(detectFork(model(40, [41, 42]).metadata, model(40, [41, 42]).tensorInfos), null);
   });
 
   test('buun detected via dtype 47 (TURBO8_0)', () => {
@@ -541,5 +574,124 @@ describe('calcMemoryBreakdown (always theoretical full offload)', () => {
     assert.equal(r.vramBytes, 100 + 50 + (2000 - 20));
     assert.equal(r.ramBytes, 20);
     assert.equal(r.ramExpertBytes, 0);
+  });
+});
+
+describe('calcKVCache (n_seq_max stream scaling)', () => {
+  // Minimal dense-transformer metadata: 2 layers, 4 KV heads, head dim 64.
+  const meta = {
+    'general.architecture': 'llama',
+    'llama.embedding_length': 512,
+    'llama.attention.head_count': 8,
+    'llama.attention.head_count_kv': 4,
+    'llama.block_count': 2,
+  };
+  const F16 = 1; // GGMLQuantizationType.F16
+
+  test('nSeqMax=1 baseline', () => {
+    const r = calcKVCache(meta, 4096, F16, F16, 1);
+    // 2 layers x 4 heads x 64 dim x 4096 ctx x 2 bytes, K and V each
+    assert.equal(r.bytesK, 2 * 4 * 64 * 4096 * 2);
+    assert.equal(r.bytesV, r.bytesK);
+  });
+
+  test('nSeqMax=4: per-stream cells x n_seq_max streams equals total ctx', () => {
+    // llama.cpp splits n_ctx into n_seq_max streams of pad(n_ctx/n_seq_max)
+    // cells each and allocates ALL streams (llama-kv-cache.cpp:231), so the
+    // total equals the nSeqMax=1 allocation when ctx divides evenly.
+    const r1 = calcKVCache(meta, 4096, F16, F16, 1);
+    const r4 = calcKVCache(meta, 4096, F16, F16, 4);
+    assert.equal(r4.bytesK, r1.bytesK);
+    assert.equal(r4.bytesV, r1.bytesV);
+  });
+});
+
+describe('MTP (nextn_predict_layers) KV exclusion', () => {
+  const F16 = 1;
+  const mkMeta = (arch, extra = {}) => ({
+    'general.architecture': arch,
+    [`${arch}.embedding_length`]: 512,
+    [`${arch}.attention.head_count`]: 8,
+    [`${arch}.attention.head_count_kv`]: 4,
+    [`${arch}.block_count`]: 5,
+    [`${arch}.nextn_predict_layers`]: 1,
+    ...extra,
+  });
+
+  test('step35 excludes MTP tail from KV', () => {
+    const r = calcKVCache(mkMeta('step35'), 4096, F16, F16, 1);
+    // 4 main layers (not 5); no SWA metadata so all layers use full ctx
+    assert.equal(r.bytesK, 4 * 4 * 64 * 4096 * 2);
+  });
+
+  test('mimo2 excludes MTP tail from KV', () => {
+    const r = calcKVCache(mkMeta('mimo2'), 4096, F16, F16, 1);
+    assert.equal(r.bytesK, 4 * 4 * 64 * 4096 * 2);
+  });
+
+  test('exaone4 excludes MTP tail from KV', () => {
+    const r = calcKVCache(mkMeta('exaone4'), 4096, F16, F16, 1);
+    assert.equal(r.bytesK, 4 * 4 * 64 * 4096 * 2);
+  });
+
+  test('hy_v3 registered with MTP-aware KV', () => {
+    assert.ok(ARCHITECTURES.hy_v3, 'hy_v3 missing from registry');
+    const r = calcKVCache(mkMeta('hy_v3'), 4096, F16, F16, 1);
+    assert.equal(r.bytesK, 4 * 4 * 64 * 4096 * 2);
+  });
+});
+
+describe('qwen35 recurrent_layers array support', () => {
+  const F16 = 1;
+  test('explicit attention.recurrent_layers array overrides interval pattern', () => {
+    const meta = {
+      'general.architecture': 'qwen35',
+      'qwen35.embedding_length': 512,
+      'qwen35.attention.head_count': 8,
+      'qwen35.attention.head_count_kv': 4,
+      'qwen35.block_count': 8,
+      // 6 recurrent, 2 full-attention (layers 3 and 7 zero = full attn)
+      'qwen35.attention.recurrent_layers': [1, 1, 1, 0, 1, 1, 1, 0],
+    };
+    const r = calcKVCache(meta, 4096, F16, F16, 1);
+    assert.equal(r.bytesK, 2 * 4 * 64 * 4096 * 2);
+  });
+});
+
+describe('measureBpe (offset-based BPE measurement)', () => {
+  test('measures BPE from adjacent offsets', () => {
+    const tensors = [
+      { dtype: 42, shape: [64n, 64n], offset: 0n },
+      { dtype: 0, shape: [128n], offset: 1152n },
+    ];
+    assert.equal(measureBpe(tensors, 42), 1152 / 4096); // 18/64
+  });
+
+  test('skips shard-boundary pairs (offset decreases)', () => {
+    const tensors = [
+      { dtype: 42, shape: [64n, 64n], offset: 100n },
+      { dtype: 0, shape: [128n], offset: 0n }, // next shard restarts at 0
+    ];
+    assert.equal(measureBpe(tensors, 42), null);
+  });
+
+  test('returns null when target dtype tensor is last', () => {
+    const tensors = [
+      { dtype: 0, shape: [128n], offset: 0n },
+      { dtype: 42, shape: [64n, 64n], offset: 512n },
+    ];
+    assert.equal(measureBpe(tensors, 42), null);
+  });
+});
+
+describe('upstream Q2_0 defaults', () => {
+  test('BPE[42] is upstream Q2_0 (18/64)', () => {
+    assert.equal(BPE[42], 18 / 64);
+  });
+  test('QUANT_NAMES[42] is Q2_0', () => {
+    assert.equal(QUANT_NAMES[42], 'Q2_0');
+  });
+  test('prism-ml override keeps QK128 layout (34/128)', () => {
+    assert.equal(PRISM_ML_FORK_BPE[42], 34 / 128);
   });
 });

@@ -347,11 +347,20 @@ const mtpEffectiveLayers = (m, n_block) =>
 // and qwen3next (qwen3next without MTP — its block_count doesn't carry nextn).
 // Previously inlined as the same 4-line body 3×.
 const QWEN35_FULL_ATTN_INTERVAL_DEFAULT = 4;
-function qwen35KvCache(meta, ctxSize, kvTypeK, kvTypeV, swaFull) {
+// Full-attention layer predicate for the qwen35 family. llama.cpp first looks
+// for an explicit `<arch>.attention.recurrent_layers` array (qwen35.cpp:21,
+// LLM_KV_ATTENTION_RECURRENT_LAYERS); only when absent does it fall back to
+// the `(i + 1) % full_attention_interval == 0` pattern (default interval 4).
+function qwen35FullAttnFilter(meta) {
   const arch = meta['general.architecture'];
+  const recrArr = meta[`${arch}.attention.recurrent_layers`];
+  if (Array.isArray(recrArr)) return (i) => Number(recrArr[i]) === 0;
   const interval = getMeta(meta, `${arch}.full_attention_interval`) || QWEN35_FULL_ATTN_INTERVAL_DEFAULT;
+  return (i) => ((i + 1) % interval === 0);
+}
+function qwen35KvCache(meta, ctxSize, kvTypeK, kvTypeV, swaFull) {
   return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, {
-    layerFilter: (i) => ((i + 1) % interval === 0),
+    layerFilter: qwen35FullAttnFilter(meta),
     effectiveLayers: mtpEffectiveLayers,
     swaFull: swaFull === true,
   });
@@ -513,7 +522,7 @@ export const ARCHITECTURES = {
   qwen2:          {          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3:          {          categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen35:         {         categories: ['transformer'],      kvCache: qwen35KvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  qwen3next:      {      categories: ['transformer', 'moe'],kvCache: (meta, ctxSize, kvTypeK, kvTypeV) => { const arch = meta['general.architecture']; const interval = getMeta(meta, `${arch}.full_attention_interval`) || QWEN35_FULL_ATTN_INTERVAL_DEFAULT; return buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: (i) => ((i + 1) % interval === 0) }); }, activations: sharedExpertActivations, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: SHEXP_MOE_TENSOR_GROUPS },
+  qwen3next:      {      categories: ['transformer', 'moe'],kvCache: (meta, ctxSize, kvTypeK, kvTypeV) => buildKvCache(meta, ctxSize, kvTypeK, kvTypeV, { layerFilter: qwen35FullAttnFilter(meta) }), activations: sharedExpertActivations, moe: (m, ti) => buildMoe(m, ti, { isRouter: (t) => t.name.includes('ffn_gate_inp') && !t.name.includes('shexp'), isShared: (t) => t.name.includes('_shexp.') || t.name.includes('ffn_gate_inp_shexp'), }), tensorGroups: SHEXP_MOE_TENSOR_GROUPS },
   qwen2vl:        {        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   qwen3vl:        {        categories: ['transformer', 'vl'],kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   gemma3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 6, swaFull: sf === true }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
@@ -545,15 +554,19 @@ export const ARCHITECTURES = {
   wan:            {            categories: ['diffusion'],        kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'acestep-lm':   {    categories: ['audio'],            kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   t5encoder:      {      categories: ['transformer'],      kvCache: noKvCache,    activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
-  mimo2:          {          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf === true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // mimo2 reads nextn_predict_layers (mimo2.cpp); MTP tail excluded from KV.
+  mimo2:          {          categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, effectiveLayers: mtpEffectiveLayers, swaFull: sf === true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   'hunyuan-dense':{  categories: ['transformer'],      kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   // exaone4: only the 64-layer (32B) variant has SWA; smaller variants are dense.
   // llama-model.cpp:2287–2299 — the SWA branch is gated on n_layer==64.
+  // exaone4 also reads nextn_predict_layers (exaone4.cpp:18); MTP tail blocks
+  // have n_head_kv_arr[il] == 0 in llama.cpp (arrays filled only to n_layer()),
+  // so they carry no KV cache. The SWA gate is on hparams.n_layer() == 64,
+  // i.e. block_count minus MTP blocks (exaone4.cpp:4).
   exaone4:        {        categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => {
-    const arch = m['general.architecture'];
-    const n_layer = getMeta(m, `${arch}.block_count`);
-    if (n_layer === 64) return buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, swaFull: sf === true });
-    return buildKvCache(m, c, kK, kV);
+    const n_main = mtpEffectiveLayers(m, getMeta(m, `${m['general.architecture']}.block_count`));
+    if (n_main === 64) return buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 4096, effectiveLayers: mtpEffectiveLayers, swaFull: sf === true });
+    return buildKvCache(m, c, kK, kV, { effectiveLayers: mtpEffectiveLayers });
   }, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   plamo3:         {         categories: ['transformer', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 8, swaFull: sf === true }), activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
   // smallthinker: llama-model.cpp:2697–2704 forces n_swa = 4096 when the SWA key is present.
@@ -613,7 +626,9 @@ export const ARCHITECTURES = {
   // ── ISWA + MoE architectures ──
   // exaone-moe: llama-model.cpp:2310–2314 hardcodes n_swa = 128.
   'exaone-moe': {   categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaDefault: 128, effectiveLayers: mtpEffectiveLayers, swaFull: sf === true }), activations: leadingDenseActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
-  step35:       {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf === true }), activations: buildActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // step35: reads nextn_predict_layers (step35.cpp:32); the main-context KV
+  // cache filters out MTP blocks (llama-model.cpp:2185-2191, il < n_layer()).
+  step35:       {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, effectiveLayers: mtpEffectiveLayers, swaFull: sf === true }), activations: buildActivations, moe: moeShexpOnly, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── GLM4 MoE: gate_up_exps fused pattern ──
   glm4moe: {
@@ -625,6 +640,25 @@ export const ARCHITECTURES = {
       isShared: noShared,
     }),
     tensorGroups: { expert: ['*ffn_gate_exps*', '*ffn_gate_up_exps*', '*ffn_up_exps*', '*ffn_down_exps*'], router: ['*ffn_gate_inp*'], shared: [] },
+  },
+
+  // ── HY-V3 (Hunyuan V3): MoE with shared experts + fused gate_up_exps + MTP ──
+  // Standard attention KV cache (build_attn_inp_kv, hy-v3.cpp); MTP blocks at
+  // the block_count tail are filtered from the main-context KV cache
+  // (llama-model.cpp:2185-2191). Sigmoid router with exp_probs_b bias; dense
+  // FFN in leading blocks is detected by tensor presence (no
+  // leading_dense_block_count key), so buildActivations' all-MoE assumption is
+  // the closest metadata-only approximation.
+  hy_v3: {
+    categories: ['transformer', 'moe'],
+    kvCache: (m, c, kK, kV) => buildKvCache(m, c, kK, kV, { effectiveLayers: mtpEffectiveLayers }),
+    activations: buildActivations,
+    moe: moeShexpOnly,
+    tensorGroups: {
+      expert: ['*ffn_gate_exps*', '*ffn_gate_up_exps*', '*ffn_up_exps*', '*ffn_down_exps*', '*exp_probs_b*'],
+      router: ['*ffn_gate_inp*'],
+      shared: ['*ffn_gate_shexp*', '*ffn_up_shexp*', '*ffn_down_shexp*'],
+    },
   },
 
   // ── DSA (DeepSeek Sparse Attention) — MLA + MoE (GLM-5 family) ──
@@ -804,8 +838,10 @@ export const ARCHITECTURES = {
 
   // Mellum: optional SWA (reads sliding_window; swa_type only set when present).
   // Register with iswa so SWA layers are shrunk correctly when metadata is set;
-  // harmless (no-op) when SWA metadata is absent.
-  mellum:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaFull: sf === true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
+  // harmless (no-op) when SWA metadata is absent. When n_swa > 0 and no
+  // sliding_window_pattern key exists, llama.cpp defaults the period to 4
+  // (mellum.cpp:11).
+  mellum:        {        categories: ['transformer', 'moe', 'iswa'], kvCache: (m, c, kK, kV, sf) => buildKvCache(m, c, kK, kV, { iswa: true, swaPeriodDefault: 4, swaFull: sf === true }), activations: buildActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS },
 
   // ── Standard MoE (no shared experts): moeNoShared + buildActivations ──
   olmoe:         {         categories: ['transformer', 'moe'], kvCache: llamaKvCache, activations: buildActivations, moe: moeNoShared, tensorGroups: STANDARD_MOE_TENSOR_GROUPS },
@@ -1108,9 +1144,24 @@ function defaultRecurrentLayers(metadata) {
     return count;
   }
 
-  // qwen35-family: recurrent unless (i+1) % full_attention_interval == 0.
+  // qwen35-family: explicit `attention.recurrent_layers` array wins
+  // (qwen35.cpp:21); otherwise recurrent unless
+  // (i+1) % full_attention_interval == 0.
+  const recrArr = metadata[`${arch}.attention.recurrent_layers`];
+  if (Array.isArray(recrArr)) {
+    let count = 0;
+    for (let i = 0; i < Math.min(recrArr.length, n_layer); i++) {
+      if (Number(recrArr[i]) !== 0) count++;
+    }
+    return count;
+  }
+  // MTP tail blocks are dense attention-only, never recurrent
+  // (qwen35.cpp: is_recr_impl[i] = i < n_layer() && ...).
   const interval = getMeta(metadata, `${arch}.full_attention_interval`);
-  if (interval > 0) return n_layer - Math.floor(n_layer / interval);
+  if (interval > 0) {
+    const n_main = Math.max(0, n_layer - getMeta(metadata, `${arch}.nextn_predict_layers`));
+    return n_main - Math.floor(n_main / interval);
+  }
   return 0;
 }
 
@@ -1139,6 +1190,13 @@ export function calcKVCache(metadata, ctxSize, kvTypeK, kvTypeV, nSeqMax = 1, sw
   const handler = getArchHandler(arch);
   const paddedCtx = Math.max(256, Math.ceil(Math.floor(ctxSize / nSeqMax) / 256) * 256);
   const result = handler.kvCache(metadata, paddedCtx, kvTypeK, kvTypeV, swaFull);
+  // llama.cpp's default split KV cache allocates n_ctx_seq cells PER STREAM
+  // with n_stream = n_seq_max (llama-kv-cache.cpp:231, ggml_new_tensor_3d with
+  // third dim n_stream), so the total is per-stream bytes × n_seq_max.
+  if (nSeqMax > 1) {
+    result.bytesK *= nSeqMax;
+    result.bytesV *= nSeqMax;
+  }
   const recurrent = calcRecurrentState(metadata, nSeqMax);
   result.bytesRecurrent = recurrent ? recurrent.totalBytes : 0;
   result.recurrentLayers = recurrent ? recurrent.recurrentLayers : 0;
@@ -1166,7 +1224,8 @@ export function calcMoEInfo(metadata, tensorInfos) {
 // patch count depends on the runtime audio length.
 const AUDIO_PROJ_TYPES = new Set([
   'ultravox', 'voxtral', 'qwen2a', 'qwen3a', 'glma', 'lfm2a',
-  'gemma4a', 'gemma3na', 'meralion', 'musicflamingo',
+  'gemma4a', 'gemma4ua', 'gemma3na', 'meralion', 'musicflamingo',
+  'granite_speech',
 ]);
 
 function estimateOutputTokens(projType, p) {
@@ -1188,10 +1247,16 @@ function estimateOutputTokens(projType, p) {
     case 'mlp':
     case 'mlp_norm':
     case 'phi4':
-    case 'pixtral':
-    case 'lightonocr':
     case 'janus_pro':
       return nPatches;
+    case 'pixtral':
+    case 'lightonocr': {
+      // clip.cpp: patches are downscaled by n_merge per side; models with a
+      // v.token_embd.img_break tensor emit one [IMG_BREAK] per row except the
+      // last (n_patches_y - 1 extra tokens).
+      const side = Math.floor(perSide / merge);
+      return side * side + (p.hasImgBreak ? Math.max(0, side - 1) : 0);
+    }
     case 'dots_ocr':
     case 'paddleocr': {
       const stride = merge * merge;
@@ -1205,7 +1270,9 @@ function estimateOutputTokens(projType, p) {
     case 'qwen2.5vl_merger':
     case 'qwen3vl_merger':
     case 'glm4v':
-    case 'youtuvl': {
+    case 'youtuvl':
+    case 'exaone4_5':
+    case 'mimovl': {
       const x = Math.floor(imageSize / (patchSize * 2));
       return x * x;
     }
@@ -1215,11 +1282,15 @@ function estimateOutputTokens(projType, p) {
     }
     case 'gemma3':
     case 'gemma4v':
+    case 'gemma4uv':
     case 'idefics3':
     case 'internvl':
     case 'nemotron_v2_vl':
     case 'llama4':
       return Math.floor(nPatches / (merge * merge));
+    case 'minicpmv4_6':
+      // ViT merger 4x + final merger 4x = 16x total spatial downsample
+      return Math.floor(nPatches / 16);
     case 'gemma3nv':
       return perSide;
     case 'lfm2':
@@ -1236,6 +1307,19 @@ function estimateOutputTokens(projType, p) {
       const h = Math.floor(Math.sqrt(reduced));
       return h * (h + 1) + 1;
     }
+    case 'deepseekocr2':
+      // global view: nPatches/16 query tokens + 1 view separator
+      return Math.floor(nPatches / 16) + 1;
+    case 'granite4_vision': {
+      // (query_side × side/window_side)² per tile + 1 trailing newline
+      // (clip.cpp PROJECTOR_TYPE_GRANITE4_VISION). Defaults match the 384px
+      // reference config: window_side 8, query_side 4 → 144 + 1.
+      const windowSide = p.granite4WindowSide > 0 ? p.granite4WindowSide : 8;
+      const querySide = p.granite4QuerySide > 0 ? p.granite4QuerySide : 4;
+      const n = Math.floor(perSide / windowSide);
+      return (querySide * n) * (querySide * n) + 1;
+    }
+    case 'hunyuanvl':
     case 'hunyuanocr': {
       const ow = Math.floor(perSide / merge);
       const oh = ow;
@@ -1252,9 +1336,11 @@ const KNOWN_PROJ_TYPES = new Set([
   'mlp', 'mlp_norm', 'phi4', 'pixtral', 'lightonocr', 'janus_pro',
   'dots_ocr', 'paddleocr', 'ldp', 'ldpv2', 'adapter', 'resampler',
   'qwen2vl_merger', 'qwen2.5vl_merger', 'qwen3vl_merger', 'glm4v', 'youtuvl',
-  'step3vl', 'gemma3', 'gemma4v', 'idefics3', 'internvl', 'nemotron_v2_vl',
-  'llama4', 'gemma3nv', 'lfm2', 'kimivl', 'kimik25', 'cogvlm', 'deepseekocr',
-  'hunyuanocr', 'yasa2', 'qwen2.5o', ...AUDIO_PROJ_TYPES,
+  'step3vl', 'gemma3', 'gemma4v', 'gemma4uv', 'idefics3', 'internvl',
+  'nemotron_v2_vl', 'llama4', 'gemma3nv', 'lfm2', 'kimivl', 'kimik25',
+  'cogvlm', 'deepseekocr', 'deepseekocr2', 'hunyuanocr', 'hunyuanvl',
+  'yasa2', 'qwen2.5o', 'exaone4_5', 'mimovl', 'minicpmv4_6',
+  'granite4_vision', ...AUDIO_PROJ_TYPES,
 ]);
 
 export function calcMmProj(metadata, tensorInfos) {
@@ -1276,11 +1362,15 @@ export function calcMmProj(metadata, tensorInfos) {
   const nMerge = getMeta(metadata, 'clip.vision.spatial_merge_size') || getMeta(metadata, 'clip.vision.projector.scale_factor') || 1;
   const minicpmvQ = getMeta(metadata, 'clip.minicpmv_query_num');
   const minicpmvV = getMeta(metadata, 'clip.minicpmv_version');
+  const granite4WindowSide = getMeta(metadata, 'clip.vision.projector.window_side');
+  const granite4QuerySide = getMeta(metadata, 'clip.vision.projector.query_side');
+  const hasImgBreak = tensorInfos.some(t => t.name === 'v.token_embd.img_break');
 
   const projTypeKnown = projType != null && KNOWN_PROJ_TYPES.has(projType.toLowerCase());
   const isAudioProj = projType != null && AUDIO_PROJ_TYPES.has(projType.toLowerCase());
   const nOutputTokens = estimateOutputTokens(projType, {
     imageSize, patchSize, nMerge, minicpmvQ, minicpmvV,
+    granite4WindowSide, granite4QuerySide, hasImgBreak,
   });
   const perImageActBytes = nOutputTokens > 0 && projDim > 0
     ? nOutputTokens * projDim * 4

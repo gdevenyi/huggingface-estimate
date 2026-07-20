@@ -127,13 +127,14 @@ export const BPE = {
   // turboquant weight quantization (numeric IDs from llama-cpp-turboquant ggml.h)
   45: 16 / 32, // TQ3_1S
   46: 20 / 32, // TQ4_1S
-  // Default BPE for colliding IDs 42/43 when no fork is detected. These IDs
-  // appear in tensorInfos (model weights) from tq3 (Q1_0/TQ3_1S), prism-ml
-  // (Q2_0), or buun (TURBO3_0/TURBO4_0). When fork detection succeeds, the
-  // fork-specific override maps take precedence. The defaults below match
-  // turboquant's string-keyed values (34/128, 50/128), which coincidentally
-  // equal prism-ml's Q2_0 BPE — the most common undetected case.
-  42: 34 / 128, // default (prism-ml Q2_0 / turboquant TURBO2_0)
+  // ID 42 is now upstream llama.cpp's GGML_TYPE_Q2_0 (QK2_0=64, block 2+16
+  // bytes → 18/64 = 0.28125 bpe; ggml-common.h:187-192). It still collides
+  // with tq3 (Q1_0), prism-ml (Q2_0 at QK=128 → 34/128), and buun (TURBO3_0);
+  // fork detection in parsing.js stamps _bpeOverride for those. The undetected
+  // default is upstream's value.
+  42: 18 / 64,  // Q2_0 (upstream llama.cpp; fork overrides via parsing.js)
+  // ID 43 is unused upstream (GGML_TYPE_COUNT); default matches turboquant's
+  // TURBO3_0 (50/128), the only fork that could leave it undetected.
   43: 50 / 128, // default (turboquant TURBO3_0)
   // turboquant KV cache quantization (string keys used by KV_VALID_QUANTS dropdown)
   TQ3_1S: 16 / 32,
@@ -260,13 +261,18 @@ const TURBOQUANT_QUANT_NAMES = {
   TURBO2_0: 'TURBO2_0',
   TURBO3_0: 'TURBO3_0',
   TURBO4_0: 'TURBO4_0',
-  42: 'TURBO2_0',
+  // ID 42 belongs to upstream Q2_0 now (set below); turboquant's numeric 42
+  // (TURBO2_0) is a KV-cache-only type that never appears in weight tensors.
   43: 'TURBO3_0',
   44: 'TURBO4_0',
   45: 'TQ3_1S (turboquant)',
   46: 'TQ4_1S (turboquant)',
 };
 Object.assign(QUANT_NAMES, TURBOQUANT_QUANT_NAMES);
+// Upstream llama.cpp Q2_0 (GGML_TYPE_Q2_0 = 42; not yet in @huggingface/gguf's
+// enum, so set explicitly). Fork detection overrides the display name for
+// tq3 (Q1_0), prism-ml (Q2_0 @ QK128), and buun (TURBO3_0) models.
+QUANT_NAMES[42] = 'Q2_0';
 const ROTORQUANT_QUANT_NAMES = {
   PLANAR3_0: 'PLANAR3_0',
   PLANAR4_0: 'PLANAR4_0',

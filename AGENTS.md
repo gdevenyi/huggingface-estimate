@@ -20,7 +20,7 @@ No build step, no framework. ESM throughout (`package.json` has `"type": "module
 **Implemented — novel quant types from newly-cloned forks**:
 - `buun-llama-cpp/` (658★): TURBO3_TCQ (ID 45, BPE 52/128 = 0.40625), TURBO2_TCQ (ID 46, BPE 36/128 = 0.28125), TURBO8_0 (ID 47, BPE 130/128 = 1.015625), TURBO1_TCQ (ID 51, BPE 20/128 = 0.15625). Also uses IDs 42–44 for TURBO3_0/TURBO4_0/TURBO2_0 with QK=32 (different BPEs than TheTom's turboquant fork which uses QK=128). Detected via dtype 47 (unique to buun). KV cache types: TURBO8_0 (47), BUUN_TURBO3_TCQ, BUUN_TURBO2_TCQ. IDs 48–50 are reserved (codec removed, slot kept for type-id stability).
 - `beellama.cpp/` (Anbeeld): TQ3_1S (ID 47, BPE 16/32 = 0.5), TQ4_1S (ID 48, BPE 20/32 = 0.625), Q6_0 (ID 49, BPE 26/32 = 0.8125). Weight types at IDs 47–49; turbo KV types at IDs 42–46 use QK=128 (same BPE as turboquant). Detected via ftype 43 (MOSTLY_TQ3_1S) or ftype 44 (MOSTLY_TQ4_1S). TQ3_1S (47) collides with buun's TURBO8_0. KV cache types: Q6_0 (BEELLAMA_Q6_0 string key), plus shared turbo types from turboquant group. Also defines `gemma4-dflash-draft` architecture (DFlash speculative drafter, no KV cache).
-- `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary 1-bit weight type. BPE coincidentally matches turboquant's TURBO2_0. Detected via ftype 28 (MOSTLY_Q2_0) or ftype 41 (quant tool bug setting file_type to type ID) with dtype 42 present. Falls back to prism-ml naming when dtype 42 appears in weights without any other fork signal.
+- `prism-ml-llama.cpp/` (193★, PrismML/Bonsai): Q2_0 (ID 42, BPE 34/128 = 0.265625) — ternary weight type at QK=128. Collides with upstream llama.cpp's Q2_0 (same ID 42, same ftype 41, but QK=64 → BPE 18/64 = 0.28125). Detected via ftype 28 (prism-ml GGML_FTYPE) with dtype 42, or by offset-based `measureBpe` disambiguation when ftype 41 / bare dtype 42 is seen (see "Fork-aware BPE overrides").
 
 **Tracked data**: `specs/` — GPU CSV source data used by build scripts.
 
@@ -39,7 +39,7 @@ node run-calc.js bartowski/Llama-3.1-8B-Instruct-GGUF --ctx 8192 --kvTypeK Q8_0
 node run-calc.js --batch test/baseline.list
 ```
 
-Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16), `--mmproj FILE`, `--mmprojDevice vram|ram` (default vram). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
+Options: `--ctx N` (default 4096), `--batchSize N` (default 1), `--n-seq N` (default 1; parallel sequences — per-stream cells are `pad(ctx/nSeq, 256)` and total KV ≈ ctx cells, matching llama.cpp's split cache), `--kvTypeK TYPE` (default F16), `--kvTypeV TYPE` (default F16), `--mmproj FILE`, `--mmprojDevice vram|ram` (default vram). Batch file has one HF repo per line, `#` comments supported. Outputs JSON to stdout, progress to stderr.
 
 Performance flags (add a `performance` block to the JSON): `--gpu <name|id>` (fuzzy-matches `gpu-data.json`), `--cpu <name|id>` (matches `hardware-presets.js`), `--gpu-flops`, `--gpu-bw`, `--cpu-flops`, `--ram-bw` for manual overrides, `--ngl <n|auto>`, `--cpu-moe`, `--n-cpu-moe N`. Omit all GPU flags to disable the performance block (preserves the pre-feature output shape).
 
@@ -74,7 +74,7 @@ Two views, both matching llama.cpp:
      - Pass 2: convert dense-only layers to full front-to-back, contiguous (stop at the first that won't upgrade) (matches llama.cpp step 4's dense→full conversion).
      - Pass 3: try to offload ONE more boundary layer at a sub-layer fraction (matches llama.cpp step 4 "fit part of one more layer"). Fractions, largest VRAM content first: `partial-gate` (attn+up+gate+KV) > `partial-up` (attn+up+KV) > `partial-attn` (attn+KV); the rest of that layer (down + experts) stays in RAM. `calcPerLayerFootprint` buckets each non-expert tensor into `attn/up/gate/down` groups (regex on `ffn_gate|ffn_up|ffn_down`) to compute the fraction sizes.
    - With a manual `--ngl N`: last N layers placed back-to-front, then expert-placement overrides applied (`hybrid` for flagged layers). No auto-fit; `--ngl` itself also aborts `--fit`.
-- KV cache always per-layer (lives wherever the layer lives). `calcKVCache` pads `n_ctx` to 256 (`GGML_PAD(n_ctx / n_seq_max, 256)`) matching llama.cpp's `llama-context.cpp:252,257-258`. The `swaFull` parameter (default `false`, matching `common.h:570`) controls whether SWA layers use full or reduced context.
+- KV cache always per-layer (lives wherever the layer lives). `calcKVCache` computes per-stream cells as `GGML_PAD(n_ctx / n_seq_max, 256)` matching llama.cpp's `llama-context.cpp` (n_ctx_seq), then multiplies attention K/V bytes by `nSeqMax` — llama.cpp's default split cache allocates `n_ctx_seq` cells for EACH of the `n_seq_max` streams (`ggml_new_tensor_3d(..., kv_size, n_stream)` in `llama-kv-cache.cpp:231`), so the total ≈ `n_ctx` cells regardless of `n_seq_max`. The `swaFull` parameter (default `false`, matching `common.h:570`) controls whether SWA layers use full or reduced context.
 - Performance: `activeExpertWeightBytes` (active fraction = `expertUsedCount / expertCount`) drives per-token bandwidth/compute regardless of where experts are stored — sparse MoE only reads active experts each step.
 
 ## Bytes-per-element hardcoded
@@ -89,20 +89,23 @@ All tensor size calculations go through `tensorBpe(t)` which checks for a per-te
 
 GGUF type IDs 44 and 46 collide between the turboquant and tq3 forks (different types, different BPE). ID 42 also collides (tq3's Q1_0 weight type vs turboquant's TURBO2_0 KV type). `parseGGUF()` in `parsing.js` detects the source fork via `general.file_type` and tensor dtype presence, then stamps `_bpeOverride` and `_nameOverride` on affected tensors. All downstream size calculations use `tensorBpe(t)` which checks `_bpeOverride` before falling back to `BPE[t.dtype]`.
 
+**Upstream Q2_0 (ID 42)**: mainline llama.cpp now defines `GGML_TYPE_Q2_0 = 42` with `QK2_0 = 64` (block 2+16 bytes → BPE 18/64 = 0.28125) and `LLAMA_FTYPE_MOSTLY_Q2_0 = 41`. This collides with prism-ml's Q2_0 (QK=128 → 34/128) at BOTH the type ID and the ftype, so metadata alone cannot distinguish them. `measureBpe(tensorInfos, dtype)` in `parsing.js` measures actual stored bytes from adjacent GGUF tensor offsets (skipping decreasing-offset pairs at merged-shard boundaries) and `detectFork` picks the closer layout. The base `BPE[42]` / `QUANT_NAMES[42]` defaults are upstream's (18/64, 'Q2_0'); prism-ml gets `_bpeOverride` 34/128 when detected.
+
 **Detection heuristics** (first match wins):
-1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or (`40` AND dtype 42 present) → tq3 fork. ftype 40 = `MOSTLY_Q1_0` is now also used by upstream (dtype 41), so dtype 42 presence is required to distinguish tq3's Q1_0 (ID 42) from upstream's Q1_0 (ID 41)
-2. `general.file_type == 28` (MOSTLY_Q2_0), or ftype 41 with dtype 42 present → prism-ml fork
-3. `general.file_type == 43` with dtype 47, or ftype 44 with dtype 48 → beellama fork (ftype 43/44 are MOSTLY_TQ3_1S/MOSTLY_TQ4_1S). Must be checked BEFORE buun because dtype 47 collides with buun's TURBO8_0
-4. Any tensor with dtype 47 (TURBO8_0, without beellama ftype signal) → buun fork (unique to buun)
-5. Any tensor with dtype 45 or 46 (TQ3_1S/TQ4_1S weight types) → turboquant fork (TheTom). Note: turboquant's IDs 42/43/44 are KV cache types that never appear in model weights, so detection is based on weight types 45/46 only.
-6. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant (edge case: ftype 43 without beellama's dtype 47)
-7. Fallback: dtype 42 in weights without any fork-specific signal → prism-ml (Q2_0 BPE 34/128 matches the default BPE[42])
+1. Any tensor with dtype 200, or `general.file_type == 200`, `45`, or (`40` AND dtype 42 present AND dtype 41 absent) → tq3 fork. ftype 40 = `MOSTLY_Q1_0` is also used by upstream (dtype 41), which may mix in upstream Q2_0 (dtype 42) tensors — the dtype-41 exclusion keeps those on the upstream path
+2. `general.file_type == 28` AND dtype 42 present → prism-ml fork (prism-ml's GGML_FTYPE; upstream ftype 28 = MOSTLY_IQ2_S never carries dtype 42)
+3. ftype 41 with dtype 42 present → measure stored BPE via `measureBpe`; ≈34/128 → prism-ml, ≈18/64 or unmeasurable → upstream (no fork)
+4. `general.file_type == 43` with dtype 47, or ftype 44 with dtype 48 → beellama fork (ftype 43/44 are MOSTLY_TQ3_1S/MOSTLY_TQ4_1S). Must be checked BEFORE buun because dtype 47 collides with buun's TURBO8_0
+5. Any tensor with dtype 47 (TURBO8_0, without beellama ftype signal) → buun fork (unique to buun)
+6. Any tensor with dtype 45 or 46 (TQ3_1S/TQ4_1S weight types) → turboquant fork (TheTom). Note: turboquant's IDs 42/43/44 are KV cache types that never appear in model weights, so detection is based on weight types 45/46 only.
+7. `general.file_type == 43` with tensor dtype 44 present → tq3; dtype 45 present → turboquant (edge case: ftype 43 without beellama's dtype 47)
+8. Fallback: dtype 42 in weights without any fork-specific signal → `measureBpe` disambiguation (prism-ml vs upstream Q2_0), defaulting to upstream
 
 **Colliding type IDs**:
 
-| ID | Default (turboquant) | tq3 fork | buun fork | beellama fork |
+| ID | Default (upstream/turboquant) | tq3 fork | buun fork | beellama fork |
 |----|----------------------|----------|-----------|---------------|
-| 42 | TURBO2_0 (KV cache, 0.265625 BPE) | Q1_0 (weight, 0.140625 BPE = 1.125 bpw) | TURBO3_0 (KV, 0.4375 BPE) | TURBO3_0 (KV, 0.390625 BPE) |
+| 42 | Q2_0 (upstream weight, 0.28125 BPE); prism-ml Q2_0 0.265625 via override; turboquant TURBO2_0 (KV-only, 0.265625) | Q1_0 (weight, 0.140625 BPE = 1.125 bpw) | TURBO3_0 (KV, 0.4375 BPE) | TURBO3_0 (KV, 0.390625 BPE) |
 | 43 | TURBO3_0 (KV cache, 0.390625 BPE) | — | TURBO4_0 (KV, 0.515625 BPE) | TURBO4_0 (KV, 0.515625 BPE) |
 | 44 | TURBO4_0 (KV cache, 0.515625 BPE) | TQ3_1S (weight, 0.5 BPE) | TURBO2_0 (KV, 0.3125 BPE) | TURBO2_0 (KV, 0.265625 BPE) |
 | 45 | TQ3_1S (weight, 0.5 BPE) | TQ3_1S (weight, 0.5 BPE — same) | TURBO3_TCQ (KV, 0.40625 BPE) | TURBO3_TCQ (KV, 0.40625 BPE) |
@@ -159,7 +162,7 @@ Files matching `*-of-*.gguf` are auto-detected as shards in `parseGGUF()`. Calls
 
 - **Weights** — delegated to `calcWeightSize()`, identical to the main-model weight math.
 - **Per-image output activation** — `n_output_tokens × projection_dim × 4` bytes (fp32). `n_output_tokens` mirrors `clip_n_output_tokens()` at `llama.cpp/tools/mtmd/clip.cpp:2829` via `estimateOutputTokens(projType, ...)`. Projector types map to a handful of formulas keyed on `clip.vision.image_size`, `clip.vision.patch_size`, `clip.vision.spatial_merge_size`, and (for resampler) `clip.minicpmv_query_num` / `clip.minicpmv_version`. Audio projectors (ultravox, voxtral, qwen2a, etc.) return 0 — their patch count depends on runtime audio length.
-- **Metadata keys read**: `clip.has_vision_encoder`, `clip.has_audio_encoder`, `clip.projector_type` (plus `clip.vision.projector_type` / `clip.audio.projector_type` fallbacks), `clip.vision.image_size`, `clip.vision.patch_size`, `clip.vision.embedding_length`, `clip.vision.block_count`, `clip.vision.projection_dim`, `clip.vision.spatial_merge_size`, `clip.minicpmv_query_num`, `clip.minicpmv_version`. Source of truth: `llama.cpp/tools/mtmd/clip-impl.h`.
+- **Metadata keys read**: `clip.has_vision_encoder`, `clip.has_audio_encoder`, `clip.projector_type` (plus `clip.vision.projector_type` / `clip.audio.projector_type` fallbacks), `clip.vision.image_size`, `clip.vision.patch_size`, `clip.vision.embedding_length`, `clip.vision.block_count`, `clip.vision.projection_dim`, `clip.vision.spatial_merge_size`, `clip.vision.projector.scale_factor`, `clip.vision.projector.window_side` / `clip.vision.projector.query_side` (granite4_vision), `clip.minicpmv_query_num`, `clip.minicpmv_version`. pixtral/lightonocr also check tensorInfos for `v.token_embd.img_break` ([IMG_BREAK] row tokens). Source of truth: `llama.cpp/tools/mtmd/clip-impl.h`.
 
 **Placement** — `--mmprojDevice vram` (default) mirrors llama.cpp's `mmproj_use_gpu=true`; `ram` mirrors `--no-mmproj-offload` (see `llama.cpp/common/common.h:544`). When selected, the combined `weightBytes + perImageActBytes` is folded into either `vramBytes` or `ramBytes`.
 
@@ -252,7 +255,7 @@ All fields optional. Compose them in the handler: `kvCache: (m, c, kK, kV) => bu
 | `denseFirst: true` | With ISWA, first layer in each period is dense (smallthinker pattern; matches llama.cpp `set_swa_pattern(N, true)`) |
 | `swaPeriodDefault: N` | Fallback SWA period when metadata doesn't supply one (gpt-oss: 2, llama4: 4, gemma3n: 5) |
 | `swaDefault: N` | Fallback `sliding_window` value (llama4: 8192) |
-| `effectiveLayers(meta, n_block)` | Override iteration count (gemma4 `shared_kv_layers`, gemma3n `layer_kv_from_start`, MTP-aware archs `nextn_predict_layers` — glm4, glm4moe, bailingmoe2, exaone-moe, qwen35, qwen35moe) |
+| `effectiveLayers(meta, n_block)` | Override iteration count (gemma4 `shared_kv_layers`, gemma3n `layer_kv_from_start`, MTP-aware archs `nextn_predict_layers` — glm4, glm4moe, bailingmoe2, exaone-moe, exaone4, qwen35, qwen35moe, cohere2moe, step35, mimo2, hy_v3) |
 | `layerFilter(i)` | Skip layers (qwen35moe keeps only every `full_attention_interval`-th layer) |
 
 `effectiveLayers` and `layerFilter` compose: qwen35 / qwen35moe use both to skip MTP trailing blocks *and* keep only every Nth full-attention layer.
@@ -261,7 +264,7 @@ Per-layer `head_count_kv == 0` is treated as "no KV cache on this layer" across 
 
 ### MTP (Multi-Token Prediction / `nextn_predict_layers`)
 
-Some archs (qwen35, qwen35moe, glm4, glm4moe, bailingmoe2, exaone-moe, glm-dsa) emit MTP blocks at the tail of `block_count`. llama.cpp loads MTP weights into model memory but skips them in the main decoder graph — they only run inside the speculative-decoding `LLM_GRAPH_TYPE_DECODER_MTP` (see `resources/llama.cpp/src/models/qwen35.cpp:160-162`).
+Some archs (qwen35, qwen35moe, glm4, glm4moe, bailingmoe2, exaone-moe, exaone4, glm-dsa, cohere2moe, step35, mimo2, hy_v3) emit MTP blocks at the tail of `block_count`. llama.cpp loads MTP weights into model memory but skips them in the main decoder graph — they only run inside the speculative-decoding `LLM_GRAPH_TYPE_DECODER_MTP` (see `resources/llama.cpp/src/models/qwen35.cpp:160-162`). llama.cpp's hparam arrays (`n_head_kv_arr` etc.) are only filled up to `n_layer() = block_count - nextn`, so MTP layers allocate zero-size KV even without an explicit filter — every nextn-reading arch must therefore use `effectiveLayers: mtpEffectiveLayers` (or the inline MLA equivalent).
 
 Estimator accounting:
 - **KV cache** — excluded via `effectiveLayers: (m, n_block) => n_block - getMeta(m, '<arch>.nextn_predict_layers')`. `mlaKvCache` does it inline for MLA archs.

@@ -50,18 +50,64 @@ export const KV_VALID_QUANTS = [...new Set([
 export const STANDARD_KV_QUANT_SET = new Set(STANDARD_KV_QUANTS);
 
 
+// Measure the actual bytes-per-element of a dtype from GGUF tensor offsets.
+// Each tensor's stored size is (next tensor's offset - its own offset), padded
+// to the file alignment (default 32 bytes) — negligible against whole-tensor
+// sizes. Adjacent-pair deltas are only trusted when the next offset is larger
+// (merged shard lists restart offsets at each shard boundary; those pairs are
+// skipped). Returns the measured BPE of the largest measurable tensor of the
+// given dtype, or null when none is measurable (e.g. it is the last tensor).
+export function measureBpe(tensorInfos, dtype) {
+  const measurable = tensorInfos.filter(t => t.offset != null && Array.isArray(t.shape));
+  const sorted = measurable.sort((a, b) => (a.offset < b.offset ? -1 : a.offset > b.offset ? 1 : 0));
+  let best = null, bestElems = 0;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const t = sorted[i];
+    if (t.dtype !== dtype) continue;
+    const next = sorted[i + 1];
+    if (next.offset <= t.offset) continue; // shard boundary in a merged list
+    const elems = t.shape.map(Number).reduce((a, b) => a * b, 1);
+    if (elems <= 0) continue;
+    const bytes = Number(next.offset - t.offset);
+    if (elems > bestElems) {
+      bestElems = elems;
+      best = bytes / elems;
+    }
+  }
+  return best;
+}
+
+// Disambiguate ID-42 weight tensors: upstream llama.cpp Q2_0 (QK2_0=64 →
+// 18/64 = 0.28125) vs prism-ml Q2_0 (QK2_0=128 → 34/128 = 0.265625). Both
+// write general.file_type = 41 (LLAMA_FTYPE_MOSTLY_Q2_0), so metadata alone
+// cannot tell them apart — measure the stored tensor size instead. Returns
+// 'prism-ml' or null (= upstream, no overrides needed).
+const PRISM_Q2_0_BPE = 34 / 128;
+const UPSTREAM_Q2_0_BPE = 18 / 64;
+function classifyDtype42(tensorInfos) {
+  const measured = measureBpe(tensorInfos, 42);
+  if (measured === null) return null; // unmeasurable → assume upstream
+  return Math.abs(measured - PRISM_Q2_0_BPE) < Math.abs(measured - UPSTREAM_Q2_0_BPE)
+    ? 'prism-ml'
+    : null;
+}
+
 export function detectFork(metadata, tensorInfos) {
   const ftype = Number(metadata['general.file_type'] ?? -1);
   const dtypeSet = new Set(tensorInfos.map((t) => t.dtype));
   // tq3-unique signals first: dtype 200 (TQ3_0 KV), ftype 200/45.
   // ftype 40 = MOSTLY_Q1_0: shared by upstream (dtype 41) and tq3 (dtype 42).
-  // Only trigger tq3 when dtype 42 is present (tq3's Q1_0 ID); upstream Q1_0
-  // uses dtype 41 and should NOT trigger tq3 detection.
-  if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || (ftype === 40 && dtypeSet.has(42))) return 'tq3';
-  // prism-ml: ftype 28 (MOSTLY_Q2_0) is the canonical signal. Some prism-ml
-  // quant tools set file_type to the type ID (41) instead of the ftype (28),
-  // so also check: dtype 42 present (Q2_0 weight) without any tq3 signal above.
-  if (ftype === 28 || (dtypeSet.has(42) && ftype === 41)) return 'prism-ml';
+  // Only trigger tq3 when dtype 42 is present (tq3's Q1_0 ID) AND dtype 41 is
+  // absent — upstream Q1_0 quants use dtype 41 and may mix in upstream Q2_0
+  // (dtype 42) tensors, which must not trigger tq3 detection.
+  if (dtypeSet.has(200) || ftype === 200 || ftype === 45 || (ftype === 40 && dtypeSet.has(42) && !dtypeSet.has(41))) return 'tq3';
+  // prism-ml: GGML_FTYPE_MOSTLY_Q2_0 = 28 is a prism-ml-only signal (upstream
+  // ftype 28 is MOSTLY_IQ2_S, which never carries dtype-42 tensors). ftype 41
+  // (LLAMA_FTYPE_MOSTLY_Q2_0) is written by BOTH prism-ml and upstream
+  // llama.cpp — their Q2_0 blocks differ (QK=128 → 34/128 vs QK=64 → 18/64),
+  // so disambiguate by measuring actual tensor bytes from GGUF offsets.
+  if (ftype === 28 && dtypeSet.has(42)) return 'prism-ml';
+  if (dtypeSet.has(42) && ftype === 41) return classifyDtype42(tensorInfos);
   // beellama: ftype 43 (MOSTLY_TQ3_1S, dtype 47) or ftype 44 (MOSTLY_TQ4_1S,
   // dtype 48). Must be checked BEFORE buun because beellama's TQ3_1S (dtype 47)
   // collides with buun's TURBO8_0 (also dtype 47). Distinguishing signal:
@@ -84,10 +130,10 @@ export function detectFork(metadata, tensorInfos) {
   // tensors, so a dtype-202 in tensorInfos uniquely identifies ik_llama.
   // Must come AFTER the tq3 checks above (which also detect dtype 200/201).
   if (dtypeSet.has(202)) return 'ik_llama';
-  // Fallback: dtype 42 present without any fork-specific signal → prism-ml
-  // (its Q2_0 BPE 34/128 matches the default BPE[42], so byte counts are right
-  // regardless; the fork label just provides the correct display name).
-  if (dtypeSet.has(42)) return 'prism-ml';
+  // Fallback: dtype 42 present without any fork-specific signal — measure the
+  // stored tensor size to distinguish prism-ml Q2_0 (34/128) from upstream
+  // Q2_0 (18/64, the default BPE[42] / QUANT_NAMES[42]).
+  if (dtypeSet.has(42)) return classifyDtype42(tensorInfos);
   return null;
 }
 
