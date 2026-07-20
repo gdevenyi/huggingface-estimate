@@ -186,7 +186,7 @@ for (const [key, val] of Object.entries(GGMLQuantizationType)) {
   if (typeof val === 'number') QUANT_NAMES[val] = key;
 }
 // ── ik_llama.cpp extension names (labeled for clarity) ──
-export const IK_LLAMA_QUANT_NAMES = {
+const IK_LLAMA_QUANT_NAMES = {
   151: 'Q8_KV',
   398: 'Q8_KV_R8 (ik_llama)',
   136: 'Q8_K64 (ik_llama)',
@@ -280,7 +280,7 @@ const ROTORQUANT_QUANT_NAMES = {
   ISO4_0: 'ISO4_0',
 };
 Object.assign(QUANT_NAMES, ROTORQUANT_QUANT_NAMES);
-export const TQ3_QUANT_NAMES = {
+const TQ3_QUANT_NAMES = {
   42: 'Q1_0 (tq3)',
   44: 'TQ3_1S (tq3)',
   45: 'TQ3_1S (tq3)',
@@ -321,7 +321,7 @@ export const BUUN_FORK_BPE = {
   45: 52 / 128,  // TURBO3_TCQ (buun; unique type, collides with TheTom's TQ3_1S at 16/32)
   46: 36 / 128,  // TURBO2_TCQ (buun; unique type, collides with TheTom's TQ4_1S at 20/32)
 };
-export const BUUN_QUANT_NAMES = {
+const BUUN_QUANT_NAMES = {
   42: 'TURBO3_0 (buun)',
   43: 'TURBO4_0 (buun)',
   44: 'TURBO2_0 (buun)',
@@ -337,7 +337,7 @@ export const BUUN_QUANT_NAMES = {
 export const PRISM_ML_FORK_BPE = {
   42: 34 / 128,  // Q2_0 (prism-ml; same BPE as TheTom's TURBO2_0)
 };
-export const PRISM_ML_QUANT_NAMES = {
+const PRISM_ML_QUANT_NAMES = {
   42: 'Q2_0 (prism-ml)',
 };
 
@@ -350,7 +350,7 @@ export const BEELLAMA_FORK_BPE = {
   48: 20 / 32,   // TQ4_1S (beellama weight type)
   49: 26 / 32,   // Q6_0 (beellama weight type)
 };
-export const BEELLAMA_QUANT_NAMES = {
+const BEELLAMA_QUANT_NAMES = {
   47: 'TQ3_1S (beellama)',
   48: 'TQ4_1S (beellama)',
   49: 'Q6_0 (beellama)',
@@ -362,7 +362,8 @@ export const BEELLAMA_QUANT_NAMES = {
 // per-tensor _bpeOverride / _nameOverride at parse time. Adding a new fork
 // means appending one entry here (plus its detectFork predicate in parsing.js).
 //
-// Individual maps are still exported above for direct consumers (tests, docs).
+// The *_FORK_BPE maps are still exported above for test assertions; the
+// *_QUANT_NAMES maps are module-local (consumed only via this registry).
 export const FORK_OVERRIDES = {
   tq3:        { bpe: TQ3_FORK_BPE,           names: TQ3_QUANT_NAMES      },
   buun:       { bpe: BUUN_FORK_BPE,          names: BUUN_QUANT_NAMES     },

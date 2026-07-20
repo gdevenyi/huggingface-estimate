@@ -23,13 +23,14 @@ import {
 } from './calculations.js';
 import { mergeCpuPresets, mergeGpuPresets, findCpuPreset, getGpuPresets, getSlowestCpuPreset, UNIFIED_MEMORY_CPU_PRESET } from './hardware-presets.js';
 import { readFileSync } from 'node:fs';
-import { readRepoList, parallelMap } from './lib/cli.js';
+import { readRepoList, parallelMap, ok, fail } from './lib/cli.js';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const GIB = 1024 ** 3;
+const giB = (bytes) => +(bytes / GIB).toFixed(2);
 
 const CPU_JSON_FILES = ['intel-cpu-presets.json', 'amd-cpu-presets.json'];
 const GPU_JSON_FILES = ['nvidia-gpu-presets.json', 'intel-gpu-presets.json', 'amd-gpu-presets.json', 'apple-gpu-presets.json'];
@@ -210,15 +211,64 @@ function parseArgs(argv) {
     return val;
   };
 
+  // Uniform flags: dest field + value kind. Kinds: 'str' (raw value), 'bool'
+  // (no value, sets true), 'float' (parseFloat, unguarded), 'int' (parseInt,
+  // unguarded), 'posint'/'nonneg' (parseInt with the standard range guard).
+  // Flags with bespoke value grammar (--ctx max, --ngl auto, --kvTypeK/V
+  // names, --swa-full 0/1, --vram/--ram clamping, --mmprojDevice enum) keep
+  // explicit handlers below.
+  const FLAG_SPECS = {
+    '--batch': { dest: 'batch', kind: 'str' },
+    '--file': { dest: 'file', kind: 'str' },
+    '--all': { dest: 'all', kind: 'bool' },
+    '--batchSize': { dest: 'batchSize', kind: 'posint' },
+    '--n-seq': { dest: 'nSeq', kind: 'posint' },
+    '--mmproj': { dest: 'mmproj', kind: 'str' },
+    '--no-mmproj': { dest: 'noMmproj', kind: 'bool' },
+    '--gpu': { dest: 'gpu', kind: 'str' },
+    '--gpu-flops': { dest: 'gpuFlops', kind: 'float' },
+    '--gpu-bw': { dest: 'gpuBw', kind: 'float' },
+    '--cpu': { dest: 'cpu', kind: 'str' },
+    '--cpu-flops': { dest: 'cpuFlops', kind: 'float' },
+    '--ram-bw': { dest: 'ramBw', kind: 'float' },
+    '--cpu-moe': { dest: 'cpuMoe', kind: 'bool' },
+    '--n-cpu-moe': { dest: 'nCpuMoe', kind: 'nonneg' },
+    '--bw-util': { dest: 'bwUtil', kind: 'float' },
+    '--compute-util': { dest: 'computeUtil', kind: 'float' },
+    '--prefill-mfu': { dest: 'prefillMfu', kind: 'float' },
+    '--weight-read-ratio': { dest: 'weightReadRatio', kind: 'float' },
+    '--gpu-count': { dest: 'gpuCount', kind: 'posint' },
+    '--interconnect-bw': { dest: 'interconnectBw', kind: 'float' },
+    '--flash-attention': { dest: 'flashAttention', kind: 'bool' },
+    '--spec-decode': { dest: 'specDecode', kind: 'bool' },
+    '--acceptance-rate': { dest: 'acceptanceRate', kind: 'float' },
+    '--draft-len': { dest: 'draftLen', kind: 'int' },
+    '--decode-batch': { dest: 'decodeBatch', kind: 'int' },
+    '--concurrency': { dest: 'concurrency', kind: 'posint' },
+  };
+
   let i = 2;
   while (i < argv.length) {
     const arg = argv[i];
-    if (arg === '--batch') {
-      args.batch = needValue(arg);
-    } else if (arg === '--file') {
-      args.file = needValue(arg);
-    } else if (arg === '--all') {
-      args.all = true;
+    const spec = FLAG_SPECS[arg];
+    if (spec) {
+      if (spec.kind === 'bool') {
+        args[spec.dest] = true;
+      } else if (spec.kind === 'str') {
+        args[spec.dest] = needValue(arg);
+      } else if (spec.kind === 'float') {
+        args[spec.dest] = parseFloat(needValue(arg));
+      } else if (spec.kind === 'int') {
+        args[spec.dest] = parseInt(needValue(arg), 10);
+      } else {
+        const min = spec.kind === 'posint' ? 1 : 0;
+        const v = parseInt(needValue(arg), 10);
+        if (Number.isNaN(v) || v < min) {
+          console.error(`Error: ${arg} requires a ${min === 1 ? 'positive' : 'non-negative'} integer`);
+          process.exit(1);
+        }
+        args[spec.dest] = v;
+      }
     } else if (arg === '--ctx') {
       const v = needValue(arg);
       if (v === 'max') { args.ctx = 'max'; }
@@ -229,18 +279,6 @@ function parseArgs(argv) {
           process.exit(1);
         }
         args.ctx = n;
-      }
-    } else if (arg === '--batchSize') {
-      args.batchSize = parseInt(needValue(arg), 10);
-      if (Number.isNaN(args.batchSize) || args.batchSize < 1) {
-        console.error('Error: --batchSize requires a positive integer');
-        process.exit(1);
-      }
-    } else if (arg === '--n-seq') {
-      args.nSeq = parseInt(needValue(arg), 10);
-      if (Number.isNaN(args.nSeq) || args.nSeq < 1) {
-        console.error('Error: --n-seq requires a positive integer');
-        process.exit(1);
       }
     } else if (arg === '--kvTypeK') {
       args.kvTypeK = parseKvType(needValue(arg), '--kvTypeK');
@@ -263,18 +301,6 @@ function parseArgs(argv) {
         process.exit(1);
       }
       args.mmprojDevice = v;
-    } else if (arg === '--gpu') {
-      args.gpu = needValue(arg);
-    } else if (arg === '--gpu-flops') {
-      args.gpuFlops = parseFloat(needValue(arg));
-    } else if (arg === '--gpu-bw') {
-      args.gpuBw = parseFloat(needValue(arg));
-    } else if (arg === '--cpu') {
-      args.cpu = needValue(arg);
-    } else if (arg === '--cpu-flops') {
-      args.cpuFlops = parseFloat(needValue(arg));
-    } else if (arg === '--ram-bw') {
-      args.ramBw = parseFloat(needValue(arg));
     } else if (arg === '--ngl') {
       const v = needValue(arg);
       if (v === 'auto') { args.ngl = 'auto'; }
@@ -286,49 +312,6 @@ function parseArgs(argv) {
         }
         args.ngl = n;
       }
-    } else if (arg === '--cpu-moe') {
-      args.cpuMoe = true;
-    } else if (arg === '--n-cpu-moe') {
-      const v = parseInt(needValue(arg), 10);
-      if (Number.isNaN(v) || v < 0) {
-        console.error('Error: --n-cpu-moe requires a non-negative integer');
-        process.exit(1);
-      }
-      args.nCpuMoe = v;
-    } else if (arg === '--bw-util') {
-      args.bwUtil = parseFloat(needValue(arg));
-    } else if (arg === '--compute-util') {
-      args.computeUtil = parseFloat(needValue(arg));
-    } else if (arg === '--prefill-mfu') {
-      args.prefillMfu = parseFloat(needValue(arg));
-    } else if (arg === '--weight-read-ratio') {
-      args.weightReadRatio = parseFloat(needValue(arg));
-    } else if (arg === '--gpu-count') {
-      const v = parseInt(needValue(arg), 10);
-      if (Number.isNaN(v) || v < 1) {
-        console.error('Error: --gpu-count requires a positive integer');
-        process.exit(1);
-      }
-      args.gpuCount = v;
-    } else if (arg === '--interconnect-bw') {
-      args.interconnectBw = parseFloat(needValue(arg));
-    } else if (arg === '--flash-attention') {
-      args.flashAttention = true;
-    } else if (arg === '--spec-decode') {
-      args.specDecode = true;
-    } else if (arg === '--acceptance-rate') {
-      args.acceptanceRate = parseFloat(needValue(arg));
-    } else if (arg === '--draft-len') {
-      args.draftLen = parseInt(needValue(arg), 10);
-    } else if (arg === '--decode-batch') {
-      args.decodeBatch = parseInt(needValue(arg), 10);
-    } else if (arg === '--concurrency') {
-      const v = parseInt(needValue(arg), 10);
-      if (Number.isNaN(v) || v < 1) {
-        console.error('Error: --concurrency requires a positive integer');
-        process.exit(1);
-      }
-      args.concurrency = v;
     } else if (!arg.startsWith('-')) {
       args.repo = arg;
     } else {
@@ -752,7 +735,7 @@ function formatPerformance(device, metadata, tensorInfos, ctxSize, args, kvCache
       id: device.gpu.preset ? device.gpu.preset.id : null,
       fp16Tflops: device.gpu.flopsFp16Tflops,
       memBwGBps: device.gpu.bwGBps,
-      vramGiB: device.gpu.vramBytes ? +(device.gpu.vramBytes / GIB).toFixed(2) : 0,
+      vramGiB: device.gpu.vramBytes ? giB(device.gpu.vramBytes) : 0,
       count: device.gpuCount || 1,
       interconnectBwGBps: device.interconnectBwGBps || 0,
     },
@@ -785,8 +768,8 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
     actualRamTotal = actual.actualRam + (args.mmprojDevice === 'ram' ? mmprojActBytes : 0);
     vramFit = {
       availableGiB: args.vram,
-      actualVramGiB: +(actual.actualVram / GIB).toFixed(2),
-      actualRamGiB: +(actualRamTotal / GIB).toFixed(2),
+      actualVramGiB: giB(actual.actualVram),
+      actualRamGiB: giB(actualRamTotal),
       fits: actual.actualVram <= vramAvailBytes,
       usagePct: +usagePct.toFixed(1),
       nGpuLayers: actual.nGpuLayers,
@@ -794,17 +777,17 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
       nPartialLayers: actual.nPartialLayers || 0,
       nCpuLayers: actual.nCpuLayers,
       vramBreakdownGiB: {
-        weights: +(actual.vramWeightsBytes / GIB).toFixed(2),
-        experts: +(actual.vramExpertBytes / GIB).toFixed(2),
-        kv: +(actual.vramKvBytes / GIB).toFixed(2),
-        activations: +(actual.vramActivationBytes / GIB).toFixed(2),
-        output: +(actual.vramOutputBytes / GIB).toFixed(2),
+        weights: giB(actual.vramWeightsBytes),
+        experts: giB(actual.vramExpertBytes),
+        kv: giB(actual.vramKvBytes),
+        activations: giB(actual.vramActivationBytes),
+        output: giB(actual.vramOutputBytes),
       },
       ramBreakdownGiB: {
-        experts: +(actual.ramExpertBytes / GIB).toFixed(2),
-        cpuLayerWeights: +(actual.ramCpuLayerBytes / GIB).toFixed(2),
-        cpuLayerKv: +(actual.ramCpuKvBytes / GIB).toFixed(2),
-        inputEmb: +(actual.ramInputEmbBytes / GIB).toFixed(2),
+        experts: giB(actual.ramExpertBytes),
+        cpuLayerWeights: giB(actual.ramCpuLayerBytes),
+        cpuLayerKv: giB(actual.ramCpuKvBytes),
+        inputEmb: giB(actual.ramInputEmbBytes),
       },
     };
   }
@@ -814,7 +797,7 @@ function calcVramRamFit(args, activations, mmProjInfo, layerFootprint, ramBytes,
     const usagePct = actualRamTotal / ramAvailBytes * 100;
     ramFit = {
       availableGiB: args.ram,
-      requiredGiB: +(actualRamTotal / GIB).toFixed(2),
+      requiredGiB: giB(actualRamTotal),
       fits: actualRamTotal <= ramAvailBytes,
       usagePct: +usagePct.toFixed(1),
     };
@@ -834,7 +817,7 @@ async function runBatch(batchFile, args) {
       process.stderr.write(`[${i + 1}/${lines.length}] ${repo}... `);
       try {
         const data = await processRepo(repo, args);
-        results.push({ success: true, data });
+        results.push(ok(data));
         if (args.all && data.files) {
           console.error(`done (${data.files.length} files)`);
         } else {
@@ -842,7 +825,7 @@ async function runBatch(batchFile, args) {
         }
       } catch (err) {
         console.error(`failed: ${err.message}`);
-        results.push({ success: false, repo, error: err.message });
+        results.push(fail(repo, err));
       }
     }
     console.log(JSON.stringify(results, null, 2));

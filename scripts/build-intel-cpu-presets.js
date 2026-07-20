@@ -2,22 +2,13 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseRowsFromPath, parseInt_, parseGHz, round } from './lib/format.js';
+import { parseRowsFromPath, parseInt_, parseGHz, round, slug, makeCmp } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CPU_CSV = join(ROOT, 'resources', 'intel', 'intel_cpu_specs.csv');
 const OUT_PATH = join(ROOT, 'intel-cpu-presets.json');
 
 // Vendor-specific slug (preserves hyphens, differs from Apple's TSV slug).
-function slug(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 function cleanName(raw) {
   return raw
     .replace(/\u2122/g, '')
@@ -225,21 +216,7 @@ function cpuSortKey(p) {
   return [99, p.name];
 }
 
-function cmp(a, b) {
-  const ka = cpuSortKey(a), kb = cpuSortKey(b);
-  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
-    const x = ka[i], y = kb[i];
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    if (typeof x === 'number' && typeof y === 'number') {
-      if (x !== y) return x - y;
-    } else {
-      const c = String(x).localeCompare(String(y));
-      if (c !== 0) return c;
-    }
-  }
-  return 0;
-}
+const cmp = makeCmp(cpuSortKey);
 out.sort(cmp);
 
 writeFileSync(OUT_PATH, JSON.stringify(out, null, 2) + '\n');

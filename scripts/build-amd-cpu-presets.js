@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseRowsFromPath, parseInt_, parseGHz, round } from './lib/format.js';
+import { parseRowsFromPath, parseInt_, parseGHz, round, slug } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DESKTOP_CSV = join(ROOT, 'resources', 'amd', 'Processor Specifications.csv');
@@ -21,15 +21,6 @@ function parseGBps(s) {
   s = s.replace(/,/g, '');
   const m = s.match(/([\d.]+)\s*GB\/s/i);
   return m ? parseFloat(m[1]) : null;
-}
-
-function slug(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
 }
 
 function cleanName(raw) {

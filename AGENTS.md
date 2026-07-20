@@ -134,8 +134,7 @@ IDs 200 (TQ3_0, KV-only, 0.4375 BPE), 201 (TURBO3_0, KV, 0.390625 BPE), and 202 
 - `getMeta(metadata, key, fallback=0)` — safe metadata accessor with numeric coercion.
 - `getArchHandler(arch)` — returns architecture handler from registry (with alias resolution + fallback to `llama`).
 - `formatBytes(bytes)` / `formatElements(n)` — human-readable formatters (KiB/MiB/GiB/TiB, K/M/B/T).
-- `TQ3_FORK_BPE` — BPE override map for tq3 fork collision resolution.
-- `TQ3_QUANT_NAMES` — display name overrides for tq3 fork types.
+- `QUANT_NAMES` — re-exported from `quant-types.js` for the browser/CLI consumers (ui.js, run-calc.js). All other quant-type data (`BPE`, the `*_FORK_BPE` maps, `FORK_OVERRIDES`) is imported from `quant-types.js` directly; the fork `*_QUANT_NAMES` maps are module-local there, consumed only via `FORK_OVERRIDES`.
 - `calcRecurrentState(metadata, nSeqMax=1)` — computes SSM/recurrent state memory for architectures with recurrent layers. Returns `{ convStateBytes, ssmStateBytes, totalBytes, recurrentLayers, n_embd_r, n_embd_s }` or `null` if the architecture has no SSM hparams. State is F32, indexed by sequence count (not context length). Matches llama.cpp's `n_embd_r()` and `n_embd_s()` in `llama-hparams.cpp`. Supports KDA (Kimi-Linear), RWKV, LFM2 shortconv, and Mamba/Mamba2-style SSM state. Used by pure-recurrent archs (mamba, rwkv*), hybrid attention/SSM archs (jamba, falcon-h1, qwen35/moe, nemotron_h*), and KDA hybrids (kimi-linear).
 
 ## Utility exports from `parsing.js`
@@ -205,17 +204,18 @@ ARCH_ALIASES = {
 
 ### Step 4: Add registry entry
 
-Handlers are assembled from shared builders near the top of `calculations.js`. For a standard transformer, point at the canonical triple:
+Registry entries are built with the `defArch(categories, overrides)` factory, which fills the llama-default handler quad (`kvCache: llamaKvCache, activations: llamaActivations, moe: llamaMoe, tensorGroups: LLAMA_TENSOR_GROUPS`); entries declare only what differs:
 
 ```js
-myarch: {
-  name: 'myarch',
-  categories: ['transformer', 'moe'],
-  kvCache: llamaKvCache,
-  activations: buildActivations,
-  moe: moeNoShared,           // or moeShexpOnly, or llamaMoe
-  tensorGroups: LLAMA_TENSOR_GROUPS,
-},
+myarch: defArch(['transformer']),                    // fully standard transformer
+myarch2: defArch(['transformer', 'moe'], {           // MoE without shared experts
+  moe: moeNoShared,           // or moeShexpOnly, or leave default (llamaMoe)
+  tensorGroups: STANDARD_MOE_TENSOR_GROUPS,
+}),
+myarch3: defArch(['transformer', 'iswa'], {          // interleaved SWA
+  kvCache: iswaKv({ swaPeriodDefault: 4 }),          // iswaKv threads the runtime swaFull flag
+}),
+myarch4: defArch(['transformer'], { kvCache: mtpKv }), // excludes nextn_predict_layers MTP tail
 ```
 
 The available builders:
@@ -315,7 +315,7 @@ Three sources feed the estimator:
 
 **Intel iGPU presets** (section 2 of `build-intel-gpu-presets.js`): all entries from `intel_cpu_specs.csv` with `Xe-cores > 0`. FP16 TFLOPS = `Xe-cores × 128 × gpuClockGHz / 1000`. Memory bandwidth from CPU's `Memory Types` + `Max # of Memory Channels`. Default `vramGB`: 32 (user-adjustable). All entries set `memType: 'Unified'` and `unifiedMemory: true`.
 - **Per-vendor CPU presets** — `<vendor>-cpu-presets.json` files loaded at runtime. `intel-cpu-presets.json` is generated from Intel CSVs by `scripts/build-intel-cpu-presets.js`. `amd-cpu-presets.json` is generated from AMD CSVs by `scripts/build-amd-cpu-presets.js`. `apple-cpu-presets.json` is generated from `apple_silicon_macs.csv` by `scripts/build-apple-presets.js`. CPU FP16 TFLOPS = `cores × boost_GHz × fp32_per_cycle` using 2x FMA datapath throughput: Zen 5 (2×512-bit FMA) → 64, Zen 4 (2×256-bit FMA, AVX-512 double-pumped) → 32, Zen 3/2 (2×256-bit FMA) → 32, Zen 1/+ (2×128-bit FMA) → 16; Intel AVX-512 → 32, AVX2 → 16; Apple NEON → 8. Apple CPU FP16 is derived from the CSV's `CPU_FP32_TFLOPS_NEON × 2`. Pessimistic vs. actual tensor-optimized kernels but bandwidth is typically the decode bottleneck anyway.
-- **`hardware-presets.js`** — `RAM_PRESETS` (kept here), plus `mergeCpuPresets()`/`mergeGpuPresets()` functions to load the vendor JSON files, and `findCpuPreset()`/`findRamPreset()` lookup functions.
+- **`hardware-presets.js`** — `mergeCpuPresets()`/`mergeGpuPresets()` functions to load the vendor JSON files, plus `findCpuPreset()`/`getSlowestCpuPreset()` lookup functions and the `UNIFIED_MEMORY_CPU_PRESET` sentinel.
 - **`calcPerLayerFootprint` / `estimatePerformance`** in `calculations.js` — group tensors by `/^blk\.(\d+)\./`, fold active-expert fraction into per-layer byte totals for MoE layers, then iterate `max(FLOPs/FLOPS, bytes/BW)` per layer. Bottleneck label compares aggregate compute-time vs. BW-time per device side; `cpu-dram-spill` fires when CPU layers exceed 50% of total decode time. The per-layer roofline is augmented with: (1) efficiency/derating factors (`bwUtilization`, `computeUtilization`, `prefillMfu`) applied as multipliers on raw hardware rates; (2) prefill attention O(n²) FLOPs (`calcAttnFlopsCoeff` reads `attention.head_count` × `key_length`, or MLA latent dims); (3) weight-read-ratio for L2 cache effects; (4) multi-GPU tensor parallelism with LogP all-reduce communication overhead; (5) batch scheduling efficiency for large concurrent decode batches; (6) Apple Silicon per-SKU `decodeBwScale` in GPU presets; (7) flash attention prefill boost; (8) speculative decoding speedup; (9) MoE expert dispatch latency. All calibration factors default to conservative values and are user-adjustable via CLI flags or UI controls. Set all efficiency factors to 1.0 to recover the pure speed-of-light ceiling. The `calibration` object in the output records all applied factors.
 
 **FP16 rate caveat for data-center cards**: the CSV reports shader-rate FP16 (often 1:64 of tensor-core rate) for H100 / B200. Preprocessor uses `max(BF16, FP16 if ≥ 1.5× FP32, FP32 × 2)` to approximate the tensor-core path, but the result is conservative for Hopper/Blackwell — users can override with `--gpu-flops`.

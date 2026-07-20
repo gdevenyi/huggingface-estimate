@@ -24,6 +24,19 @@ function slug(text) {
     .replace(/^-|-$/g, '');
 }
 
+// Empirical decode bandwidth-utilization scale per (generation, tier),
+// derived from the tps calculator's Apple Silicon calibration (see AGENTS.md,
+// resources/tps/). Consumed by estimatePerformance as gpu.preset.decodeBwScale.
+// Previously these values were hand-patched into apple-gpu-presets.json after
+// generation, which made the JSON unreproducible from this script.
+const DECODE_BW_SCALE = {
+  'M1 Base': 0.5,  'M1 Pro': 0.5,  'M1 Max': 0.49, 'M1 Ultra': 0.55,
+  'M2 Base': 0.55, 'M2 Pro': 0.55, 'M2 Max': 0.58, 'M2 Ultra': 0.65,
+  'M3 Base': 0.6,  'M3 Pro': 0.65, 'M3 Max': 0.76, 'M3 Ultra': 0.72,
+  'M4 Base': 0.65, 'M4 Pro': 0.75, 'M4 Max': 0.85,
+  'M5 Base': 0.65, 'M5 Pro': 0.75, 'M5 Max': 0.85,
+};
+
 const TIER_ORDER = { ultra: 0, max: 1, pro: 2, base: 3 };
 
 function tierRank(tier) {
@@ -94,6 +107,9 @@ for (let i = 1; i < lines.length; i++) {
     memType: 'Unified',
     unifiedMemory: true,
     ...flags,
+    // undefined for unknown (generation, tier) combos → key omitted by
+    // JSON.stringify; the perf estimator then defaults to 1.0.
+    decodeBwScale: DECODE_BW_SCALE[`${generation} ${tier}`],
     _year: year,
     _tier: tier,
     _gpuCores: gpuCores,

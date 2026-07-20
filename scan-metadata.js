@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { resolveHFModel, parseGGUF, buildResolveUrl } from './parsing.js';
 import {
   getArchHandler,
   getModelArch,
@@ -8,7 +7,7 @@ import {
   globMatch,
 } from './calculations.js';
 import { BPE, QUANT_NAMES } from './quant-types.js';
-import { readRepoList, parallelMap } from './lib/cli.js';
+import { readRepoList, parallelMap, resolveAndParse } from './lib/cli.js';
 
 // ── Consumed metadata key suffixes (after stripping arch prefix) ──
 // Sourced from calculations.js + ui.js. Split into:
@@ -209,12 +208,7 @@ Exit codes:
 // ── Repo scanner ──
 
 async function scanRepo(repo) {
-  const resolved = await resolveHFModel(repo);
-  let url = resolved.url;
-  if (!url) {
-    url = buildResolveUrl(repo, resolved.ggufFiles[0]);
-  }
-  const { metadata, tensorInfos } = await parseGGUF(url);
+  const { url, metadata, tensorInfos } = await resolveAndParse(repo);
   const arch = metadata['general.architecture'] || 'unknown';
 
   const allMetaKeys = Object.keys(metadata);

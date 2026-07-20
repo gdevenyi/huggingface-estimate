@@ -1,4 +1,4 @@
-// Hand-curated RAM presets for the tokens/sec estimator.
+// Hardware preset loading/lookup for the tokens/sec estimator.
 //
 // CPU and GPU presets live in per-vendor JSON files:
 //   intel-cpu-presets.json, amd-cpu-presets.json
@@ -14,45 +14,6 @@
 // (README.md section CPU FLOPS), pessimistic vs. real-world tensor-core-
 // equivalent CPU kernels but good enough as a decode-time lower bound
 // (decode is bandwidth-bound anyway).
-//
-// RAM bandwidth presets are theoretical peaks per channel-configuration.
-
-// ── RAM presets (kept here, not vendor-specific) ──
-export const RAM_PRESETS = [
-  { id: 'ddr5-8000-dc',  name: 'DDR5-8000 dual-channel',    bandwidthGBps: 128 },
-  { id: 'ddr5-7200-dc',  name: 'DDR5-7200 dual-channel',    bandwidthGBps: 115 },
-  { id: 'ddr5-6400-dc',  name: 'DDR5-6400 dual-channel',    bandwidthGBps: 102 },
-  { id: 'ddr5-6000-dc',  name: 'DDR5-6000 dual-channel',    bandwidthGBps: 96 },
-  { id: 'ddr5-5600-dc',  name: 'DDR5-5600 dual-channel',    bandwidthGBps: 90 },
-  { id: 'ddr5-4800-dc',  name: 'DDR5-4800 dual-channel',    bandwidthGBps: 77 },
-  { id: 'ddr4-3600-dc',  name: 'DDR4-3600 dual-channel',    bandwidthGBps: 58 },
-  { id: 'ddr4-3200-dc',  name: 'DDR4-3200 dual-channel',    bandwidthGBps: 51 },
-  { id: 'ddr4-2933-dc',  name: 'DDR4-2933 dual-channel',    bandwidthGBps: 47 },
-  { id: 'ddr4-2666-dc',  name: 'DDR4-2666 dual-channel',    bandwidthGBps: 42 },
-  { id: 'ddr4-2400-dc',  name: 'DDR4-2400 dual-channel',    bandwidthGBps: 38 },
-  { id: 'ddr4-2133-dc',  name: 'DDR4-2133 dual-channel',    bandwidthGBps: 34 },
-
-  { id: 'ddr4-3200-4ch', name: 'DDR4-3200 quad-channel (sTRX4)',    bandwidthGBps: 102 },
-  { id: 'ddr4-2666-4ch', name: 'DDR4-2666 quad-channel (X299/X399)',bandwidthGBps: 85 },
-
-  { id: 'ddr5-4800-8ch', name: 'DDR5-4800 8-channel server',bandwidthGBps: 307 },
-  { id: 'ddr5-5600-8ch', name: 'DDR5-5600 8-channel server',bandwidthGBps: 358 },
-  { id: 'ddr5-6400-12ch',name: 'DDR5-6400 12-channel EPYC', bandwidthGBps: 614 },
-  { id: 'ddr4-3200-8ch', name: 'DDR4-3200 8-channel server',bandwidthGBps: 205 },
-  { id: 'ddr4-2666-8ch', name: 'DDR4-2666 8-channel (EPYC Naples)', bandwidthGBps: 170 },
-  { id: 'ddr4-2666-6ch', name: 'DDR4-2666 6-channel (Skylake-SP)',  bandwidthGBps: 128 },
-
-  { id: 'lpddr5x-8533',  name: 'LPDDR5X-8533 quad-channel', bandwidthGBps: 273 },
-  { id: 'lpddr5-6400-qc',name: 'LPDDR5-6400 quad-channel',  bandwidthGBps: 205 },
-
-  { id: 'apple-um-68',   name: 'Apple unified 68 GB/s (M1 base)',     bandwidthGBps: 68 },
-  { id: 'apple-um-120',  name: 'Apple unified 120 GB/s (M4 base)',    bandwidthGBps: 120 },
-  { id: 'apple-um-200',  name: 'Apple unified 200 GB/s (M2 Pro)',     bandwidthGBps: 200 },
-  { id: 'apple-um-273',  name: 'Apple unified 273 GB/s (M4 Pro)',     bandwidthGBps: 273 },
-  { id: 'apple-um-400',  name: 'Apple unified 400 GB/s (M1/2/3 Max)', bandwidthGBps: 400 },
-  { id: 'apple-um-546',  name: 'Apple unified 546 GB/s (M4 Max)',     bandwidthGBps: 546 },
-  { id: 'apple-um-819',  name: 'Apple unified 819 GB/s (M1/2/3 Ultra)', bandwidthGBps: 819 },
-];
 
 // ── CPU ID aliases for backward compat ──
 const CPU_ID_ALIASES = {
@@ -118,15 +79,6 @@ export function findCpuPreset(query) {
   return _cpuPresets.find(p => p.id === q || p.id === alias)
       || _cpuPresets.find(p => p.name.toLowerCase() === q)
       || _cpuPresets.find(p => p.name.toLowerCase().includes(q))
-      || null;
-}
-
-export function findRamPreset(query) {
-  if (!query) return null;
-  const q = query.toLowerCase();
-  return RAM_PRESETS.find(p => p.id === q)
-      || RAM_PRESETS.find(p => p.name.toLowerCase() === q)
-      || RAM_PRESETS.find(p => p.name.toLowerCase().includes(q))
       || null;
 }
 

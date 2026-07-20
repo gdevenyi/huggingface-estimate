@@ -97,7 +97,6 @@ const ramEl = $('#ram');
 const kvTypeKEl = $('#kvTypeK');
 const kvTypeVEl = $('#kvTypeV');
 const swaFullEl = $('#swaFull');
-const swaFullWrap = $('#swaFullWrap');
 const gpuPresetEl = $('#gpuPreset');
 const gpuFlopsEl = $('#gpuFlops');
 const gpuBwEl = $('#gpuBw');
@@ -705,7 +704,9 @@ function renderKvCache(kv, kvTypeK, kvTypeV, isMla, arch) {
 
 function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mmProjBytes, mmProjDevice, vramBytes, ramBytes }) {
   const totalBytes = vramBytes + ramBytes;
-  const vramPct = (b) => vramBytes > 0 ? `${(b / vramBytes * 100).toFixed(1)}%` : '0%';
+  const pctOf = (b, total) => total > 0 ? `${(b / total * 100).toFixed(1)}%` : '0%';
+  // Write "<bytes> (<pct of device total>)" into the element at `sel`.
+  const sized = (sel, bytes, total) => { $(sel).textContent = `${formatBytes(bytes)} (${pctOf(bytes, total)})`; };
   const mtpBytes = (footprint && footprint.mtpBytes) || 0;
   // token_embd is always on the CPU in llama.cpp; keep it out of the VRAM
   // weights figure so the bar sums correctly, and show it in the RAM panel.
@@ -725,12 +726,11 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   if (moe) {
     $('#vramWeightsRow .label').textContent = 'Attention + embedding weights';
     show($('#vramActiveExpertRow'));
-    const expertLabel = `All experts (${moe.expertCount})`;
-    $('#vramActiveExpertLabel').textContent = expertLabel;
-    $('#vramActiveExpertSize').textContent = `${formatBytes(vramExpertBytes)} (${vramPct(vramExpertBytes)})`;
+    $('#vramActiveExpertLabel').textContent = `All experts (${moe.expertCount})`;
+    sized('#vramActiveExpertSize', vramExpertBytes, vramBytes);
     if (vramRouterSharedBytes > 0) {
       show($('#vramRouterRow'));
-      $('#vramRouterSize').textContent = `${formatBytes(vramRouterSharedBytes)} (${vramPct(vramRouterSharedBytes)})`;
+      sized('#vramRouterSize', vramRouterSharedBytes, vramBytes);
     } else {
       hide($('#vramRouterRow'));
     }
@@ -739,25 +739,24 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
     hide($('#vramActiveExpertRow'));
     hide($('#vramRouterRow'));
   }
-  $('#vramWeightsSize').textContent = `${formatBytes(nonMoEWeightBytes)} (${vramPct(nonMoEWeightBytes)})`;
+  sized('#vramWeightsSize', nonMoEWeightBytes, vramBytes);
   if (mtpBytes > 0) {
     show($('#vramMtpRow'));
-    $('#vramMtpSize').textContent = `${formatBytes(mtpBytes)} (${vramPct(mtpBytes)})`;
+    sized('#vramMtpSize', mtpBytes, vramBytes);
   } else {
     hide($('#vramMtpRow'));
   }
-  const kvOnlyBytes = kv.bytesK + kv.bytesV;
-  $('#vramKVSize').textContent = `${formatBytes(kvOnlyBytes)} (${vramPct(kvOnlyBytes)})`;
+  sized('#vramKVSize', kv.bytesK + kv.bytesV, vramBytes);
   if (kv.bytesRecurrent > 0) {
     show($('#vramRecurrentRow'));
-    $('#vramRecurrentSize').textContent = `${formatBytes(kv.bytesRecurrent)} (${vramPct(kv.bytesRecurrent)})`;
+    sized('#vramRecurrentSize', kv.bytesRecurrent, vramBytes);
   } else {
     hide($('#vramRecurrentRow'));
   }
-  $('#vramActSize').textContent = `${formatBytes(acts.totalBytes)} (${vramPct(acts.totalBytes)})`;
+  sized('#vramActSize', acts.totalBytes, vramBytes);
   if (currentMmProjInfo && mmProjDevice === 'vram') {
     show($('#vramMmProjRow'));
-    $('#vramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${vramPct(mmProjBytes)})`;
+    sized('#vramMmProjSize', mmProjBytes, vramBytes);
   } else {
     hide($('#vramMmProjRow'));
   }
@@ -766,22 +765,19 @@ function renderMemoryPanel({ weights, moe, kv, acts, memBreakdown, footprint, mm
   if (moe && memBreakdown.ramExpertBytes > 0) {
     show($('#ramInactiveRow'));
     $('#ramInactiveLabel').textContent = 'Inactive experts';
-    const expertInRam = memBreakdown.ramExpertBytes;
-    $('#ramInactiveSize').textContent = `${formatBytes(expertInRam)} (${ramBytes > 0 ? (expertInRam / ramBytes * 100).toFixed(1) : '0'}%)`;
+    sized('#ramInactiveSize', memBreakdown.ramExpertBytes, ramBytes);
   } else {
     hide($('#ramInactiveRow'));
   }
   if (inputEmb > 0) {
     show($('#ramInputEmbRow'));
-    const pct = ramBytes > 0 ? (inputEmb / ramBytes * 100).toFixed(1) : '0';
-    $('#ramInputEmbSize').textContent = `${formatBytes(inputEmb)} (${pct}%)`;
+    sized('#ramInputEmbSize', inputEmb, ramBytes);
   } else {
     hide($('#ramInputEmbRow'));
   }
   if (currentMmProjInfo && mmProjDevice === 'ram') {
     show($('#ramMmProjRow'));
-    const ramPct = ramBytes > 0 ? (mmProjBytes / ramBytes * 100).toFixed(1) : '0';
-    $('#ramMmProjSize').textContent = `${formatBytes(mmProjBytes)} (${ramPct}%)`;
+    sized('#ramMmProjSize', mmProjBytes, ramBytes);
   } else {
     hide($('#ramMmProjRow'));
   }
@@ -822,6 +818,22 @@ function renderMmProjPanel(mmProjDevice) {
   }
 }
 
+// Shared usage-bar scaffolding for the VRAM/RAM fit sections: bar width +
+// color class, status line, percentage text, "<used> / <total> GiB" label,
+// and the "A · B · C" breakdown line. Callers supply the color and status
+// text since the wording differs per device.
+function renderUsageBar(prefix, { usagePct, color, statusText, usedBytes, totalGB, breakdownParts }) {
+  const bar = $(`#${prefix}Bar`);
+  bar.style.width = `${Math.min(usagePct, 100)}%`;
+  bar.className = `usage-bar ${color}`;
+  const status = $(`#${prefix}Status`);
+  status.className = `usage-status ${color}`;
+  status.textContent = statusText;
+  $(`#${prefix}BarText`).textContent = `${usagePct.toFixed(1)}%`;
+  $(`#${prefix}FitLabel`).textContent = `${formatBytes(usedBytes)} / ${totalGB} GiB`;
+  $(`#${prefix}Breakdown`).textContent = breakdownParts.length > 0 ? breakdownParts.join(' · ') : '';
+}
+
 function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpuMoe, nCpuMoe, nglOverride, unifiedMemory }) {
   const fitPanel = $('#fitCheckPanel');
   const showVramBar = vramGB > 0;
@@ -846,15 +858,7 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
   });
 
   show($('#vramFitSection'));
-  const vramAvailBytes = vramGB * GIB;
-  const vramUsagePct = (actual.actualVram / vramAvailBytes * 100);
-  const clampedVramPct = Math.min(vramUsagePct, 100);
-
-  const vramBar = $('#vramBar');
-  const vramBarText = $('#vramBarText');
-  const vramStatus = $('#vramStatus');
-
-  vramBar.style.width = `${clampedVramPct}%`;
+  const vramUsagePct = (actual.actualVram / (vramGB * GIB) * 100);
 
   const np = actual.nPartialLayers || 0;
   const parts = [`${actual.nGpuLayers} GPU`];
@@ -864,71 +868,56 @@ function renderFitCheck({ vramGB, ramGB, acts, layerFootprint, mmProjDevice, cpu
   const fullOffload = actual.nGpuLayers > 0 && np === 0 && actual.nHybridLayers === 0 && actual.nCpuLayers === 0;
   const layerSplitStr = fullOffload ? `${actual.nGpuLayers} GPU (full offload)` : parts.join(' / ');
 
+  let vramColor, vramStatusText;
   if (vramUsagePct > 100) {
-    vramBar.className = 'usage-bar red';
-    vramStatus.className = 'usage-status red';
-    vramStatus.textContent = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
+    vramColor = 'red';
+    vramStatusText = `\u2717 Overflow \u2014 ${formatBytes(actual.actualVram)} needed, ${vramGB} GiB available \u2014 ${layerSplitStr}`;
   } else if (actual.nCpuLayers > 0) {
-    vramBar.className = 'usage-bar yellow';
-    vramStatus.className = 'usage-status yellow';
-    vramStatus.textContent = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
+    vramColor = 'yellow';
+    vramStatusText = `\u26A0 Partial offload \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   } else {
-    vramBar.className = 'usage-bar green';
-    vramStatus.className = 'usage-status green';
-    vramStatus.textContent = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
+    vramColor = 'green';
+    vramStatusText = `\u2713 Fits \u2014 ${formatBytes(actual.actualVram)} of ${vramGB} GiB (${vramUsagePct.toFixed(0)}%) \u2014 ${layerSplitStr}`;
   }
 
-  vramBarText.textContent = `${vramUsagePct.toFixed(1)}%`;
-  $('#vramFitLabel').textContent = `${formatBytes(actual.actualVram)} / ${vramGB} GiB`;
-
-  // Actual VRAM distribution breakdown
-  const vramBD = $('#vramBreakdown');
   const vramParts = [];
   if (actual.vramWeightsBytes > 0) vramParts.push(`Weights ${formatBytes(actual.vramWeightsBytes)}`);
   if (actual.vramExpertBytes > 0) vramParts.push(`Experts ${formatBytes(actual.vramExpertBytes)}`);
   if (actual.vramKvBytes > 0) vramParts.push(`KV ${formatBytes(actual.vramKvBytes)}`);
   if (actual.vramActivationBytes > 0) vramParts.push(`Activations ${formatBytes(actual.vramActivationBytes)}`);
   if (actual.vramOutputBytes > 0) vramParts.push(`Output ${formatBytes(actual.vramOutputBytes)}`);
-  vramBD.textContent = vramParts.length > 0 ? vramParts.join(' \u00B7 ') : '';
+  renderUsageBar('vram', {
+    usagePct: vramUsagePct, color: vramColor, statusText: vramStatusText,
+    usedBytes: actual.actualVram, totalGB: vramGB, breakdownParts: vramParts,
+  });
 
   const actualRamBytes = actual.actualRam + (mmProjDevice === 'ram' ? mmProjActBytes : 0);
   const showRamBar = ramGB > 0 && actualRamBytes > 0;
   if (showRamBar) {
     show($('#ramFitSection'));
     const ramUsagePct = (actualRamBytes / (ramGB * GIB) * 100);
-    const clampedRamPct = Math.min(ramUsagePct, 100);
 
-    const ramBar = $('#ramBar');
-    const ramBarText = $('#ramBarText');
-    const ramStatus = $('#ramStatus');
-
-    ramBar.style.width = `${clampedRamPct}%`;
-
+    let ramColor, ramStatusText;
     if (ramUsagePct <= RAM_GREEN_PCT) {
-      ramBar.className = 'usage-bar green';
-      ramStatus.className = 'usage-status green';
-      ramStatus.textContent = `\u2713 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
+      ramColor = 'green';
+      ramStatusText = `\u2713 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
     } else if (ramUsagePct <= RAM_YELLOW_PCT) {
-      ramBar.className = 'usage-bar yellow';
-      ramStatus.className = 'usage-status yellow';
-      ramStatus.textContent = `\u26A0 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
+      ramColor = 'yellow';
+      ramStatusText = `\u26A0 RAM usage \u2014 ${formatBytes(actualRamBytes)} of ${ramGB} GiB (${ramUsagePct.toFixed(0)}% used)`;
     } else {
-      ramBar.className = 'usage-bar red';
-      ramStatus.className = 'usage-status red';
-      ramStatus.textContent = `\u2717 RAM overflow \u2014 ${formatBytes(actualRamBytes)} needed, ${ramGB} GiB available`;
+      ramColor = 'red';
+      ramStatusText = `\u2717 RAM overflow \u2014 ${formatBytes(actualRamBytes)} needed, ${ramGB} GiB available`;
     }
 
-    ramBarText.textContent = `${ramUsagePct.toFixed(1)}%`;
-    $('#ramFitLabel').textContent = `${formatBytes(actualRamBytes)} / ${ramGB} GiB`;
-
-    // Actual RAM distribution breakdown
-    const ramBD = $('#ramBreakdown');
     const ramParts = [];
     if (actual.ramExpertBytes > 0) ramParts.push(`Expert weights ${formatBytes(actual.ramExpertBytes)}`);
     if (actual.ramCpuLayerBytes > 0) ramParts.push(`CPU layer weights ${formatBytes(actual.ramCpuLayerBytes)}`);
     if (actual.ramCpuKvBytes > 0) ramParts.push(`CPU layer KV ${formatBytes(actual.ramCpuKvBytes)}`);
     if (actual.ramInputEmbBytes > 0) ramParts.push(`Input embedding ${formatBytes(actual.ramInputEmbBytes)}`);
-    ramBD.textContent = ramParts.length > 0 ? ramParts.join(' \u00B7 ') : '';
+    renderUsageBar('ram', {
+      usagePct: ramUsagePct, color: ramColor, statusText: ramStatusText,
+      usedBytes: actualRamBytes, totalGB: ramGB, breakdownParts: ramParts,
+    });
   } else {
     hide($('#ramFitSection'));
   }

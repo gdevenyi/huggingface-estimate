@@ -17,20 +17,39 @@ export function round(n, d) {
   return Math.round(n * m) / m;
 }
 
-// Build a comparator from a key function returning a comparable (or array of
-// comparables, lexicographic). Replaces the 5 hand-written cmp() functions.
-export function compareByKey(keyFn) {
+// Build a comparator from a key function returning an array of comparables.
+// Numbers compare numerically, everything else via localeCompare; shorter
+// keys sort first. Byte-identical to the cmp() bodies previously copy-pasted
+// in build-gpu-list, build-amd-gpu-list, build-intel-cpu-presets, and
+// build-intel-gpu-presets.
+export function makeCmp(keyFn) {
   return (a, b) => {
-    const ka = keyFn(a);
-    const kb = keyFn(b);
-    if (Array.isArray(ka) && Array.isArray(kb)) {
-      for (let i = 0; i < ka.length; i++) {
-        if (ka[i] !== kb[i]) return ka[i] < kb[i] ? -1 : 1;
+    const ka = keyFn(a), kb = keyFn(b);
+    for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+      const x = ka[i], y = kb[i];
+      if (x === undefined) return -1;
+      if (y === undefined) return 1;
+      if (typeof x === 'number' && typeof y === 'number') {
+        if (x !== y) return x - y;
+      } else {
+        const c = String(x).localeCompare(String(y));
+        if (c !== 0) return c;
       }
-      return 0;
     }
-    return ka < kb ? -1 : ka > kb ? 1 : 0;
+    return 0;
   };
+}
+
+// Kebab-case ID from a display name. Identical body previously copy-pasted in
+// the AMD GPU/CPU and Intel CPU builders; the Intel GPU builder prefixes the
+// result with 'intel-'.
+export function slug(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 // Strip sort-metadata keys (those prefixed with `_`) from output objects.

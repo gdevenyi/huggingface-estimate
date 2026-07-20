@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseRowsFromPath, parseMHz, round } from './lib/format.js';
+import { parseRowsFromPath, parseMHz, round, slug, makeCmp } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_PATH = join(ROOT, 'amd-gpu-presets.json');
@@ -57,15 +57,6 @@ function parseYear(s) {
   if (!s) return null;
   const m = s.match(/(\d{4})/);
   return m ? parseInt(m[1], 10) : null;
-}
-
-function slug(name) {
-  return name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
 }
 
 function cleanName(raw) {
@@ -492,21 +483,7 @@ function amdSortKey(g) {
   return [9, -(g.year ?? 0), g.name];
 }
 
-function cmp(a, b) {
-  const ka = amdSortKey(a), kb = amdSortKey(b);
-  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
-    const x = ka[i], y = kb[i];
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    if (typeof x === 'number' && typeof y === 'number') {
-      if (x !== y) return x - y;
-    } else {
-      const c = String(x).localeCompare(String(y));
-      if (c !== 0) return c;
-    }
-  }
-  return 0;
-}
+const cmp = makeCmp(amdSortKey);
 out.sort(cmp);
 
 writeFileSync(OUT_PATH, JSON.stringify(out, null, 0) + '\n');

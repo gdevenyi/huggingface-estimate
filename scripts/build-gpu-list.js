@@ -12,35 +12,11 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { round } from './lib/format.js';
+import { round, parseCSV, makeCmp } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const CSV_PATH = join(ROOT, 'specs', 'gpu_1986-2026.csv');
 const OUT_PATH = join(ROOT, 'gpu-data.json');
-
-// ── CSV parser: handles quoted fields with embedded commas/newlines ──
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQuotes) {
-      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-      else if (c === '"') { inQuotes = false; }
-      else { field += c; }
-    } else {
-      if (c === '"') { inQuotes = true; }
-      else if (c === ',') { row.push(field); field = ''; }
-      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else if (c === '\r') { /* skip */ }
-      else { field += c; }
-    }
-  }
-  if (field.length || row.length) { row.push(field); rows.push(row); }
-  return rows;
-}
 
 // ── Field extractors ──
 // Pull the primary numeric value (before a space or "(" annotation).
@@ -297,21 +273,7 @@ function sortKey(g) {
   }
   return [9, g.name];
 }
-function cmp(a, b) {
-  const ka = sortKey(a), kb = sortKey(b);
-  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
-    const x = ka[i], y = kb[i];
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    if (typeof x === 'number' && typeof y === 'number') {
-      if (x !== y) return x - y;
-    } else {
-      const c = String(x).localeCompare(String(y));
-      if (c !== 0) return c;
-    }
-  }
-  return 0;
-}
+const cmp = makeCmp(sortKey);
 // ── Merge Intel entries from first-party CSV build ──
 const INTEL_DATA_PATH = join(ROOT, 'intel-gpu-presets.json');
 try {

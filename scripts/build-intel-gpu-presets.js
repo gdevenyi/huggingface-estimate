@@ -2,7 +2,7 @@
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { parseRowsFromPath, parseGHz, parseMHz, parseInt_, round } from './lib/format.js';
+import { parseRowsFromPath, parseGHz, parseMHz, parseInt_, round, slug as baseSlug, makeCmp } from './lib/format.js';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const GPU_CSV = join(ROOT, 'resources', 'intel', 'intel_gpu_specs.csv');
@@ -39,14 +39,7 @@ function parseYear(s) {
   return m2 ? parseInt(m2[1], 10) : null;
 }
 
-function slug(name) {
-  return 'intel-' + name
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+const slug = (name) => 'intel-' + baseSlug(name);
 
 function cleanGpuName(raw) {
   return raw
@@ -255,21 +248,7 @@ function gpuSortKey(g) {
   return [9, g.name];
 }
 
-function cmp(a, b) {
-  const ka = gpuSortKey(a), kb = gpuSortKey(b);
-  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
-    const x = ka[i], y = kb[i];
-    if (x === undefined) return -1;
-    if (y === undefined) return 1;
-    if (typeof x === 'number' && typeof y === 'number') {
-      if (x !== y) return x - y;
-    } else {
-      const c = String(x).localeCompare(String(y));
-      if (c !== 0) return c;
-    }
-  }
-  return 0;
-}
+const cmp = makeCmp(gpuSortKey);
 out.sort(cmp);
 
 writeFileSync(OUT_PATH, JSON.stringify(out, null, 2) + '\n');

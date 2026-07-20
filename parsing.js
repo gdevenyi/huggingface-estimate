@@ -47,7 +47,6 @@ export const KV_VALID_QUANTS = [...new Set([
   ...STANDARD_KV_QUANTS,
   ...KV_FORK_GROUPS.flatMap(g => g.quants),
 ])];
-export const STANDARD_KV_QUANT_SET = new Set(STANDARD_KV_QUANTS);
 
 
 // Measure the actual bytes-per-element of a dtype from GGUF tensor offsets.
